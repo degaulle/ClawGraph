@@ -97,7 +97,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         # Serve knowledge_graph.json from project root
         if path == "/knowledge_graph.json":
-            self._serve_file(ROOT / "knowledge_graph.json", "application/json")
+            self._serve_file(ROOT / "output" / "knowledge_graph.json", "application/json")
             return
 
         # Static files from frontend/

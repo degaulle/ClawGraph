@@ -36,8 +36,12 @@
     font-size: 13px;
   }
   #legend h3 { margin-bottom: 10px; color: #fff; font-size: 14px; }
+  .legend-section { margin-bottom: 8px; }
+  .legend-section:last-child { margin-bottom: 0; }
+  .legend-section-title { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
   .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
   .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .legend-line { width: 16px; height: 3px; border-radius: 1px; }
   #stats {
     position: absolute;
     bottom: 16px;
@@ -161,7 +165,13 @@
     color: #ccc;
     font-size: 12px;
     width: 290px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
   }
+  #appearance::-webkit-scrollbar { width: 5px; }
+  #appearance::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
   #appearance h3 {
     color: #fff;
     font-size: 13px;
@@ -190,6 +200,38 @@
     accent-color: #888;
     cursor: pointer;
   }
+  .tri-switch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  .tri-switch-btns {
+    display: flex;
+    flex-shrink: 0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .tri-switch-btn {
+    background: transparent;
+    color: #555;
+    border: none;
+    border-right: 1px solid #444;
+    padding: 2px 7px;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .tri-switch-btn:last-child { border-right: none; }
+  .tri-switch-btn:hover { color: #999; }
+  .tri-switch-btn.active-visible { background: #1a3a2a; color: #10b981; }
+  .tri-switch-btn.active-hidden { background: #2a2a1a; color: #eab308; }
+  .tri-switch-btn.active-off { background: #2a1a1a; color: #ef4444; }
+  .tri-switch-label {
+    color: #999;
+    font-size: 11px;
+  }
 </style>
 </head>
 <body>
@@ -203,12 +245,22 @@
 </div>
 <div id="legend">
   <h3>Knowledge Graph</h3>
-  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Contributors</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Files (active)</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Files (deleted)</div>
+  <div class="legend-section">
+    <div class="legend-section-title">Nodes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Contributors</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Files (active)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Files (deleted)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Crates</div>
+  </div>
+  <div class="legend-section">
+    <div class="legend-section-title">Edges</div>
+    <div class="legend-item"><div class="legend-line" style="background:rgba(255,255,255,0.6)"></div> Authored</div>
+    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on</div>
+    <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
+  </div>
 </div>
 <div id="controls">
-  <h3 onclick="document.querySelector('.ctrl-body').classList.toggle('collapsed')">
+  <h3 onclick="document.getElementById('ctrl-body').classList.toggle('collapsed')">
     Force Simulation <span class="toggle">&#9660;</span>
   </h3>
   <div class="ctrl-body" id="ctrl-body"></div>
@@ -244,8 +296,14 @@
   const CONTRIBUTOR_COLOR = '#f59e0b';
   const FILE_COLOR = '#3b82f6';
   const DELETED_FILE_COLOR = '#6b7280';
-  const EDGE_COLOR = 'rgba(255, 255, 255, 0.04)';
-  const HIGHLIGHT_EDGE_COLOR = 'rgba(255, 255, 255, 0.35)';
+  const CRATE_COLOR = '#10b981';
+
+  // Edge colors as RGB components (alpha applied dynamically)
+  const EDGE_RGB = {
+    authored: '255, 255, 255',
+    depends_on: '239, 68, 68',
+    contains: '16, 185, 129',
+  };
 
   // Load data
   let raw;
@@ -258,8 +316,8 @@
   }
   loadingEl.style.display = 'none';
 
-  // Build nodes array
-  const nodes = [];
+  // Build ALL nodes (kept permanently — D3 adds x/y/vx/vy to these)
+  const allNodes = [];
   const nodeMap = new Map();
 
   for (const c of raw.nodes.contributors) {
@@ -270,7 +328,7 @@
       totalCommits: c.total_commits,
       radius: Math.max(4, Math.min(16, 3 + Math.sqrt(c.total_commits))),
     };
-    nodes.push(node);
+    allNodes.push(node);
     nodeMap.set(c.id, node);
   }
 
@@ -285,42 +343,134 @@
       lineCount: loc,
       radius: loc > 0 ? Math.max(1.5, Math.min(12, 1.5 + Math.sqrt(loc) * 0.3)) : 1.5,
     };
-    nodes.push(node);
+    allNodes.push(node);
     nodeMap.set(f.id, node);
   }
 
-  // Build links
-  const links = raw.edges.map(e => ({
-    source: e.source,
-    target: e.target,
-    commits: e.commits.length,
-  }));
-
-  // Build adjacency for highlight
-  const adjacency = new Map();
-  for (const link of links) {
-    const sid = typeof link.source === 'object' ? link.source.id : link.source;
-    const tid = typeof link.target === 'object' ? link.target.id : link.target;
-    if (!adjacency.has(sid)) adjacency.set(sid, new Set());
-    if (!adjacency.has(tid)) adjacency.set(tid, new Set());
-    adjacency.get(sid).add(tid);
-    adjacency.get(tid).add(sid);
+  for (const cr of (raw.nodes.crates || [])) {
+    const node = {
+      id: cr.id,
+      name: cr.name,
+      type: 'crate',
+      rootDir: cr.root_dir,
+      edition: cr.edition,
+      hasLib: cr.has_lib,
+      hasBin: cr.has_bin,
+      radius: 8,
+    };
+    allNodes.push(node);
+    nodeMap.set(cr.id, node);
   }
 
-  // Stats
-  statsEl.style.display = 'block';
-  statsEl.textContent = `${raw.nodes.contributors.length} contributors | ${raw.nodes.files.length} files | ${raw.edges.length} edges`;
+  // Raw link data (never passed to D3 — source/target stay as strings)
+  const allLinksRaw = raw.edges.map(e => ({
+    source: e.source,
+    target: e.target,
+    type: e.type || 'authored',
+    commits: e.commits ? e.commits.length : 0,
+  }));
 
   // Free raw data
   raw = null;
 
-  // Simulation
-  const linkForce = d3.forceLink(links).id(d => d.id).distance(30).strength(0.1);
+  // --- Active simulation data (rebuilt when "off" toggles change) ---
+  let nodes = [];
+  let links = [];
+  let adjacency = new Map();
+
+  // --- Visibility state: 'visible' | 'hidden' | 'off' ---
+  const vis = {
+    contributors: 'visible',
+    files: 'visible',
+    crates: 'visible',
+    authored: 'visible',
+    dependsOn: 'visible',
+    contains: 'visible',
+  };
+
+  function nodeTypeState(node) {
+    if (node.type === 'contributor') return vis.contributors;
+    if (node.type === 'crate') return vis.crates;
+    return vis.files;
+  }
+
+  function linkTypeState(link) {
+    if (link.type === 'authored') return vis.authored;
+    if (link.type === 'depends_on') return vis.dependsOn;
+    if (link.type === 'contains') return vis.contains;
+    return 'visible';
+  }
+
+  // For draw: is this node rendered?
+  function nodeDrawn(node) {
+    return nodeTypeState(node) === 'visible';
+  }
+
+  // For draw: is this link rendered?
+  function linkDrawn(link) {
+    const s = link.source;
+    const t = link.target;
+    if (!nodeDrawn(s) || !nodeDrawn(t)) return false;
+    return linkTypeState(link) === 'visible';
+  }
+
+  function getNodeScale(node) {
+    if (node.type === 'contributor') return contributorScale;
+    if (node.type === 'crate') return crateScale;
+    return fileScale;
+  }
+
+  function updateStats() {
+    const nc = nodes.filter(n => n.type === 'contributor').length;
+    const nf = nodes.filter(n => n.type === 'file').length;
+    const ncr = nodes.filter(n => n.type === 'crate').length;
+    statsEl.style.display = 'block';
+    statsEl.textContent = `${nc} contributors | ${nf} files | ${ncr} crates | ${links.length} edges`;
+  }
+
+  function rebuildGraph() {
+    // Clear hover state (hovered node may no longer exist in the graph)
+    hoveredNode = null;
+    tooltip.style.display = 'none';
+
+    // Filter nodes — 'visible' and 'hidden' are in simulation, 'off' is excluded
+    nodes = allNodes.filter(n => nodeTypeState(n) !== 'off');
+    const activeIds = new Set(nodes.map(n => n.id));
+
+    // Create fresh link objects (D3 mutates source/target to object refs)
+    links = allLinksRaw
+      .filter(l => {
+        if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
+        return linkTypeState(l) !== 'off';
+      })
+      .map(l => ({ ...l }));
+
+    // Rebuild adjacency
+    adjacency = new Map();
+    for (const l of links) {
+      // source/target are still strings here (fresh copies)
+      if (!adjacency.has(l.source)) adjacency.set(l.source, new Set());
+      if (!adjacency.has(l.target)) adjacency.set(l.target, new Set());
+      adjacency.get(l.source).add(l.target);
+      adjacency.get(l.target).add(l.source);
+    }
+
+    // Update simulation
+    simulation.nodes(nodes);
+    linkForce.links(links);
+    collisionForce.radius(d => d.radius + collisionPadding);
+    simulation.alpha(1).restart();
+
+    updateStats();
+  }
+
+  // --- Simulation setup (initial empty — rebuildGraph populates) ---
+  const linkForce = d3.forceLink([]).id(d => d.id).distance(30).strength(0.1);
   const chargeForce = d3.forceManyBody().strength(-8).distanceMax(200).distanceMin(1).theta(0.9);
   const centerForce = d3.forceCenter(width / 2, height / 2).strength(1);
   const collisionForce = d3.forceCollide().radius(d => d.radius + 0.5).strength(0.3).iterations(1);
 
-  const simulation = d3.forceSimulation(nodes)
+  const simulation = d3.forceSimulation([])
     .force('link', linkForce)
     .force('charge', chargeForce)
     .force('center', centerForce)
@@ -334,13 +484,15 @@
   // --- Appearance state ---
   let contributorScale = 1;
   let fileScale = 1;
+  let crateScale = 1;
   let edgeWidth = 0.5;
   let edgeOpacity = 0.04;
   let highlightEdgeWidth = 1;
   let highlightEdgeOpacity = 0.35;
   let fixedSize = false;
+  let collisionPadding = 0.5;
 
-  // --- Shared slider builder ---
+  // --- Shared UI builders ---
   function makeGroup(title, parent) {
     const div = document.createElement('div');
     div.className = 'ctrl-group';
@@ -376,9 +528,6 @@
     return input;
   }
 
-  // --- Appearance panel ---
-  const appearBody = document.getElementById('appear-body');
-
   function makeCheckbox(parent, label, checked, onChange) {
     const row = document.createElement('div');
     row.className = 'ctrl-check';
@@ -396,9 +545,75 @@
     return input;
   }
 
+  function makeTriSwitch(parent, label, initial, onChange) {
+    const row = document.createElement('div');
+    row.className = 'tri-switch';
+    const btns = document.createElement('div');
+    btns.className = 'tri-switch-btns';
+
+    const states = [
+      { value: 'visible', text: 'Show', cls: 'active-visible', title: 'Visible — rendered and in simulation' },
+      { value: 'hidden',  text: 'Hide', cls: 'active-hidden',  title: 'Hidden — in simulation but not rendered' },
+      { value: 'off',     text: 'Off',  cls: 'active-off',     title: 'Off — removed from simulation entirely' },
+    ];
+
+    const buttons = [];
+    for (const s of states) {
+      const btn = document.createElement('button');
+      btn.className = 'tri-switch-btn' + (s.value === initial ? ' ' + s.cls : '');
+      btn.textContent = s.text;
+      btn.title = s.title;
+      btn.dataset.value = s.value;
+      btn.dataset.cls = s.cls;
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.className = 'tri-switch-btn');
+        btn.className = 'tri-switch-btn ' + s.cls;
+        onChange(s.value);
+      });
+      buttons.push(btn);
+      btns.appendChild(btn);
+    }
+
+    const lbl = document.createElement('span');
+    lbl.className = 'tri-switch-label';
+    lbl.textContent = label;
+
+    row.appendChild(btns);
+    row.appendChild(lbl);
+    parent.appendChild(row);
+  }
+
+  // --- Appearance panel ---
+  const appearBody = document.getElementById('appear-body');
+
+  // Visibility group — tri-switches
+  const visGroup = makeGroup('Visibility', appearBody);
+
+  function onVisChange(key, needsRebuild) {
+    return (value) => {
+      const wasOff = vis[key] === 'off';
+      vis[key] = value;
+      const isOff = value === 'off';
+      if (wasOff !== isOff) {
+        rebuildGraph();
+      } else {
+        draw();
+      }
+    };
+  }
+
+  makeTriSwitch(visGroup, 'Contributors',     'visible', onVisChange('contributors'));
+  makeTriSwitch(visGroup, 'Files',            'visible', onVisChange('files'));
+  makeTriSwitch(visGroup, 'Crates',           'visible', onVisChange('crates'));
+  makeTriSwitch(visGroup, 'Authored edges',   'visible', onVisChange('authored'));
+  makeTriSwitch(visGroup, 'Dependency edges', 'visible', onVisChange('dependsOn'));
+  makeTriSwitch(visGroup, 'Contains edges',   'visible', onVisChange('contains'));
+
+  // Node sizing group
   const nodeGroup = makeGroup('Nodes', appearBody);
   makeSlider(nodeGroup, 'Contributor Size', 0.1, 5, 0.1, 1, v => { contributorScale = v; draw(); });
   makeSlider(nodeGroup, 'File Size', 0.1, 5, 0.1, 1, v => { fileScale = v; draw(); });
+  makeSlider(nodeGroup, 'Crate Size', 0.1, 5, 0.1, 1, v => { crateScale = v; draw(); });
   makeCheckbox(nodeGroup, 'Fixed size (ignore zoom)', false, v => { fixedSize = v; draw(); });
 
   const edgeGroup = makeGroup('Edges', appearBody);
@@ -410,7 +625,6 @@
   // --- Force controls panel ---
   const ctrlBody = document.getElementById('ctrl-body');
 
-  // Simulation group
   const simGroup = makeGroup('Simulation', ctrlBody);
   makeSlider(simGroup, 'Alpha', 0, 1, 0.01, 0.01, v => simulation.alpha(v));
   makeSlider(simGroup, 'Alpha Decay', 0, 0.1, 0.001, 0.01, v => simulation.alphaDecay(v));
@@ -418,26 +632,21 @@
   makeSlider(simGroup, 'Alpha Target', 0, 1, 0.01, 0, v => simulation.alphaTarget(v));
   makeSlider(simGroup, 'Velocity Decay', 0, 1, 0.01, 0.3, v => simulation.velocityDecay(v));
 
-  // Link force group
   const linkGroup = makeGroup('Link Force', ctrlBody);
   makeSlider(linkGroup, 'Distance', 1, 300, 1, 30, v => { linkForce.distance(v); });
   makeSlider(linkGroup, 'Strength', 0, 2, 0.01, 0.1, v => { linkForce.strength(v); });
   makeSlider(linkGroup, 'Iterations', 1, 10, 1, 1, v => { linkForce.iterations(v); });
 
-  // Charge force group
   const chargeGroup = makeGroup('Charge (Many-Body)', ctrlBody);
   makeSlider(chargeGroup, 'Strength', -100, 10, 0.5, -8, v => { chargeForce.strength(v); });
   makeSlider(chargeGroup, 'Distance Min', 0, 50, 0.5, 1, v => { chargeForce.distanceMin(v); });
   makeSlider(chargeGroup, 'Distance Max', 50, 2000, 10, 200, v => { chargeForce.distanceMax(v); });
   makeSlider(chargeGroup, 'Theta', 0, 2, 0.01, 0.9, v => { chargeForce.theta(v); });
 
-  // Center force group
   const centerGroup = makeGroup('Center Force', ctrlBody);
   makeSlider(centerGroup, 'Strength', 0, 2, 0.01, 1, v => { centerForce.strength(v); });
 
-  // Collision force group
   const collGroup = makeGroup('Collision', ctrlBody);
-  let collisionPadding = 0.5;
   makeSlider(collGroup, 'Strength', 0, 2, 0.01, 0.3, v => { collisionForce.strength(v); });
   makeSlider(collGroup, 'Padding', 0, 10, 0.5, 0.5, v => {
     collisionPadding = v;
@@ -445,7 +654,6 @@
   });
   makeSlider(collGroup, 'Iterations', 1, 10, 1, 1, v => { collisionForce.iterations(v); });
 
-  // Reheat / Stop buttons
   const btnRow = document.createElement('div');
   btnRow.style.marginTop = '8px';
   const reheatBtn = document.createElement('button');
@@ -474,6 +682,9 @@
   let hoveredNode = null;
   let draggedNode = null;
 
+  // --- Initial graph build ---
+  rebuildGraph();
+
   // Draw
   function draw() {
     ctx.save();
@@ -482,7 +693,7 @@
     ctx.scale(transform.k, transform.k);
 
     const highlightSet = new Set();
-    if (hoveredNode) {
+    if (hoveredNode && nodeDrawn(hoveredNode)) {
       highlightSet.add(hoveredNode.id);
       const neighbors = adjacency.get(hoveredNode.id);
       if (neighbors) neighbors.forEach(n => highlightSet.add(n));
@@ -493,13 +704,17 @@
 
     // Edges
     for (const link of links) {
+      if (!linkDrawn(link)) continue;
+
       const s = link.source;
       const t = link.target;
+      const rgb = EDGE_RGB[link.type] || EDGE_RGB.authored;
+
       if (hoveredNode && (highlightSet.has(s.id) && highlightSet.has(t.id))) {
-        ctx.strokeStyle = `rgba(255, 255, 255, ${highlightEdgeOpacity})`;
+        ctx.strokeStyle = `rgba(${rgb}, ${highlightEdgeOpacity})`;
         ctx.lineWidth = highlightEdgeWidth * zk;
       } else {
-        ctx.strokeStyle = `rgba(255, 255, 255, ${edgeOpacity})`;
+        ctx.strokeStyle = `rgba(${rgb}, ${edgeOpacity})`;
         ctx.lineWidth = edgeWidth * zk;
       }
       ctx.beginPath();
@@ -511,9 +726,11 @@
     // Nodes
     const dimAlpha = hoveredNode ? 0.15 : 1;
     for (const node of nodes) {
+      if (!nodeDrawn(node)) continue;
+
       const highlighted = highlightSet.has(node.id);
       const alpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 1;
-      const scale = node.type === 'contributor' ? contributorScale : fileScale;
+      const scale = getNodeScale(node);
       const r = node.radius * scale * zk;
 
       ctx.globalAlpha = alpha;
@@ -522,6 +739,8 @@
 
       if (node.type === 'contributor') {
         ctx.fillStyle = CONTRIBUTOR_COLOR;
+      } else if (node.type === 'crate') {
+        ctx.fillStyle = CRATE_COLOR;
       } else if (node.deleted) {
         ctx.fillStyle = DELETED_FILE_COLOR;
       } else {
@@ -532,8 +751,8 @@
     ctx.globalAlpha = 1;
 
     // Label for hovered node
-    if (hoveredNode) {
-      const hScale = hoveredNode.type === 'contributor' ? contributorScale : fileScale;
+    if (hoveredNode && nodeDrawn(hoveredNode)) {
+      const hScale = getNodeScale(hoveredNode);
       const hR = hoveredNode.radius * hScale * zk;
       const fontSize = Math.max(10, 12 * zk);
       ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
@@ -548,7 +767,6 @@
 
   // Hit detection
   function nodeAt(mx, my) {
-    // Convert mouse coords to simulation space
     const sx = (mx - transform.x) / transform.k;
     const sy = (my - transform.y) / transform.k;
     const zk = fixedSize ? (1 / transform.k) : 1;
@@ -556,7 +774,8 @@
     let closestDist = Infinity;
     for (let i = nodes.length - 1; i >= 0; i--) {
       const n = nodes[i];
-      const scale = n.type === 'contributor' ? contributorScale : fileScale;
+      if (!nodeDrawn(n)) continue;
+      const scale = getNodeScale(n);
       const dx = sx - n.x;
       const dy = sy - n.y;
       const dist = dx * dx + dy * dy;
@@ -581,6 +800,12 @@
         let html = `<div class="value">${node.name}</div>`;
         if (node.type === 'contributor') {
           html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
+        } else if (node.type === 'crate') {
+          const targets = [];
+          if (node.hasLib) targets.push('lib');
+          if (node.hasBin) targets.push('bin');
+          html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
+          html += `<div class="label">${node.rootDir}</div>`;
         } else {
           const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
           html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
