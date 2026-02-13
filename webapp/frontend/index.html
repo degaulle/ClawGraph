@@ -250,7 +250,7 @@
   // Load data
   let raw;
   try {
-    const resp = await fetch('../knowledge_graph.json');
+    const resp = await fetch('/knowledge_graph.json');
     raw = await resp.json();
   } catch (e) {
     loadingEl.textContent = 'Failed to load knowledge_graph.json: ' + e.message;
