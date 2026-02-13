@@ -12,12 +12,20 @@ Usage:
 """
 
 import http.server
-import json
+import logging
 import os
+import socketserver
 import threading
 import time
 import argparse
 from pathlib import Path
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+)
+log = logging.getLogger("devserver")
 
 ROOT = Path(__file__).resolve().parent.parent.parent  # knowledge-graph/
 FRONTEND = ROOT / "webapp" / "frontend"
@@ -59,6 +67,8 @@ def _notify_clients():
                 dead.append(wfile)
         for d in dead:
             _clients.remove(d)
+        if _clients:
+            log.info("Reload pushed to %d client(s)", len(_clients))
 
 
 # ── Reload script injected into HTML ─────────────────────────────────
@@ -159,9 +169,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
         }.get(ext, "application/octet-stream")
 
     def log_message(self, format, *args):
-        # Quieter logging — skip SSE keep-alive noise
-        if "/events" not in (args[0] if args else ""):
-            super().log_message(format, *args)
+        # Route HTTP request logging through the logging module
+        # Skip SSE /events since those are long-lived connections
+        msg = format % args if args else format
+        if "/events" not in msg:
+            log.info("%s %s", self.client_address[0], msg)
+
+    def log_error(self, format, *args):
+        msg = format % args if args else format
+        log.error("%s %s", self.client_address[0], msg)
+
+
+class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
 
 
 # ── Main ──────────────────────────────────────────────────────────────
@@ -175,14 +195,14 @@ def main():
     t = threading.Thread(target=_watcher, daemon=True)
     t.start()
 
-    server = http.server.HTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"Dev server running at http://localhost:{args.port}")
-    print(f"Serving frontend from {FRONTEND}")
-    print(f"Live reload active (polling every {POLL_INTERVAL}s)")
+    server = ThreadedServer(("127.0.0.1", args.port), Handler)
+    log.info("Dev server running at http://localhost:%d", args.port)
+    log.info("Serving frontend from %s", FRONTEND)
+    log.info("Live reload active (polling every %ss)", POLL_INTERVAL)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down.")
+        log.info("Shutting down.")
         server.server_close()
 
 
