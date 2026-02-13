@@ -146,6 +146,32 @@ def test_commit_lookup():
     assert result["commits"]["aaa"]["author"].startswith("contributor_")
 
 
+def test_existing_edges_have_authored_type():
+    commits = [
+        {
+            "hash": "aaa",
+            "author": "Alice",
+            "email": "alice@example.com",
+            "timestamp": 1700000000,
+            "message": "Add file",
+            "changes": [{"status": "A", "path": "foo.rs"}],
+        },
+        {
+            "hash": "bbb",
+            "author": "Bob",
+            "email": "bob@example.com",
+            "timestamp": 1700000001,
+            "message": "Modify file",
+            "changes": [{"status": "M", "path": "foo.rs"}],
+        },
+    ]
+    with tempfile.TemporaryDirectory() as tmpdir:
+        result = build_graph(commits, tmpdir)
+    for edge in result["edges"]:
+        assert "type" in edge
+        assert edge["type"] == "authored"
+
+
 def test_file_timestamps():
     commits = [
         {

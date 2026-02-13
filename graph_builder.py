@@ -82,7 +82,7 @@ def build_graph(parsed_commits: list[dict], repo_path: str) -> dict:
 
     # Collapse edge dict into edge list
     edges = [
-        {"source": src, "target": tgt, "commits": hashes}
+        {"source": src, "target": tgt, "type": "authored", "commits": hashes}
         for (src, tgt), hashes in edge_map.items()
     ]
 
