@@ -1,4 +1,5 @@
 __pycache__/
 .pytest_cache/
+.venv/
 knowledge_graph.json
-output/
+summary-graph/output/*/
