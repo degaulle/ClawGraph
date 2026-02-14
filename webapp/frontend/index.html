@@ -653,7 +653,8 @@
   // --- Visibility state: 'visible' | 'hidden' | 'off' ---
   const vis = {
     contributors: 'visible',
-    files: 'visible',
+    activeSource: 'visible',
+    otherFiles: 'off',
     crates: 'visible',
     authored: 'visible',
     dependsOn: 'visible',
@@ -661,10 +662,26 @@
     contributedTo: 'visible',
   };
 
+  // Source code file extensions
+  const SOURCE_CODE_EXTS = new Set([
+    'rs', 'py', 'js', 'ts', 'jsx', 'tsx', 'mjs', 'cjs',
+    'go', 'c', 'cpp', 'cc', 'cxx', 'h', 'hpp', 'hxx',
+    'java', 'kt', 'kts', 'scala', 'cs', 'fs', 'rb', 'php',
+    'swift', 'm', 'mm', 'r', 'lua', 'pl', 'pm', 'sh', 'bash',
+    'zsh', 'ps1', 'bat', 'hs', 'ml', 'mli', 'ex', 'exs',
+    'erl', 'clj', 'cljs', 'dart', 'asm', 's', 'sql',
+    'html', 'css', 'scss', 'less', 'vue', 'svelte',
+  ]);
+
+  function isActiveSourceCode(node) {
+    return node.type === 'file' && !node.deleted && SOURCE_CODE_EXTS.has(node.fileType);
+  }
+
   function nodeTypeState(node) {
     if (node.type === 'contributor') return vis.contributors;
     if (node.type === 'crate') return vis.crates;
-    return vis.files;
+    if (node.type === 'file') return isActiveSourceCode(node) ? vis.activeSource : vis.otherFiles;
+    return vis.otherFiles;
   }
 
   function linkTypeState(link) {
@@ -1032,9 +1049,10 @@
     };
   }
 
-  makeTriSwitch(visGroup, 'Contributors',     'visible', onVisChange('contributors'));
-  makeTriSwitch(visGroup, 'Files',            'visible', onVisChange('files'));
-  makeTriSwitch(visGroup, 'Crates',           'visible', onVisChange('crates'));
+  makeTriSwitch(visGroup, 'Contributors',        'visible', onVisChange('contributors'));
+  makeTriSwitch(visGroup, 'Active Source Code',  'visible', onVisChange('activeSource'));
+  makeTriSwitch(visGroup, 'All Other Files',     'off',     onVisChange('otherFiles'));
+  makeTriSwitch(visGroup, 'Crates',              'visible', onVisChange('crates'));
   makeTriSwitch(visGroup, 'Authored edges',       'visible', onVisChange('authored'));
   makeTriSwitch(visGroup, 'Dependency edges',    'visible', onVisChange('dependsOn'));
   makeTriSwitch(visGroup, 'Contains edges',      'visible', onVisChange('contains'));
