@@ -11,7 +11,7 @@ from graph_builder import build_graph
 
 # Allow importing from rust-graph/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rust-graph"))
-from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates
+from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at
 
 
 def _find_cargo_workspaces(repo_path: str) -> list[str]:
@@ -99,6 +99,7 @@ def main():
                 id_remap[old_id] = new_id
                 cnode["id"] = new_id
 
+        enrich_crate_created_at(crate_nodes, graph["nodes"]["files"])
         dep_edges = build_crate_dependency_edges(ws_path, crate_nodes)
         contains_edges = map_files_to_crates(graph["nodes"]["files"], crate_nodes)
 

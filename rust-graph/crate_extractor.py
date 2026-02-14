@@ -68,6 +68,7 @@ def _parse_metadata(metadata: dict) -> list[dict]:
             "edition": pkg.get("edition", "2021"),
             "has_lib": has_lib,
             "has_bin": has_bin,
+            "created_at": None,
         })
 
     return crate_nodes
@@ -132,6 +133,22 @@ def build_crate_dependency_edges(
     """
     metadata = _run_cargo_metadata(workspace_path)
     return _build_dependency_edges_from_metadata(metadata, crate_nodes)
+
+
+def enrich_crate_created_at(
+    crate_nodes: list[dict], file_nodes: list[dict]
+) -> None:
+    """Set each crate's created_at from the created_at of its Cargo.toml file node.
+
+    Mutates crate_nodes in place.
+    """
+    # Build a lookup: file name -> file node
+    name_to_file = {f["name"]: f for f in file_nodes}
+
+    for crate in crate_nodes:
+        manifest_file = name_to_file.get(crate["manifest_path"])
+        if manifest_file is not None:
+            crate["created_at"] = manifest_file.get("created_at")
 
 
 def map_files_to_crates(

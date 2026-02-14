@@ -4,6 +4,7 @@ from crate_extractor import (
     _parse_metadata,
     _build_dependency_edges_from_metadata,
     map_files_to_crates,
+    enrich_crate_created_at,
 )
 
 
@@ -79,6 +80,7 @@ def test_parse_cargo_metadata_output():
     assert alpha["edition"] == "2021"
     assert alpha["has_lib"] is True
     assert alpha["has_bin"] is False
+    assert alpha["created_at"] is None
 
     beta = crates[1]
     assert beta["id"] == "crate_2"
@@ -230,3 +232,31 @@ def test_edge_type_field_present():
     for edge in all_edges:
         assert "type" in edge
         assert edge["type"] in ("depends_on", "contains")
+
+
+# --- Test 8: Enrich crate created_at from file nodes ---
+
+def test_enrich_crate_created_at():
+    crate_nodes = [
+        {"id": "crate_1", "name": "alpha", "root_dir": "alpha/",
+         "manifest_path": "alpha/Cargo.toml", "created_at": None},
+        {"id": "crate_2", "name": "beta", "root_dir": "beta/",
+         "manifest_path": "beta/Cargo.toml", "created_at": None},
+        {"id": "crate_3", "name": "gamma", "root_dir": "gamma/",
+         "manifest_path": "gamma/Cargo.toml", "created_at": None},
+    ]
+    file_nodes = [
+        {"id": "file_1", "name": "alpha/Cargo.toml",
+         "created_at": "2025-05-01T10:00:00+00:00"},
+        {"id": "file_2", "name": "beta/Cargo.toml",
+         "created_at": "2025-06-15T12:30:00+00:00"},
+        # gamma/Cargo.toml is missing from file nodes (e.g. deleted and re-added)
+        {"id": "file_3", "name": "alpha/src/lib.rs",
+         "created_at": "2025-05-02T09:00:00+00:00"},
+    ]
+
+    enrich_crate_created_at(crate_nodes, file_nodes)
+
+    assert crate_nodes[0]["created_at"] == "2025-05-01T10:00:00+00:00"
+    assert crate_nodes[1]["created_at"] == "2025-06-15T12:30:00+00:00"
+    assert crate_nodes[2]["created_at"] is None  # no matching file node

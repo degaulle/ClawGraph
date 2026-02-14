@@ -16,7 +16,7 @@ The graph captures relationships between **contributors**, **files**, and
   "nodes": {
     "files":        [{ "id", "name", "previous_names", "file_type", "latest_line_count", "created_at", "last_modified_at", "deleted" }],
     "contributors": [{ "id", "name", "emails", "first_commit_at", "total_commits" }],
-    "crates":       [{ "id", "name", "root_dir", "manifest_path", "edition", "has_lib", "has_bin" }]
+    "crates":       [{ "id", "name", "root_dir", "manifest_path", "edition", "has_lib", "has_bin", "created_at" }]
   },
   "edges": [
     { "source (contributor)", "target (file)",  "type": "authored",   "commits" },
@@ -99,6 +99,8 @@ Extracts crate-level structure from Cargo workspaces using
 
 - `extract_crates`: parses workspace packages into crate nodes (sorted by name
   for deterministic IDs)
+- `enrich_crate_created_at`: sets each crate's `created_at` from the
+  `created_at` of its `Cargo.toml` file node
 - `build_crate_dependency_edges`: filters dependencies to workspace-internal
   crates, produces `depends_on` edges
 - `map_files_to_crates`: assigns each file to the crate whose `root_dir` is the
@@ -114,7 +116,7 @@ subdirectories), runs crate extraction for each, prefixes paths so crate
 
 ### Step 7 — Tests
 
-- **Unit tests** (30): git log parsing, rename tracking, graph building, file
+- **Unit tests** (31): git log parsing, rename tracking, graph building, file
   metadata, crate extraction (fixture-based, no cargo needed)
 - **Integration tests** (2): temp git repo with 5 scripted commits; temp Cargo
   workspace with 2 crates validating the full pipeline including crate nodes,
@@ -142,10 +144,10 @@ workspace — `--no-deps` skips external dependencies.
 ## Test results
 
 ```
-37 passed in 0.28s
+38 passed in 0.28s
 ```
 
-All 37 unit + integration tests green.
+All 38 unit + integration tests green.
 
 ---
 

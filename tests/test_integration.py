@@ -8,7 +8,7 @@ from git_log_parser import parse_git_log
 from graph_builder import build_graph
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "rust-graph"))
-from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates
+from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at
 
 
 def run_git(repo_path, *args, env=None):
@@ -262,6 +262,7 @@ def test_crate_integration():
 
         # Run crate extraction
         crate_nodes = extract_crates(repo_path)
+        enrich_crate_created_at(crate_nodes, graph["nodes"]["files"])
         dep_edges = build_crate_dependency_edges(repo_path, crate_nodes)
         contains_edges = map_files_to_crates(graph["nodes"]["files"], crate_nodes)
 
@@ -275,6 +276,10 @@ def test_crate_integration():
         assert len(graph["nodes"]["crates"]) == 2
         crate_names = {c["name"] for c in graph["nodes"]["crates"]}
         assert crate_names == {"alpha", "beta"}
+
+        # Crate created_at should be set from Cargo.toml file nodes
+        for crate in graph["nodes"]["crates"]:
+            assert crate["created_at"] is not None
 
         # 1 depends_on edge (alpha -> beta)
         dep_edges_in_graph = [e for e in graph["edges"] if e.get("type") == "depends_on"]

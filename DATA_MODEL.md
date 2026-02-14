@@ -70,7 +70,8 @@ Output file: `output/knowledge_graph.json`
   "manifest_path": "codex-rs/ansi-escape/Cargo.toml",
   "edition": "2024",
   "has_lib": true,
-  "has_bin": false
+  "has_bin": false,
+  "created_at": "2025-05-01T10:00:00+00:00"
 }
 ```
 
@@ -83,6 +84,7 @@ Output file: `output/knowledge_graph.json`
 | `edition` | `string` | Rust edition (e.g. `"2021"`, `"2024"`) |
 | `has_lib` | `bool` | Has a `lib` or `proc-macro` target |
 | `has_bin` | `bool` | Has a `bin` target |
+| `created_at` | `ISO 8601 \| null` | Timestamp of first commit adding the crate's `Cargo.toml`; `null` if not in git history |
 
 ## Edge types
 
