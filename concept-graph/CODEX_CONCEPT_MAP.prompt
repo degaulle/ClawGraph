@@ -1,0 +1,19 @@
+Context
+You are inside the OpenAI Codex repo. Produce a product/feature concept map that becomes the shared coordination vocabulary for Engineering, Product, and UX.
+
+Definition of “concept”
+A concept is something a PM/UX/Eng would discuss as a capability, workflow, user goal, constraint, surface area, integration, or lifecycle stage (not a class, package, or internal refactor). For this particular assignment, bias towards product and UX thinking.
+
+Method
+- Skim top-level docs and READMEs first.
+- Then scan directories for user-facing features, workflows, and integrations.
+- Use your product and UX thinking to identify concepts that are not obvious from the codebase. Explore further as needed.
+
+Deliverable
+- <10 Major Concepts, <100 Minor Concepts total.
+- Each Minor Concept has exactly one parent Major Concept.
+- For each Major/Minor:
+  - Definition (1–2 sentences)
+  - Evidence links: some files or folders are fine. Do not need to be too precise or specific. Keep this part simple and concise.
+
+Output: YAML tree

@@ -1,0 +1,565 @@
+# ============================================================================
+# OpenAI Codex CLI — Product / Feature Concept Map (Definitions Only)
+# ============================================================================
+# Purpose: Shared coordination vocabulary for Engineering, Product, and UX.
+# Structure: <10 Major Concepts, each with Minor Concepts (≤100 total).
+# Every concept has a 1–2 sentence definition.
+# ============================================================================
+
+concepts:
+
+  # ==========================================================================
+  # 1. CONVERSATION
+  # ==========================================================================
+  - major: Conversation
+    definition: >
+      The primary interaction paradigm: a streaming, turn-based chat between
+      the user and the AI coding agent, conducted in natural language with
+      rich input modalities and inline controls.
+    minor:
+
+      - concept: User Prompt
+        definition: >
+          A natural-language message the user types into the composer to
+          instruct the agent. The fundamental input unit of every turn.
+
+      - concept: Agent Response Stream
+        definition: >
+          The agent's reply, delivered as a real-time token stream with
+          markdown rendering, code blocks, and inline diffs.
+
+      - concept: Slash Command
+        definition: >
+          In-chat commands prefixed with "/" that trigger UI actions or mode
+          switches (e.g. /model, /review, /diff, /skills).
+
+      - concept: Multimodal Input
+        definition: >
+          The ability to paste screenshots or images from the clipboard into
+          the conversation so the agent can reason over visual content.
+
+      - concept: File Mention
+        definition: >
+          A "$path/to/file" reference typed in the composer that attaches
+          file context, activates a skill, or selects an app connector.
+
+      - concept: Inline Approval Prompt
+        definition: >
+          A blocking UI element that appears mid-conversation when the agent
+          requests permission to execute a command or edit a file.
+
+      - concept: Collaboration Mode
+        definition: >
+          A switchable interaction preset (Default, Plan) that adjusts the
+          agent's system prompt, reasoning effort, and available tools.
+
+      - concept: Personality Style
+        definition: >
+          An optional tone overlay (friendly or pragmatic) that shapes the
+          agent's communication style without changing its capabilities.
+
+      - concept: Inline Diff Display
+        definition: >
+          Visual rendering of file changes proposed or applied by the agent,
+          shown directly in the conversation flow.
+
+      - concept: External Editor
+        definition: >
+          Opening the user's $EDITOR (via Ctrl+G) to compose long or complex
+          prompts outside the TUI, then submitting the result back to Codex.
+
+      - concept: Prompt History
+        definition: >
+          Per-session recall of previously submitted prompts, letting users
+          cycle through past inputs with arrow keys for quick re-use.
+
+      - concept: Background Notification
+        definition: >
+          Non-blocking status messages (e.g. "context compacted", "sandbox
+          fallback used") surfaced to the user without interrupting flow.
+
+  # ==========================================================================
+  # 2. AUTONOMY & APPROVAL
+  # ==========================================================================
+  - major: Autonomy & Approval
+    definition: >
+      The trust model that governs how much the agent can do on its own
+      versus what requires explicit human confirmation, from fully supervised
+      to fully autonomous.
+    minor:
+
+      - concept: Suggest Mode
+        definition: >
+          The most conservative approval policy: every file write and every
+          shell command requires explicit user confirmation before execution.
+
+      - concept: Auto-Edit Mode
+        definition: >
+          A middle-ground policy where the agent can apply file patches
+          autonomously, but shell commands still require user approval.
+
+      - concept: Full-Auto Mode
+        definition: >
+          Maximum autonomy: the agent executes commands and edits files
+          without prompting, but network access is disabled and execution
+          is sandboxed.
+
+      - concept: Per-File Approval Cache
+        definition: >
+          A session-scoped memory that records which file paths the user has
+          already approved, so subsequent edits to the same file skip the
+          approval prompt.
+
+      - concept: Per-Command Approval Cache
+        definition: >
+          A session-scoped memory that remembers previously approved shell
+          command prefixes, reducing friction for repeated operations.
+
+      - concept: Execution Policy
+        definition: >
+          A rule file (.codexpolicy) that uses prefix-matching to classify
+          shell commands as allow, prompt, or forbidden, enabling team-wide
+          guardrails.
+
+      - concept: Policy Amendment
+        definition: >
+          A workflow where, after a sandbox failure and user override, Codex
+          proposes adding a new prefix rule to the execution policy so future
+          runs proceed without prompting.
+
+      - concept: Approval Request Flow
+        definition: >
+          The end-to-end UX cycle: agent proposes an action, UI shows the
+          command/diff, user approves or rejects, agent proceeds or adapts.
+
+  # ==========================================================================
+  # 3. AGENT ACTIONS
+  # ==========================================================================
+  - major: Agent Actions
+    definition: >
+      The discrete tools the agent can invoke to observe, modify, and
+      interact with the user's codebase and environment—the "hands" of the
+      coding agent.
+    minor:
+
+      - concept: Shell Execution
+        definition: >
+          Running arbitrary shell commands inside the sandbox to build, test,
+          lint, or perform any CLI operation the user would do manually.
+
+      - concept: File Patch
+        definition: >
+          Applying a unified diff to one or more files, the primary mechanism
+          by which the agent writes and modifies code.
+
+      - concept: File Read
+        definition: >
+          Reading the contents of a file so the agent can understand existing
+          code before proposing changes.
+
+      - concept: Directory Listing
+        definition: >
+          Enumerating files and folders to navigate the project structure and
+          discover relevant source files.
+
+      - concept: Codebase Search
+        definition: >
+          BM25-ranked full-text search across the repository to locate
+          relevant code, definitions, or usage sites.
+
+      - concept: Image Analysis
+        definition: >
+          Inspecting a local image file (screenshot, diagram) and injecting
+          it into the conversation for visual reasoning.
+
+      - concept: JavaScript REPL
+        definition: >
+          Evaluating JavaScript expressions inline, useful for quick
+          calculations or data transformations during a task.
+
+      - concept: User Input Request
+        definition: >
+          The agent pausing to ask the user a clarifying question mid-task,
+          enabling interactive disambiguation without starting over.
+
+      - concept: Planning Tool
+        definition: >
+          A structured multi-step planning capability where the agent
+          outlines a proposed plan before executing, used in Plan mode.
+
+      - concept: Web Search
+        definition: >
+          Searching the web during a task to retrieve up-to-date documentation,
+          error explanations, or API references the model doesn't have.
+
+      - concept: MCP Tool Call
+        definition: >
+          Dynamic invocation of tools provided by external MCP servers,
+          extending the agent's capabilities at runtime.
+
+  # ==========================================================================
+  # 4. MODEL & REASONING
+  # ==========================================================================
+  - major: Model & Reasoning
+    definition: >
+      The intelligence layer: which AI model powers the agent, how hard it
+      thinks, what modalities it supports, and how it is configured per
+      session or per task.
+    minor:
+
+      - concept: Model Catalog
+        definition: >
+          The curated set of available models (e.g. gpt-5.2-codex,
+          gpt-5.1-codex-mini) with metadata about capabilities, context
+          windows, and supported modalities.
+
+      - concept: Reasoning Effort
+        definition: >
+          A per-model dial (Low / Medium / High / XHigh) that trades speed
+          and cost against depth of reasoning on complex problems.
+
+      - concept: Model Switching
+        definition: >
+          The ability to change the backing model mid-session via the /model
+          slash command, adapting intelligence to the task at hand.
+
+      - concept: Custom Provider
+        definition: >
+          Configuration support for non-OpenAI API endpoints (Azure,
+          Ollama, Groq, etc.), enabling air-gapped or self-hosted
+          deployments.
+
+      - concept: Context Window
+        definition: >
+          The token budget available for conversation history, system
+          prompts, and tool outputs—determines how much context the model
+          can "see" at once.
+
+      - concept: Tool Output Truncation
+        definition: >
+          Automatic truncation of overly large tool outputs (file contents,
+          command stdout) to stay within model token limits while preserving
+          salient information.
+
+      - concept: Input Modalities
+        definition: >
+          The set of content types a model accepts (text, image); determines
+          whether features like image paste and view_image are available.
+
+      - concept: Model Upgrade Path
+        definition: >
+          A migration hint from deprecated models to their successors,
+          surfaced to users to guide them toward newer, more capable models.
+
+  # ==========================================================================
+  # 5. PROJECT CONTEXT
+  # ==========================================================================
+  - major: Project Context
+    definition: >
+      How the agent builds awareness of the specific codebase, conventions,
+      and environment it is operating in—the bridge between generic AI and
+      project-specific intelligence.
+    minor:
+
+      - concept: Global AGENTS.md
+        definition: >
+          A personal guidance file (~/.codex/AGENTS.md) that injects
+          user-wide preferences and conventions into every Codex session.
+
+      - concept: Project AGENTS.md
+        definition: >
+          A repository-root AGENTS.md that encodes team coding standards,
+          build instructions, and project structure for all contributors.
+
+      - concept: Folder AGENTS.md
+        definition: >
+          A nested AGENTS.md scoped to a subdirectory, providing
+          module-specific instructions that override broader guidance.
+
+      - concept: Instruction Precedence
+        definition: >
+          The merge order for layered guidance: direct user prompts override
+          AGENTS.md, deeper-nested files override shallower ones.
+
+      - concept: Working Directory Awareness
+        definition: >
+          The agent's understanding of its CWD, which scopes file operations,
+          sandbox boundaries, and AGENTS.md resolution.
+
+      - concept: Git Awareness
+        definition: >
+          Integration with git to understand branches, diffs, and uncommitted
+          changes—enabling safe, version-controlled workflows.
+
+      - concept: Base Instructions
+        definition: >
+          The system prompt injected at the start of every session that
+          defines the agent's identity, safety constraints, and default
+          behaviors.
+
+      - concept: Developer Instructions
+        definition: >
+          The assembled set of per-session instructions composed from config,
+          AGENTS.md files, and collaboration mode—the agent's full "briefing".
+
+  # ==========================================================================
+  # 6. EXTENSIBILITY
+  # ==========================================================================
+  - major: Extensibility
+    definition: >
+      The mechanisms by which users, teams, and third parties extend the
+      agent's domain knowledge, tool repertoire, and integration surface
+      beyond its built-in capabilities.
+    minor:
+
+      - concept: Skills System
+        definition: >
+          A pluggable knowledge-extension framework where each skill is a
+          directory with structured metadata, instructions, scripts, and
+          reference materials.
+
+      - concept: Skill Metadata
+        definition: >
+          The SKILL.md frontmatter and openai.yaml manifest that define a
+          skill's name, description, trigger conditions, and UI presentation.
+
+      - concept: Skill Scripts
+        definition: >
+          Executable Python/Bash files bundled with a skill for deterministic
+          operations (e.g. linting, code generation) the model orchestrates.
+
+      - concept: Skill References
+        definition: >
+          On-demand documentation files loaded only when the skill is
+          activated, keeping base context lean via progressive disclosure.
+
+      - concept: Progressive Skill Loading
+        definition: >
+          A three-tier loading strategy (metadata always → body on trigger →
+          resources on demand) that minimizes context consumption.
+
+      - concept: MCP Client
+        definition: >
+          Codex acting as a Model Context Protocol client, connecting to
+          external MCP servers to gain access to dynamic tools at runtime.
+
+      - concept: MCP Server
+        definition: >
+          Codex exposing itself as an MCP server, allowing other agents or
+          orchestration layers to invoke Codex as a tool.
+
+      - concept: App Connectors
+        definition: >
+          Third-party service integrations (e.g. ChatGPT connectors) that
+          appear in the composer and provide domain-specific context or
+          actions.
+
+      - concept: Custom AI Provider
+        definition: >
+          Configuration to route model requests to alternative API endpoints
+          (Azure, Ollama, Groq, etc.), decoupling the product from a single
+          model vendor.
+
+  # ==========================================================================
+  # 7. SURFACES
+  # ==========================================================================
+  - major: Surfaces
+    definition: >
+      The distinct interfaces through which users and other systems interact
+      with the Codex agent—each optimized for a different workflow and
+      environment.
+    minor:
+
+      - concept: Interactive TUI
+        definition: >
+          The default full-screen terminal UI built with Ratatui, providing
+          a rich chat experience with streaming, diffs, and keyboard
+          navigation.
+
+      - concept: Headless Exec Mode
+        definition: >
+          A non-interactive CLI mode ("codex exec PROMPT") that runs a
+          single task to completion and exits, designed for CI pipelines
+          and scripted automation.
+
+      - concept: App Server Protocol
+        definition: >
+          A JSON-RPC 2.0 server that exposes Codex capabilities over a
+          structured API, enabling IDE extensions and programmatic control.
+
+      - concept: IDE Extension
+        definition: >
+          Editor integrations (VS Code, Cursor, Windsurf) that embed the
+          Codex agent directly into the development environment via the
+          app server protocol.
+
+      - concept: Onboarding Flow
+        definition: >
+          The first-run experience that guides new users through
+          authentication, directory trust, and initial configuration.
+
+      - concept: Feedback Dialog
+        definition: >
+          An in-product feedback form for reporting bugs, praising features,
+          or submitting suggestions—optionally attaching session logs.
+
+      - concept: Cloud Tasks
+        definition: >
+          Remote execution of Codex tasks in the cloud ("codex cloud"),
+          supporting best-of-N attempts, environment selection, and
+          asynchronous result retrieval with diff application.
+
+      - concept: Structured Output
+        definition: >
+          JSONL-formatted output from headless exec mode, enabling
+          programmatic consumption of agent results in CI/CD pipelines
+          and automation scripts.
+
+  # ==========================================================================
+  # 8. SESSION LIFECYCLE
+  # ==========================================================================
+  - major: Session Lifecycle
+    definition: >
+      The end-to-end lifecycle of a conversation thread—from creation through
+      persistence, resumption, branching, compaction, and specialized modes
+      like code review.
+    minor:
+
+      - concept: Thread Creation
+        definition: >
+          Spawning a new conversation thread with a configured model,
+          approval policy, sandbox, and working directory.
+
+      - concept: Thread Resume
+        definition: >
+          Restoring a previous conversation from its persisted rollout,
+          allowing the user to continue where they left off.
+
+      - concept: Thread Fork
+        definition: >
+          Branching a new thread from a specific point in an existing
+          conversation, enabling exploration of alternative approaches.
+
+      - concept: Context Compaction
+        definition: >
+          Automatic summarization of older conversation history when the
+          context window fills up, preserving essential information while
+          freeing token budget.
+
+      - concept: Turn Management
+        definition: >
+          The orchestration of a single agent turn: receiving input,
+          streaming model output, executing tools, handling approvals, and
+          signaling completion.
+
+      - concept: Rollout Persistence
+        definition: >
+          JSONL-based recording of every turn and event in a session,
+          enabling resume, fork, replay, and post-hoc analysis.
+
+      - concept: Review Mode
+        definition: >
+          A specialized session mode that analyzes code changes (uncommitted,
+          branch diff, or specific commit) and produces structured findings
+          with file locations.
+
+      - concept: Review Finding
+        definition: >
+          A discrete issue surfaced by Review Mode, containing a title,
+          explanation, and precise code location (file:line range).
+
+      - concept: Rollback
+        definition: >
+          Undoing the agent's most recent actions (file edits, commands)
+          to restore the workspace to its prior state.
+
+      - concept: Session Interrupt
+        definition: >
+          Stopping the agent mid-turn (e.g. Escape key) to regain control,
+          cancel a runaway command, or redirect the conversation.
+
+      - concept: Telemetry & Metrics
+        definition: >
+          OpenTelemetry-based instrumentation that tracks approval rates,
+          tool usage, model latency, and sandbox events for product analytics
+          and debugging.
+
+  # ==========================================================================
+  # 9. SAFETY & CONTAINMENT
+  # ==========================================================================
+  - major: Safety & Containment
+    definition: >
+      The layered security architecture that protects the user's system,
+      data, and network from unintended or malicious agent behavior—
+      ensuring confidence even at high autonomy levels.
+    minor:
+
+      - concept: Read-Only Sandbox
+        definition: >
+          The most restrictive sandbox mode where the agent can observe the
+          filesystem but cannot modify any files.
+
+      - concept: Workspace-Write Sandbox
+        definition: >
+          A sandbox that allows writes only within the current project
+          directory, with .git and .codex directories protected as
+          read-only.
+
+      - concept: Full-Access Mode
+        definition: >
+          Disables sandboxing entirely for pre-containerized environments
+          (Docker, nix-shell) where an outer sandbox already provides
+          isolation.
+
+      - concept: macOS Seatbelt
+        definition: >
+          Platform-specific sandbox on macOS using Apple's Sandbox.framework
+          and .sbpl policy files for mandatory access control.
+
+      - concept: Linux Sandbox
+        definition: >
+          Platform-specific sandbox on Linux using Bubblewrap (user
+          namespaces) and Landlock (filesystem access control).
+
+      - concept: Windows Sandbox
+        definition: >
+          Platform-specific sandbox on Windows using restricted user tokens,
+          ACLs, and container-level firewall rules for process isolation.
+
+      - concept: Network Restriction
+        definition: >
+          Disabling or proxying network access in sandboxed execution to
+          prevent data exfiltration or unintended external calls.
+
+      - concept: External Sandbox
+        definition: >
+          Support for delegating containment to an outer sandbox (Docker,
+          VM) rather than Codex's built-in mechanisms.
+
+      - concept: Zero Data Retention
+        definition: >
+          An enterprise configuration ensuring that no conversation data is
+          retained by the model provider, satisfying compliance requirements.
+
+      - concept: Authentication & Identity
+        definition: >
+          The sign-in system supporting ChatGPT OAuth, API keys, and device
+          code flow—gating access and linking usage to user identity.
+
+      - concept: Directory Trust
+        definition: >
+          An onboarding gate that requires users to explicitly trust a
+          project directory before the agent can operate in it, preventing
+          accidental execution in untrusted repos.
+
+      - concept: Feature Flags
+        definition: >
+          A centralized toggle system with lifecycle stages (UnderDevelopment,
+          Experimental, Stable, Deprecated) that gates experimental features
+          and surfaces them in the /experimental menu.
+
+      - concept: Configuration File
+        definition: >
+          The ~/.codex/config.toml file where users persistently configure
+          model defaults, approval policies, MCP servers, sandbox modes,
+          and provider endpoints.

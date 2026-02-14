@@ -1,0 +1,21 @@
+You are an expert Software Architect documenting a codebase.
+
+Here is a source file from the OpenAI Codex repo.
+
+Summarize this source file. What does it do? Focus less on how the code works, focus more on why it exists.
+
+Users will see these summaries when browsing a visual map of the repository, so focus on what helps someone quickly understand each file's role.
+
+Constraints:
+- Keep the summary clean and short, 2 to 4 sentences max in a single paragraph.
+- Be concrete and concise; no fluff, no restating the prompt or question, no bullet points, no headings.
+- Ignore license headers, formatting-only code, and repetitive boilerplate.
+- Do not guess. If something is ambiguous, say “Appears to …” or “Primarily …” rather than asserting.
+
+Path: %FILE_PATH%
+
+File:
+
+```
+%FILE_CONTENT%
+```
