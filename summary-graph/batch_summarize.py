@@ -22,7 +22,7 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-from summarize import summarize_content, load_template, load_source, DEFAULT_MODEL
+from summarize import summarize_content, load_template, load_source, DEFAULT_MODEL, REQUIRED_TOKEN
 
 # Rate limit: 4K req/min → ~267 max threads at ~4s avg latency. Use half.
 DEFAULT_WORKERS = 64
@@ -55,12 +55,17 @@ def process_one(
     run_dir: Path,
     model: str,
     max_tokens: int,
+    extra_substitutions: dict[str, str] | None = None,
+    json_schema: dict | None = None,
 ) -> dict:
     """Summarize one file and write its JSON result. Returns a status dict."""
     rel_path = str(source_path.relative_to(root))
     try:
         source_content = load_source(str(source_path))
-        result = summarize_content(template, source_content, rel_path, model, max_tokens)
+        substitutions = {REQUIRED_TOKEN: source_content, "%FILE_PATH%": rel_path}
+        if extra_substitutions:
+            substitutions.update(extra_substitutions)
+        result = summarize_content(template, substitutions, model, max_tokens, json_schema)
         result["source_path"] = rel_path
 
         out_file = run_dir / result_filename(source_path, root)
@@ -126,6 +131,8 @@ def main():
     run_parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model to use (default: {DEFAULT_MODEL})")
     run_parser.add_argument("--max-tokens", type=int, default=4096, help="Max response tokens (default: 4096)")
     run_parser.add_argument("--no-collect", action="store_true", help="Skip auto-collecting results into a summary JSON")
+    run_parser.add_argument("--definitions", help="Path to file whose contents replace %%CONCEPT_DEFINITIONS%%")
+    run_parser.add_argument("--json-schema", help="Path to JSON schema file for structured output")
 
     # Collect: gather results into a single JSON
     collect_parser = subparsers.add_parser("collect", help="Collect a run folder into a single summary JSON")
@@ -157,6 +164,16 @@ def main():
         sys.exit(1)
 
     template = load_template(args.template)
+
+    extra_substitutions = {}
+    if args.definitions:
+        extra_substitutions["%CONCEPT_DEFINITIONS%"] = load_source(args.definitions)
+
+    schema = None
+    if args.json_schema:
+        with open(args.json_schema, "r") as f:
+            schema = json.load(f)
+
     run_dir = make_run_dir()
     log.info("Found %d files. Writing results to %s/", len(files), run_dir)
     log.info("Workers: %d, Model: %s", args.workers, args.model)
@@ -166,7 +183,11 @@ def main():
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
-            pool.submit(process_one, template, f, args.root, run_dir, args.model, args.max_tokens): f
+            pool.submit(
+                process_one, template, f, args.root, run_dir, args.model, args.max_tokens,
+                extra_substitutions=extra_substitutions or None,
+                json_schema=schema,
+            ): f
             for f in files
         }
         for future in as_completed(futures):

@@ -21,8 +21,7 @@ import anthropic
 
 log = logging.getLogger(__name__)
 
-TOKEN_CONTENT = "%FILE_CONTENT%"
-TOKEN_PATH = "%FILE_PATH%"
+REQUIRED_TOKEN = "%FILE_CONTENT%"
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
 
 
@@ -36,44 +35,56 @@ def load_source(source_path: str) -> str:
         return f.read()
 
 
-def build_prompt(template: str, source_content: str, file_path: str = "") -> str:
-    if TOKEN_CONTENT not in template:
-        raise ValueError(f"Template must contain the {TOKEN_CONTENT} token")
-    prompt = template.replace(TOKEN_CONTENT, source_content)
-    prompt = prompt.replace(TOKEN_PATH, file_path)
+def build_prompt(template: str, substitutions: dict[str, str]) -> str:
+    if REQUIRED_TOKEN not in template:
+        raise ValueError(f"Template must contain the {REQUIRED_TOKEN} token")
+    prompt = template
+    file_content = substitutions.get(REQUIRED_TOKEN, "")
+    for token, value in substitutions.items():
+        if token == REQUIRED_TOKEN:
+            continue
+        prompt = prompt.replace(token, value)
+    prompt = prompt.replace(REQUIRED_TOKEN, file_content)
     return prompt
 
 
 def summarize_content(
     template: str,
-    source_content: str,
-    file_path: str = "",
+    substitutions: dict[str, str],
     model: str = DEFAULT_MODEL,
     max_tokens: int = 4096,
+    json_schema: dict | None = None,
 ) -> dict:
     """Summarize source content using a prompt template.
 
     Args:
         template: Prompt template string containing %FILE_CONTENT%.
-        source_content: The source code to substitute in.
-        file_path: File path to substitute into %FILE_PATH%.
+        substitutions: Token-to-value mapping (must include %FILE_CONTENT%).
         model: Anthropic model to use.
         max_tokens: Max tokens in the response.
+        json_schema: Optional JSON schema for structured output.
 
     Returns:
         Dict with keys: model, source_length, response.
     """
-    prompt = build_prompt(template, source_content, file_path)
-    log.debug("Prompt length: %d chars for %s", len(prompt), file_path or "<inline>")
+    prompt = build_prompt(template, substitutions)
+    source_content = substitutions.get(REQUIRED_TOKEN, "")
+    file_path = substitutions.get("%FILE_PATH%", "<inline>")
+    log.debug("Prompt length: %d chars for %s", len(prompt), file_path)
     client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
-    log.info("Calling %s for %s (%d chars)", model, file_path or "<inline>", len(source_content))
-    message = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        messages=[{"role": "user", "content": prompt}],
-    )
+    log.info("Calling %s for %s (%d chars)", model, file_path, len(source_content))
+    api_kwargs: dict = {
+        "model": model,
+        "max_tokens": max_tokens,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    if json_schema is not None:
+        api_kwargs["output_config"] = {
+            "format": {"type": "json_schema", "schema": json_schema},
+        }
+    message = client.messages.create(**api_kwargs)
     response_text = message.content[0].text
-    log.info("Got response for %s (%d chars)", file_path or "<inline>", len(response_text))
+    log.info("Got response for %s (%d chars)", file_path, len(response_text))
     return {
         "model": model,
         "source_length": len(source_content),
@@ -86,6 +97,8 @@ def summarize_file(
     source_path: str,
     model: str = DEFAULT_MODEL,
     max_tokens: int = 4096,
+    extra_substitutions: dict[str, str] | None = None,
+    json_schema: dict | None = None,
 ) -> dict:
     """Summarize a source file using a prompt template file.
 
@@ -94,7 +107,10 @@ def summarize_file(
     """
     template = load_template(template_path)
     source_content = load_source(source_path)
-    result = summarize_content(template, source_content, source_path, model, max_tokens)
+    substitutions = {REQUIRED_TOKEN: source_content, "%FILE_PATH%": source_path}
+    if extra_substitutions:
+        substitutions.update(extra_substitutions)
+    result = summarize_content(template, substitutions, model, max_tokens, json_schema)
     result["source_path"] = source_path
     return result
 
@@ -106,6 +122,8 @@ def main():
     parser.add_argument("--output", help="Path to write JSON output (default: stdout)")
     parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model to use (default: {DEFAULT_MODEL})")
     parser.add_argument("--max-tokens", type=int, default=4096, help="Max response tokens (default: 4096)")
+    parser.add_argument("--definitions", help="Path to file whose contents replace %%CONCEPT_DEFINITIONS%%")
+    parser.add_argument("--json-schema", help="Path to JSON schema file for structured output")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -117,8 +135,21 @@ def main():
         log.error("ANTHROPIC_API_KEY environment variable is not set.")
         sys.exit(1)
 
+    extra_substitutions = {}
+    if args.definitions:
+        extra_substitutions["%CONCEPT_DEFINITIONS%"] = load_source(args.definitions)
+
+    schema = None
+    if args.json_schema:
+        with open(args.json_schema, "r") as f:
+            schema = json.load(f)
+
     log.info("Summarizing %s with template %s", args.source, args.template)
-    result = summarize_file(args.template, args.source, args.model, args.max_tokens)
+    result = summarize_file(
+        args.template, args.source, args.model, args.max_tokens,
+        extra_substitutions=extra_substitutions or None,
+        json_schema=schema,
+    )
     output = json.dumps(result, indent=2)
 
     if args.output:

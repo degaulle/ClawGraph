@@ -17,7 +17,7 @@ from batch_summarize import discover_files, result_filename, process_one
 
 CODEX_ROOT = Path(__file__).resolve().parent.parent.parent / "codex"
 APPLY_PATCH_SRC = CODEX_ROOT / "codex-rs" / "apply-patch" / "src"
-TEMPLATE_PATH = Path(__file__).resolve().parent / "summarize.template"
+TEMPLATE_PATH = Path(__file__).resolve().parent / "template" / "summarize_file.template"
 
 MOCK_RESPONSE_TEXT = "This file does something interesting."
 
@@ -38,24 +38,44 @@ def _mock_anthropic_client():
 class TestBuildPrompt:
     def test_substitutes_content(self):
         template = "Summarize:\n```\n%FILE_CONTENT%\n```"
-        result = build_prompt(template, "fn main() {}")
+        result = build_prompt(template, {"%FILE_CONTENT%": "fn main() {}"})
         assert "fn main() {}" in result
         assert "%FILE_CONTENT%" not in result
 
     def test_substitutes_path(self):
         template = "Path: %FILE_PATH%\n```\n%FILE_CONTENT%\n```"
-        result = build_prompt(template, "code", "src/main.rs")
+        result = build_prompt(template, {"%FILE_CONTENT%": "code", "%FILE_PATH%": "src/main.rs"})
         assert "src/main.rs" in result
         assert "%FILE_PATH%" not in result
 
     def test_missing_content_token_raises(self):
         with pytest.raises(ValueError, match="FILE_CONTENT"):
-            build_prompt("no token here", "code")
+            build_prompt("no token here", {"%FILE_CONTENT%": "code"})
 
     def test_empty_path_default(self):
         template = "Path: %FILE_PATH%\n%FILE_CONTENT%"
-        result = build_prompt(template, "code")
+        result = build_prompt(template, {"%FILE_CONTENT%": "code", "%FILE_PATH%": ""})
         assert "Path: \n" in result
+
+    def test_custom_token_substitution(self):
+        template = "Defs: %CONCEPT_DEFINITIONS%\n%FILE_CONTENT%"
+        result = build_prompt(template, {
+            "%FILE_CONTENT%": "code",
+            "%CONCEPT_DEFINITIONS%": "concept A, concept B",
+        })
+        assert "concept A, concept B" in result
+        assert "%CONCEPT_DEFINITIONS%" not in result
+
+    def test_file_content_substituted_last(self):
+        """Tokens inside FILE_CONTENT must not be treated as template tokens."""
+        template = "Defs: %CUSTOM%\n%FILE_CONTENT%"
+        result = build_prompt(template, {
+            "%FILE_CONTENT%": "source with %CUSTOM% literal",
+            "%CUSTOM%": "replaced",
+        })
+        assert "Defs: replaced" in result
+        # The %CUSTOM% inside the source content should survive as-is
+        assert "source with %CUSTOM% literal" in result
 
 
 class TestLoadFiles:
@@ -107,7 +127,10 @@ class TestSummarizeContent:
     @patch("summarize.anthropic.Anthropic")
     def test_returns_expected_keys(self, mock_cls):
         mock_cls.return_value = _mock_anthropic_client()
-        result = summarize_content("Summarize:\n%FILE_CONTENT%", "fn main() {}", "main.rs")
+        result = summarize_content(
+            "Summarize:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "fn main() {}", "%FILE_PATH%": "main.rs"},
+        )
         assert result["response"] == MOCK_RESPONSE_TEXT
         assert result["source_length"] == len("fn main() {}")
         assert "model" in result
@@ -116,10 +139,39 @@ class TestSummarizeContent:
     def test_passes_prompt_to_api(self, mock_cls):
         client = _mock_anthropic_client()
         mock_cls.return_value = client
-        summarize_content("Review:\n%FILE_CONTENT%", "let x = 1;", "test.rs")
+        summarize_content(
+            "Review:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "let x = 1;", "%FILE_PATH%": "test.rs"},
+        )
         call_args = client.messages.create.call_args
         prompt = call_args.kwargs["messages"][0]["content"]
         assert "let x = 1;" in prompt
+
+    @patch("summarize.anthropic.Anthropic")
+    def test_json_schema_passed_to_api(self, mock_cls):
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        schema = {"type": "object", "properties": {"tags": {"type": "array"}}}
+        summarize_content(
+            "Tag:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "code"},
+            json_schema=schema,
+        )
+        call_args = client.messages.create.call_args
+        assert "output_config" in call_args.kwargs
+        assert call_args.kwargs["output_config"]["format"]["type"] == "json_schema"
+        assert call_args.kwargs["output_config"]["format"]["schema"] is schema
+
+    @patch("summarize.anthropic.Anthropic")
+    def test_json_schema_omitted_when_none(self, mock_cls):
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        summarize_content(
+            "Summarize:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "code"},
+        )
+        call_args = client.messages.create.call_args
+        assert "output_config" not in call_args.kwargs
 
 
 class TestSummarizeFile:
@@ -174,3 +226,23 @@ class TestProcessOne:
             assert all(r["status"] == "ok" for r in results)
             json_files = list(Path(run_dir).glob("*.json"))
             assert len(json_files) == 6
+
+    @patch("summarize.anthropic.Anthropic")
+    def test_process_one_with_extra_substitutions(self, mock_cls):
+        """Extra substitutions are forwarded to the API call."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        template = "Defs: %CONCEPT_DEFINITIONS%\nPath: %FILE_PATH%\n%FILE_CONTENT%"
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "test.rs"
+            src.write_text("fn main() {}")
+            status = process_one(
+                template, src, tmp,
+                Path(tmp), "claude-haiku-4-5-20251001", 4096,
+                extra_substitutions={"%CONCEPT_DEFINITIONS%": "concept A"},
+            )
+            assert status["status"] == "ok"
+            call_args = client.messages.create.call_args
+            prompt = call_args.kwargs["messages"][0]["content"]
+            assert "concept A" in prompt
+            assert "%CONCEPT_DEFINITIONS%" not in prompt
