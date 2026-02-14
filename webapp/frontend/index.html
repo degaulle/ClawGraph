@@ -26,7 +26,7 @@
   #tooltip .value { color: #fff; font-weight: 500; }
   #legend {
     position: absolute;
-    bottom: 16px;
+    bottom: 64px;
     right: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -44,7 +44,7 @@
   .legend-line { width: 16px; height: 3px; border-radius: 1px; }
   #stats {
     position: absolute;
-    bottom: 16px;
+    bottom: 64px;
     left: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -232,6 +232,69 @@
     color: #999;
     font-size: 11px;
   }
+  /* Timeline */
+  #timeline {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 48px;
+    background: rgba(15, 15, 15, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    user-select: none;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    z-index: 10;
+  }
+  #timeline-label-start, #timeline-label-end {
+    color: #aaa;
+    font-size: 11px;
+    font-family: monospace;
+    min-width: 80px;
+    white-space: nowrap;
+  }
+  #timeline-label-end { text-align: right; }
+  #timeline-track {
+    position: relative;
+    flex: 1;
+    height: 28px;
+    background: #111;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  #timeline-hist {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    gap: 0;
+    opacity: 0.3;
+  }
+  #timeline-hist .hist-bar {
+    flex: 1;
+    background: #555;
+    min-width: 0;
+  }
+  #timeline-fill {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(59, 130, 246, 0.25);
+    pointer-events: none;
+  }
+  .timeline-handle {
+    position: absolute;
+    top: 0;
+    width: 10px;
+    height: 100%;
+    background: rgba(140, 140, 140, 0.8);
+    border-radius: 3px;
+    cursor: ew-resize;
+    z-index: 2;
+    transition: background 0.1s;
+  }
+  .timeline-handle:hover, .timeline-handle.active { background: rgba(200, 200, 200, 0.9); }
 </style>
 </head>
 <body>
@@ -255,7 +318,7 @@
   <div class="legend-section">
     <div class="legend-section-title">Edges</div>
     <div class="legend-item"><div class="legend-line" style="background:rgba(255,255,255,0.6)"></div> Authored</div>
-    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on</div>
+    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on (directed)</div>
     <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
   </div>
 </div>
@@ -266,6 +329,16 @@
   <div class="ctrl-body" id="ctrl-body"></div>
 </div>
 <div id="stats" style="display:none"></div>
+<div id="timeline">
+  <span id="timeline-label-start"></span>
+  <div id="timeline-track">
+    <div id="timeline-hist"></div>
+    <div id="timeline-fill"></div>
+    <div class="timeline-handle" id="handle-start"></div>
+    <div class="timeline-handle" id="handle-end"></div>
+  </div>
+  <span id="timeline-label-end"></span>
+</div>
 <div id="loading">Loading knowledge graph...</div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -305,6 +378,16 @@
     contains: '16, 185, 129',
   };
 
+  // Perceived-luminance correction so all edge colors look equally bright.
+  // Uses rec. 709 coefficients: L = 0.2126*R + 0.7152*G + 0.0722*B
+  function luminance(r, g, b) { return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+  const refLum = luminance(255, 255, 255);
+  const EDGE_OPACITY_SCALE = {
+    authored:   1,
+    depends_on: refLum / luminance(239, 68, 68),
+    contains:   refLum / luminance(16, 185, 129),
+  };
+
   // Load data
   let raw;
   try {
@@ -326,6 +409,7 @@
       name: c.name,
       type: 'contributor',
       totalCommits: c.total_commits,
+      createdAt: c.first_commit_at ? new Date(c.first_commit_at).getTime() : null,
       radius: Math.max(4, Math.min(16, 3 + Math.sqrt(c.total_commits))),
     };
     allNodes.push(node);
@@ -341,6 +425,7 @@
       deleted: f.deleted,
       fileType: f.file_type,
       lineCount: loc,
+      createdAt: f.created_at ? new Date(f.created_at).getTime() : null,
       radius: loc > 0 ? Math.max(1.5, Math.min(12, 1.5 + Math.sqrt(loc) * 0.3)) : 1.5,
     };
     allNodes.push(node);
@@ -356,22 +441,155 @@
       edition: cr.edition,
       hasLib: cr.has_lib,
       hasBin: cr.has_bin,
+      createdAt: cr.created_at ? new Date(cr.created_at).getTime() : null,
       radius: 8,
     };
     allNodes.push(node);
     nodeMap.set(cr.id, node);
   }
 
+  // Build commit timestamp lookup
+  const commitTs = new Map();
+  if (raw.commits) {
+    for (const [hash, c] of Object.entries(raw.commits)) {
+      if (c.timestamp) commitTs.set(hash, new Date(c.timestamp).getTime());
+    }
+  }
+
   // Raw link data (never passed to D3 — source/target stay as strings)
-  const allLinksRaw = raw.edges.map(e => ({
-    source: e.source,
-    target: e.target,
-    type: e.type || 'authored',
-    commits: e.commits ? e.commits.length : 0,
-  }));
+  const allLinksRaw = raw.edges.map(e => {
+    const link = {
+      source: e.source,
+      target: e.target,
+      type: e.type || 'authored',
+      commits: e.commits ? e.commits.length : 0,
+    };
+    // For authored edges, store earliest/latest commit timestamp
+    if (e.commits && e.commits.length > 0) {
+      let earliest = Infinity, latest = -Infinity;
+      for (const h of e.commits) {
+        const ts = commitTs.get(h);
+        if (ts !== undefined) {
+          if (ts < earliest) earliest = ts;
+          if (ts > latest) latest = ts;
+        }
+      }
+      if (earliest !== Infinity) { link.firstAt = earliest; link.lastAt = latest; }
+    }
+    return link;
+  });
+
+  // Compute global time range and commit histogram for timeline
+  const allTimestamps = [];
+  for (const n of allNodes) { if (n.createdAt != null) allTimestamps.push(n.createdAt); }
+  for (const ts of commitTs.values()) allTimestamps.push(ts);
+  allTimestamps.sort((a, b) => a - b);
+  const timeMin = allTimestamps.length ? allTimestamps[0] : 0;
+  const timeMax = allTimestamps.length ? allTimestamps[allTimestamps.length - 1] : 1;
+
+  // Commit histogram (for track background density)
+  const HISTOGRAM_BINS = 200;
+  const commitHist = new Float32Array(HISTOGRAM_BINS);
+  const timeSpan = timeMax - timeMin || 1;
+  for (const ts of commitTs.values()) {
+    const bin = Math.min(HISTOGRAM_BINS - 1, Math.floor((ts - timeMin) / timeSpan * HISTOGRAM_BINS));
+    commitHist[bin]++;
+  }
+  const histMax = Math.max(1, ...commitHist);
 
   // Free raw data
   raw = null;
+
+  // --- Timeline setup ---
+  let tlStart = timeMin;
+  let tlEnd = timeMax;
+
+  const tlTrack = document.getElementById('timeline-track');
+  const tlFill = document.getElementById('timeline-fill');
+  const tlHistEl = document.getElementById('timeline-hist');
+  const tlLabelStart = document.getElementById('timeline-label-start');
+  const tlLabelEnd = document.getElementById('timeline-label-end');
+  const handleStart = document.getElementById('handle-start');
+  const handleEnd = document.getElementById('handle-end');
+
+  // Build histogram bars
+  for (let i = 0; i < HISTOGRAM_BINS; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'hist-bar';
+    bar.style.height = (commitHist[i] / histMax * 100) + '%';
+    tlHistEl.appendChild(bar);
+  }
+
+  function fmtDate(ms) {
+    const d = new Date(ms);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function tlFrac(ms) { return (ms - timeMin) / timeSpan; }
+
+  function updateTimeline() {
+    const sf = tlFrac(tlStart);
+    const ef = tlFrac(tlEnd);
+    tlFill.style.left = (sf * 100) + '%';
+    tlFill.style.width = ((ef - sf) * 100) + '%';
+    handleStart.style.left = (sf * 100) + '%';
+    handleEnd.style.left = 'calc(' + (ef * 100) + '% - 10px)';
+    tlLabelStart.textContent = fmtDate(tlStart);
+    tlLabelEnd.textContent = fmtDate(tlEnd);
+  }
+  updateTimeline();
+
+  // Drag handles
+  function handleDrag(handleEl, isEnd) {
+    let dragging = false;
+    function onDown(e) {
+      e.preventDefault();
+      dragging = true;
+      handleEl.classList.add('active');
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      const rect = tlTrack.getBoundingClientRect();
+      let frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const ms = timeMin + frac * timeSpan;
+      if (isEnd) {
+        tlEnd = Math.max(tlStart + timeSpan * 0.002, ms);
+      } else {
+        tlStart = Math.min(tlEnd - timeSpan * 0.002, ms);
+      }
+      updateTimeline();
+      rebuildGraph();
+    }
+    function onUp() {
+      dragging = false;
+      handleEl.classList.remove('active');
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    handleEl.addEventListener('mousedown', onDown);
+  }
+  handleDrag(handleStart, false);
+  handleDrag(handleEnd, true);
+
+  // Click on track to jump the nearest handle
+  tlTrack.addEventListener('click', (e) => {
+    if (e.target.classList.contains('timeline-handle')) return;
+    const rect = tlTrack.getBoundingClientRect();
+    const frac = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const ms = timeMin + frac * timeSpan;
+    // Move whichever handle is closer
+    const dStart = Math.abs(ms - tlStart);
+    const dEnd = Math.abs(ms - tlEnd);
+    if (dStart < dEnd) {
+      tlStart = Math.min(tlEnd - timeSpan * 0.002, ms);
+    } else {
+      tlEnd = Math.max(tlStart + timeSpan * 0.002, ms);
+    }
+    updateTimeline();
+    rebuildGraph();
+  });
 
   // --- Active simulation data (rebuilt when "off" toggles change) ---
   let nodes = [];
@@ -399,6 +617,23 @@
     if (link.type === 'depends_on') return vis.dependsOn;
     if (link.type === 'contains') return vis.contains;
     return 'visible';
+  }
+
+  // Timeline filter: node created within [tlStart, tlEnd]
+  function nodeInTimeRange(node) {
+    if (node.createdAt == null) return true; // no timestamp → always show
+    return node.createdAt >= tlStart && node.createdAt <= tlEnd;
+  }
+
+  // Timeline filter for edges
+  function linkInTimeRange(link) {
+    if (link.type === 'authored') {
+      // Show if any commit falls in the time range
+      if (link.firstAt != null) return link.lastAt >= tlStart && link.firstAt <= tlEnd;
+      return true; // no timestamp data → show
+    }
+    // depends_on / contains: visible when both endpoints pass
+    return true;
   }
 
   // For draw: is this node rendered?
@@ -434,14 +669,16 @@
     tooltip.style.display = 'none';
 
     // Filter nodes — 'visible' and 'hidden' are in simulation, 'off' is excluded
-    nodes = allNodes.filter(n => nodeTypeState(n) !== 'off');
+    // Also apply timeline range filter
+    nodes = allNodes.filter(n => nodeTypeState(n) !== 'off' && nodeInTimeRange(n));
     const activeIds = new Set(nodes.map(n => n.id));
 
     // Create fresh link objects (D3 mutates source/target to object refs)
     links = allLinksRaw
       .filter(l => {
         if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
-        return linkTypeState(l) !== 'off';
+        if (linkTypeState(l) === 'off') return false;
+        return linkInTimeRange(l);
       })
       .map(l => ({ ...l }));
 
@@ -672,6 +909,17 @@
   let transform = d3.zoomIdentity;
   const zoom = d3.zoom()
     .scaleExtent([0.05, 20])
+    .filter((event) => {
+      // Allow wheel/pinch zoom everywhere, but suppress pan (mousedown)
+      // when the pointer is over a node so d3-drag can handle it instead.
+      if (event.type === 'mousedown') {
+        const rect = canvas.getBoundingClientRect();
+        const mx = event.clientX - rect.left;
+        const my = event.clientY - rect.top;
+        if (nodeAt(mx, my)) return false;
+      }
+      return !event.button; // default d3 filter: ignore right-click
+    })
     .on('zoom', (event) => {
       transform = event.transform;
       draw();
@@ -681,6 +929,7 @@
   // State
   let hoveredNode = null;
   let draggedNode = null;
+  const selectedNodes = new Set(); // node IDs that are pinned
 
   // --- Initial graph build ---
   rebuildGraph();
@@ -709,18 +958,46 @@
       const s = link.source;
       const t = link.target;
       const rgb = EDGE_RGB[link.type] || EDGE_RGB.authored;
+      const opScale = EDGE_OPACITY_SCALE[link.type] || 1;
 
-      if (hoveredNode && (highlightSet.has(s.id) && highlightSet.has(t.id))) {
-        ctx.strokeStyle = `rgba(${rgb}, ${highlightEdgeOpacity})`;
-        ctx.lineWidth = highlightEdgeWidth * zk;
-      } else {
-        ctx.strokeStyle = `rgba(${rgb}, ${edgeOpacity})`;
-        ctx.lineWidth = edgeWidth * zk;
-      }
+      let hl = hoveredNode && highlightSet.has(s.id) && highlightSet.has(t.id);
+      const alpha = hl
+        ? Math.min(highlightEdgeOpacity * opScale, 1)
+        : Math.min(edgeOpacity * opScale, 1);
+      const lw = hl ? highlightEdgeWidth * zk : edgeWidth * zk;
+
+      ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
+      ctx.lineWidth = lw;
       ctx.beginPath();
       ctx.moveTo(s.x, s.y);
       ctx.lineTo(t.x, t.y);
       ctx.stroke();
+
+      // Arrowhead for directed edges (depends_on)
+      if (link.type === 'depends_on') {
+        const dx = t.x - s.x;
+        const dy = t.y - s.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        if (len < 1e-6) continue;
+        const ux = dx / len;
+        const uy = dy / len;
+        // Place arrow tip at the edge of the target node
+        const tScale = getNodeScale(t);
+        const tr = t.radius * tScale * zk;
+        const tipX = t.x - ux * tr;
+        const tipY = t.y - uy * tr;
+        const arrowLen = Math.max(6 * zk, lw * 4);
+        const arrowW = arrowLen * 0.5;
+        const baseX = tipX - ux * arrowLen;
+        const baseY = tipY - uy * arrowLen;
+        ctx.fillStyle = `rgba(${rgb}, ${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(tipX, tipY);
+        ctx.lineTo(baseX - uy * arrowW, baseY + ux * arrowW);
+        ctx.lineTo(baseX + uy * arrowW, baseY - ux * arrowW);
+        ctx.closePath();
+        ctx.fill();
+      }
     }
 
     // Nodes
@@ -747,6 +1024,15 @@
         ctx.fillStyle = FILE_COLOR;
       }
       ctx.fill();
+
+      // Selection ring
+      if (selectedNodes.has(node.id)) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = Math.max(1.5 * zk, 1);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 2 * zk, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
 
@@ -806,12 +1092,14 @@
           if (node.hasBin) targets.push('bin');
           html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
           html += `<div class="label">${node.rootDir}</div>`;
+          if (node.createdAt) html += `<div class="label">Created ${new Date(node.createdAt).toLocaleDateString()}</div>`;
         } else {
           const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
           html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
         }
         const neighbors = adjacency.get(node.id);
         if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
+        if (selectedNodes.has(node.id)) html += `<div class="label" style="color:#93c5fd">Pinned (click to unpin)</div>`;
         tooltip.innerHTML = html;
       } else {
         tooltip.style.display = 'none';
@@ -820,7 +1108,7 @@
     }
     if (hoveredNode) {
       tooltip.style.left = (e.clientX + 14) + 'px';
-      tooltip.style.top = (e.clientY - 14) + 'px';
+      tooltip.style.top = (e.clientY + 24) + 'px';
     }
   });
 
@@ -830,7 +1118,10 @@
     draw();
   });
 
-  // Drag
+  // Drag (with click-to-select)
+  let dragStartX = 0, dragStartY = 0;
+  const CLICK_THRESHOLD = 4; // px — below this, treat as click not drag
+
   d3.select(canvas).call(
     d3.drag()
       .container(canvas)
@@ -845,6 +1136,8 @@
       .on('start', (event) => {
         if (!event.active) simulation.alphaTarget(0.1).restart();
         draggedNode = event.subject;
+        dragStartX = event.x;
+        dragStartY = event.y;
         event.subject.fx = transform.invertX(event.x);
         event.subject.fy = transform.invertY(event.y);
         tooltip.style.display = 'none';
@@ -855,11 +1148,46 @@
       })
       .on('end', (event) => {
         if (!event.active) simulation.alphaTarget(0);
+        const node = event.subject;
+        const dx = event.x - dragStartX;
+        const dy = event.y - dragStartY;
+        const wasDragged = Math.sqrt(dx * dx + dy * dy) >= CLICK_THRESHOLD;
+
+        if (!wasDragged) {
+          // Click — toggle selection
+          if (selectedNodes.has(node.id)) {
+            selectedNodes.delete(node.id);
+            node.fx = null;
+            node.fy = null;
+          } else {
+            selectedNodes.add(node.id);
+            // keep fx/fy at current position
+          }
+        } else if (selectedNodes.has(node.id)) {
+          // Dragged a selected node — keep it pinned at new position
+        } else {
+          // Dragged an unselected node — release
+          node.fx = null;
+          node.fy = null;
+        }
         draggedNode = null;
-        event.subject.fx = null;
-        event.subject.fy = null;
+        draw();
       })
   );
+
+  // Escape to deselect all
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && selectedNodes.size > 0) {
+      for (const node of nodes) {
+        if (selectedNodes.has(node.id)) {
+          node.fx = null;
+          node.fy = null;
+        }
+      }
+      selectedNodes.clear();
+      draw();
+    }
+  });
 })();
 </script>
 </body>
