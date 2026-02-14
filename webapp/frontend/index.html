@@ -295,6 +295,52 @@
     transition: background 0.1s;
   }
   .timeline-handle:hover, .timeline-handle.active { background: rgba(200, 200, 200, 0.9); }
+  /* Mode switch */
+  .mode-switch {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    gap: 8px;
+  }
+  .mode-switch-btns {
+    display: flex;
+    flex-shrink: 0;
+    border: 1px solid #444;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .mode-switch-btn {
+    background: transparent;
+    color: #666;
+    border: none;
+    border-right: 1px solid #444;
+    padding: 3px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .mode-switch-btn:last-child { border-right: none; }
+  .mode-switch-btn:hover:not(:disabled) { color: #999; }
+  .mode-switch-btn.active { background: #1a2a3a; color: #3b82f6; }
+  .mode-switch-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .ctrl-row.disabled label,
+  .ctrl-row.disabled .ctrl-val { opacity: 0.3; }
+  .ctrl-row.disabled input[type="range"] { opacity: 0.3; pointer-events: none; }
+  .depth-slider-wrap { flex: 1; display: flex; flex-direction: column; gap: 0; }
+  .depth-slider-wrap input[type="range"] { width: 100%; margin: 0; }
+  .depth-ticks {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 2px;
+  }
+  .depth-ticks span {
+    font-size: 9px;
+    color: #666;
+    font-family: monospace;
+    width: 12px;
+    text-align: center;
+  }
+  .ctrl-row.disabled .depth-ticks span { opacity: 0.3; }
 </style>
 </head>
 <body>
@@ -320,6 +366,7 @@
     <div class="legend-item"><div class="legend-line" style="background:rgba(255,255,255,0.6)"></div> Authored</div>
     <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on (directed)</div>
     <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
+    <div class="legend-item"><div class="legend-line" style="background:#a855f7"></div> Contributed to</div>
   </div>
 </div>
 <div id="controls">
@@ -376,6 +423,7 @@
     authored: '255, 255, 255',
     depends_on: '239, 68, 68',
     contains: '16, 185, 129',
+    contributed_to: '168, 85, 247',
   };
 
   // Perceived-luminance correction so all edge colors look equally bright.
@@ -386,6 +434,7 @@
     authored:   1,
     depends_on: refLum / luminance(239, 68, 68),
     contains:   refLum / luminance(16, 185, 129),
+    contributed_to: refLum / luminance(168, 85, 247),
   };
 
   // Load data
@@ -475,6 +524,11 @@
         }
       }
       if (earliest !== Infinity) { link.firstAt = earliest; link.lastAt = latest; }
+    }
+    // For contributed_to edges, store first contribution timestamp
+    if (e.first_contribution_at) {
+      link.firstContributionAt = new Date(e.first_contribution_at).getTime();
+      link.totalCommits = e.total_commits || 0;
     }
     return link;
   });
@@ -604,6 +658,7 @@
     authored: 'visible',
     dependsOn: 'visible',
     contains: 'visible',
+    contributedTo: 'visible',
   };
 
   function nodeTypeState(node) {
@@ -616,6 +671,7 @@
     if (link.type === 'authored') return vis.authored;
     if (link.type === 'depends_on') return vis.dependsOn;
     if (link.type === 'contains') return vis.contains;
+    if (link.type === 'contributed_to') return vis.contributedTo;
     return 'visible';
   }
 
@@ -631,6 +687,10 @@
       // Show if any commit falls in the time range
       if (link.firstAt != null) return link.lastAt >= tlStart && link.firstAt <= tlEnd;
       return true; // no timestamp data → show
+    }
+    if (link.type === 'contributed_to') {
+      if (link.firstContributionAt != null) return link.firstContributionAt <= tlEnd;
+      return true;
     }
     // depends_on / contains: visible when both endpoints pass
     return true;
@@ -673,14 +733,61 @@
     nodes = allNodes.filter(n => nodeTypeState(n) !== 'off' && nodeInTimeRange(n));
     const activeIds = new Set(nodes.map(n => n.id));
 
+    // Filter candidate edges (before D3 mutates source/target)
+    let filteredLinks = allLinksRaw.filter(l => {
+      if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
+      if (linkTypeState(l) === 'off') return false;
+      return linkInTimeRange(l);
+    });
+
+    // Centric mode: BFS from selected nodes, filter by depth
+    if (centricMode && selectedNodes.size > 0) {
+      // Build BFS adjacency from candidate edges
+      const bfsAdj = new Map();
+      for (const e of filteredLinks) {
+        if (!bfsAdj.has(e.source)) bfsAdj.set(e.source, []);
+        if (!bfsAdj.has(e.target)) bfsAdj.set(e.target, []);
+        bfsAdj.get(e.source).push(e.target);
+        bfsAdj.get(e.target).push(e.source);
+      }
+
+      // BFS from selected nodes
+      const depthMap = new Map();
+      const queue = [];
+      for (const id of selectedNodes) {
+        if (activeIds.has(id)) {
+          depthMap.set(id, 0);
+          queue.push(id);
+        }
+      }
+      let qi = 0;
+      while (qi < queue.length) {
+        const id = queue[qi++];
+        const d = depthMap.get(id);
+        if (d >= centricDepth) continue;
+        for (const neighbor of (bfsAdj.get(id) || [])) {
+          if (!depthMap.has(neighbor)) {
+            depthMap.set(neighbor, d + 1);
+            queue.push(neighbor);
+          }
+        }
+      }
+
+      // Keep only nodes within depth range
+      nodes = nodes.filter(n => depthMap.has(n.id));
+
+      // Keep edges where both endpoints are in range and at least one
+      // is strictly inside the boundary (discovery-order rule)
+      filteredLinks = filteredLinks.filter(e => {
+        const ds = depthMap.get(e.source);
+        const dt = depthMap.get(e.target);
+        if (ds === undefined || dt === undefined) return false;
+        return Math.min(ds, dt) < centricDepth;
+      });
+    }
+
     // Create fresh link objects (D3 mutates source/target to object refs)
-    links = allLinksRaw
-      .filter(l => {
-        if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
-        if (linkTypeState(l) === 'off') return false;
-        return linkInTimeRange(l);
-      })
-      .map(l => ({ ...l }));
+    links = filteredLinks.map(l => ({ ...l }));
 
     // Rebuild adjacency
     adjacency = new Map();
@@ -726,7 +833,7 @@
   let edgeOpacity = 0.04;
   let highlightEdgeWidth = 1;
   let highlightEdgeOpacity = 0.35;
-  let fixedSize = false;
+  let fixedSize = true;
   let collisionPadding = 0.5;
 
   // --- Shared UI builders ---
@@ -823,6 +930,92 @@
   // --- Appearance panel ---
   const appearBody = document.getElementById('appear-body');
 
+  // --- Mode group ---
+  const modeGroup = makeGroup('Mode', appearBody);
+
+  const modeRow = document.createElement('div');
+  modeRow.className = 'mode-switch';
+  const modeBtns = document.createElement('div');
+  modeBtns.className = 'mode-switch-btns';
+
+  const freeBtn = document.createElement('button');
+  freeBtn.className = 'mode-switch-btn active';
+  freeBtn.textContent = 'Free';
+  freeBtn.addEventListener('click', () => {
+    if (!centricMode) return;
+    centricMode = false;
+    freeBtn.classList.add('active');
+    centricBtn.classList.remove('active');
+    depthRow.classList.add('disabled');
+    rebuildGraph();
+  });
+
+  const centricBtn = document.createElement('button');
+  centricBtn.className = 'mode-switch-btn';
+  centricBtn.textContent = 'Centric';
+  centricBtn.title = 'Please select at least 1 node';
+  centricBtn.disabled = true;
+  centricBtn.addEventListener('click', () => {
+    if (centricBtn.disabled || centricMode) return;
+    centricMode = true;
+    centricBtn.classList.add('active');
+    freeBtn.classList.remove('active');
+    depthRow.classList.remove('disabled');
+    rebuildGraph();
+  });
+
+  modeBtns.appendChild(freeBtn);
+  modeBtns.appendChild(centricBtn);
+  modeRow.appendChild(modeBtns);
+  const modeLabel = document.createElement('span');
+  modeLabel.className = 'tri-switch-label';
+  modeLabel.textContent = 'View Mode';
+  modeRow.appendChild(modeLabel);
+  modeGroup.appendChild(modeRow);
+
+  // Depth slider (disabled in Free mode)
+  const depthRow = document.createElement('div');
+  depthRow.className = 'ctrl-row disabled';
+  const depthLabel = document.createElement('label');
+  depthLabel.textContent = 'Depth';
+  const depthWrap = document.createElement('div');
+  depthWrap.className = 'depth-slider-wrap';
+  const depthInput = document.createElement('input');
+  depthInput.type = 'range';
+  depthInput.min = 0;
+  depthInput.max = 4;
+  depthInput.step = 1;
+  depthInput.value = 0;
+  const depthTicks = document.createElement('div');
+  depthTicks.className = 'depth-ticks';
+  for (let i = 0; i <= 4; i++) {
+    const tick = document.createElement('span');
+    tick.textContent = i;
+    depthTicks.appendChild(tick);
+  }
+  depthWrap.appendChild(depthInput);
+  depthWrap.appendChild(depthTicks);
+  depthInput.addEventListener('input', () => {
+    centricDepth = parseInt(depthInput.value);
+    if (centricMode) rebuildGraph();
+  });
+  depthRow.appendChild(depthLabel);
+  depthRow.appendChild(depthWrap);
+  modeGroup.appendChild(depthRow);
+
+  function updateCentricAvailability() {
+    const canCentric = selectedNodes.size > 0;
+    centricBtn.disabled = !canCentric;
+    centricBtn.title = canCentric ? '' : 'Please select at least 1 node';
+    if (!canCentric && centricMode) {
+      centricMode = false;
+      freeBtn.classList.add('active');
+      centricBtn.classList.remove('active');
+      depthRow.classList.add('disabled');
+      rebuildGraph();
+    }
+  }
+
   // Visibility group — tri-switches
   const visGroup = makeGroup('Visibility', appearBody);
 
@@ -842,16 +1035,17 @@
   makeTriSwitch(visGroup, 'Contributors',     'visible', onVisChange('contributors'));
   makeTriSwitch(visGroup, 'Files',            'visible', onVisChange('files'));
   makeTriSwitch(visGroup, 'Crates',           'visible', onVisChange('crates'));
-  makeTriSwitch(visGroup, 'Authored edges',   'visible', onVisChange('authored'));
-  makeTriSwitch(visGroup, 'Dependency edges', 'visible', onVisChange('dependsOn'));
-  makeTriSwitch(visGroup, 'Contains edges',   'visible', onVisChange('contains'));
+  makeTriSwitch(visGroup, 'Authored edges',       'visible', onVisChange('authored'));
+  makeTriSwitch(visGroup, 'Dependency edges',    'visible', onVisChange('dependsOn'));
+  makeTriSwitch(visGroup, 'Contains edges',      'visible', onVisChange('contains'));
+  makeTriSwitch(visGroup, 'Contributed-to edges', 'visible', onVisChange('contributedTo'));
 
   // Node sizing group
   const nodeGroup = makeGroup('Nodes', appearBody);
   makeSlider(nodeGroup, 'Contributor Size', 0.1, 5, 0.1, 1, v => { contributorScale = v; draw(); });
   makeSlider(nodeGroup, 'File Size', 0.1, 5, 0.1, 1, v => { fileScale = v; draw(); });
   makeSlider(nodeGroup, 'Crate Size', 0.1, 5, 0.1, 1, v => { crateScale = v; draw(); });
-  makeCheckbox(nodeGroup, 'Fixed size (ignore zoom)', false, v => { fixedSize = v; draw(); });
+  makeCheckbox(nodeGroup, 'Fixed size (ignore zoom)', true, v => { fixedSize = v; draw(); });
 
   const edgeGroup = makeGroup('Edges', appearBody);
   makeSlider(edgeGroup, 'Width', 0.1, 5, 0.1, 0.5, v => { edgeWidth = v; draw(); });
@@ -930,6 +1124,8 @@
   let hoveredNode = null;
   let draggedNode = null;
   const selectedNodes = new Set(); // node IDs that are pinned
+  let centricMode = false;
+  let centricDepth = 0;
 
   // --- Initial graph build ---
   rebuildGraph();
@@ -1163,6 +1359,8 @@
             selectedNodes.add(node.id);
             // keep fx/fy at current position
           }
+          updateCentricAvailability();
+          if (centricMode) rebuildGraph();
         } else if (selectedNodes.has(node.id)) {
           // Dragged a selected node — keep it pinned at new position
         } else {
@@ -1178,13 +1376,14 @@
   // Escape to deselect all
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && selectedNodes.size > 0) {
-      for (const node of nodes) {
+      for (const node of allNodes) {
         if (selectedNodes.has(node.id)) {
           node.fx = null;
           node.fy = null;
         }
       }
       selectedNodes.clear();
+      updateCentricAvailability(); // switches back to Free if in centric mode
       draw();
     }
   });
