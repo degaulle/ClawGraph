@@ -71,7 +71,7 @@
     padding: 14px 18px;
     color: #ccc;
     font-size: 12px;
-    width: 290px;
+    width: 320px;
     max-height: calc(100vh - 32px);
     overflow-y: auto;
     scrollbar-width: thin;
@@ -164,7 +164,7 @@
     padding: 14px 18px;
     color: #ccc;
     font-size: 12px;
-    width: 290px;
+    width: 320px;
     max-height: calc(100vh - 32px);
     overflow-y: auto;
     scrollbar-width: thin;
@@ -850,6 +850,7 @@
   let edgeOpacity = 0.04;
   let highlightEdgeWidth = 1;
   let highlightEdgeOpacity = 0.35;
+  let commitWidthScale = 0;
   let fixedSize = true;
   let collisionPadding = 0.5;
 
@@ -1068,6 +1069,7 @@
   const edgeGroup = makeGroup('Edges', appearBody);
   makeSlider(edgeGroup, 'Width', 0.1, 5, 0.1, 0.5, v => { edgeWidth = v; draw(); });
   makeSlider(edgeGroup, 'Opacity', 0, 0.3, 0.005, 0.04, v => { edgeOpacity = v; draw(); });
+  makeSlider(edgeGroup, 'Commit Width', 0, 3, 0.05, 0, v => { commitWidthScale = v; draw(); });
   makeSlider(edgeGroup, 'Highlight Width', 0.1, 5, 0.1, 1, v => { highlightEdgeWidth = v; draw(); });
   makeSlider(edgeGroup, 'Highlight Opacity', 0, 1, 0.01, 0.35, v => { highlightEdgeOpacity = v; draw(); });
 
@@ -1178,7 +1180,12 @@
       const alpha = hl
         ? Math.min(highlightEdgeOpacity * opScale, 1)
         : Math.min(edgeOpacity * opScale, 1);
-      const lw = hl ? highlightEdgeWidth * zk : edgeWidth * zk;
+      let commitExtra = 0;
+      if (commitWidthScale > 0 && (link.type === 'authored' || link.type === 'contributed_to')) {
+        const count = link.type === 'authored' ? link.commits : (link.totalCommits || 0);
+        commitExtra = commitWidthScale * Math.sqrt(count);
+      }
+      const lw = hl ? (highlightEdgeWidth + commitExtra) * zk : (edgeWidth + commitExtra) * zk;
 
       ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
       ctx.lineWidth = lw;
