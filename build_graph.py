@@ -11,7 +11,7 @@ from graph_builder import build_graph
 
 # Allow importing from rust-graph/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rust-graph"))
-from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at
+from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at, build_contributor_crate_edges
 
 
 def _find_cargo_workspaces(repo_path: str) -> list[str]:
@@ -113,9 +113,15 @@ def main():
         graph["edges"].extend(all_dep_edges)
         graph["edges"].extend(all_contains_edges)
 
+        contributed_to_edges = build_contributor_crate_edges(
+            graph["edges"], all_contains_edges, graph["commits"]
+        )
+        graph["edges"].extend(contributed_to_edges)
+
         print(f"  Crates: {len(all_crate_nodes)}")
         print(f"  depends_on edges: {len(all_dep_edges)}")
         print(f"  contains edges: {len(all_contains_edges)}")
+        print(f"  contributed_to edges: {len(contributed_to_edges)}")
 
     # Write output
     output_dir = os.path.join(script_dir, "output")

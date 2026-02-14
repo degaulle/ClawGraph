@@ -2,6 +2,7 @@
 
 import json
 import subprocess
+from collections import defaultdict
 
 
 def _run_cargo_metadata(workspace_path: str) -> dict:
@@ -185,5 +186,52 @@ def map_files_to_crates(
                 })
                 break
         # If no crate matched, file is unmapped (e.g. workspace-root files)
+
+    return edges
+
+
+def build_contributor_crate_edges(
+    authored_edges: list[dict],
+    contains_edges: list[dict],
+    commits_lookup: dict[str, dict],
+) -> list[dict]:
+    """Derive contributed_to edges (contributor → crate) by joining authored and contains edges.
+
+    A contributor contributed_to a crate if they authored files that the crate contains.
+    One edge per (contributor, crate) pair with total_commits (distinct commit count)
+    and first_contribution_at (earliest commit timestamp).
+    """
+    # Build file_id -> crate_id lookup from contains edges
+    file_to_crate: dict[str, str] = {}
+    for edge in contains_edges:
+        file_to_crate[edge["target"]] = edge["source"]
+
+    # Accumulate (contributor_id, crate_id) -> set of commit hashes
+    pair_commits: dict[tuple[str, str], set[str]] = defaultdict(set)
+    for edge in authored_edges:
+        if edge.get("type") != "authored":
+            continue
+        file_id = edge["target"]
+        crate_id = file_to_crate.get(file_id)
+        if crate_id is None:
+            continue
+        contributor_id = edge["source"]
+        for commit_hash in edge["commits"]:
+            pair_commits[(contributor_id, crate_id)].add(commit_hash)
+
+    # Build edges
+    edges = []
+    for (contributor_id, crate_id), commit_set in sorted(pair_commits.items()):
+        first_contribution_at = min(
+            commits_lookup[h]["timestamp"]
+            for h in commit_set
+        )
+        edges.append({
+            "source": contributor_id,
+            "target": crate_id,
+            "type": "contributed_to",
+            "total_commits": len(commit_set),
+            "first_contribution_at": first_contribution_at,
+        })
 
     return edges

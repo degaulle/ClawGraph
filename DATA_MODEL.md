@@ -88,7 +88,7 @@ Output file: `output/knowledge_graph.json`
 
 ## Edge types
 
-All edges have a `type` field. Three types exist:
+All edges have a `type` field. Four types exist:
 
 ### `authored` — contributor wrote/modified a file
 
@@ -128,6 +128,23 @@ Only workspace-internal dependencies. No external crates, no self-edges.
 
 Assigned by longest-prefix match of file path against crate `root_dir`.
 Files outside any crate (e.g. repo-root `Cargo.lock`) have no `contains` edge.
+
+### `contributed_to` — contributor contributed to a crate
+
+```json
+{
+  "source": "contributor_1",
+  "target": "crate_2",
+  "type": "contributed_to",
+  "total_commits": 15,
+  "first_contribution_at": "2025-05-03T12:34:56+00:00"
+}
+```
+
+Derived by joining `authored` (contributor→file) and `contains` (crate→file)
+edges. One edge per (contributor, crate) pair. `total_commits` is the number of
+distinct commits where the contributor touched files in the crate.
+`first_contribution_at` is the timestamp of the earliest such commit.
 
 ## Commits
 

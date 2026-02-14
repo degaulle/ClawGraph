@@ -8,7 +8,7 @@ from git_log_parser import parse_git_log
 from graph_builder import build_graph
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "rust-graph"))
-from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at
+from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at, build_contributor_crate_edges
 
 
 def run_git(repo_path, *args, env=None):
@@ -232,7 +232,7 @@ def test_crate_integration():
         with open(os.path.join(beta_dir, "src", "lib.rs"), "w") as f:
             f.write("pub fn beta_fn() {}\n")
 
-        # Commit everything
+        # Commit 1: Alice creates the workspace
         run_git(repo_path, "add", "-A")
         run_git(
             repo_path,
@@ -244,6 +244,23 @@ def test_crate_integration():
                 "GIT_AUTHOR_EMAIL": "alice@example.com",
                 "GIT_COMMITTER_NAME": "Alice",
                 "GIT_COMMITTER_EMAIL": "alice@example.com",
+            },
+        )
+
+        # Commit 2: Bob modifies a file in alpha
+        with open(os.path.join(alpha_dir, "src", "lib.rs"), "a") as f:
+            f.write("pub fn alpha_fn2() {}\n")
+        run_git(repo_path, "add", "-A")
+        run_git(
+            repo_path,
+            "commit",
+            "-m",
+            "Add alpha_fn2",
+            env={
+                "GIT_AUTHOR_NAME": "Bob",
+                "GIT_AUTHOR_EMAIL": "bob@example.com",
+                "GIT_COMMITTER_NAME": "Bob",
+                "GIT_COMMITTER_EMAIL": "bob@example.com",
             },
         )
 
@@ -269,6 +286,11 @@ def test_crate_integration():
         graph["nodes"]["crates"] = crate_nodes
         graph["edges"].extend(dep_edges)
         graph["edges"].extend(contains_edges)
+
+        contributed_to_edges = build_contributor_crate_edges(
+            graph["edges"], contains_edges, graph["commits"]
+        )
+        graph["edges"].extend(contributed_to_edges)
 
         # --- Assertions ---
 
@@ -302,10 +324,29 @@ def test_crate_integration():
             elif rs_file["name"].startswith("beta/"):
                 assert matching[0]["source"] == beta_crate["id"]
 
+        # contributed_to edges exist
+        ct_edges = [e for e in graph["edges"] if e.get("type") == "contributed_to"]
+        assert len(ct_edges) >= 2  # Alice and Bob both contributed to alpha
+
+        # Alice contributed to alpha (she authored files there in commit 1)
+        alice = [c for c in graph["nodes"]["contributors"] if c["name"] == "Alice"][0]
+        bob = [c for c in graph["nodes"]["contributors"] if c["name"] == "Bob"][0]
+        alice_alpha = [e for e in ct_edges
+                       if e["source"] == alice["id"] and e["target"] == alpha_crate["id"]]
+        assert len(alice_alpha) == 1
+        assert alice_alpha[0]["total_commits"] >= 1
+        assert alice_alpha[0]["first_contribution_at"] is not None
+
+        # Bob contributed to alpha (he authored alpha/src/lib.rs in commit 2)
+        bob_alpha = [e for e in ct_edges
+                     if e["source"] == bob["id"] and e["target"] == alpha_crate["id"]]
+        assert len(bob_alpha) == 1
+        assert bob_alpha[0]["total_commits"] == 1
+
         # All edges have a type field
         for edge in graph["edges"]:
             assert "type" in edge
-            assert edge["type"] in ("authored", "depends_on", "contains")
+            assert edge["type"] in ("authored", "depends_on", "contains", "contributed_to")
 
         # JSON round-trip
         json_str = json.dumps(graph)

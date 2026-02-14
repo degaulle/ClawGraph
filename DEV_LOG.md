@@ -21,7 +21,8 @@ The graph captures relationships between **contributors**, **files**, and
   "edges": [
     { "source (contributor)", "target (file)",  "type": "authored",   "commits" },
     { "source (crate)",       "target (crate)", "type": "depends_on" },
-    { "source (crate)",       "target (file)",  "type": "contains" }
+    { "source (crate)",       "target (file)",  "type": "contains" },
+    { "source (contributor)", "target (crate)", "type": "contributed_to", "total_commits", "first_contribution_at" }
   ],
   "commits": { "<hash>": { "message", "author", "timestamp" } }
 }
@@ -105,6 +106,9 @@ Extracts crate-level structure from Cargo workspaces using
   crates, produces `depends_on` edges
 - `map_files_to_crates`: assigns each file to the crate whose `root_dir` is the
   longest prefix match, producing `contains` edges
+- `build_contributor_crate_edges`: derives `contributed_to` edges by joining
+  `authored` (contributor→file) and `contains` (crate→file) edges; one edge per
+  (contributor, crate) pair with `total_commits` and `first_contribution_at`
 
 ### Step 6 — `build_graph.py`
 

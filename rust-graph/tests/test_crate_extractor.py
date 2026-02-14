@@ -5,6 +5,7 @@ from crate_extractor import (
     _build_dependency_edges_from_metadata,
     map_files_to_crates,
     enrich_crate_created_at,
+    build_contributor_crate_edges,
 )
 
 
@@ -260,3 +261,82 @@ def test_enrich_crate_created_at():
     assert crate_nodes[0]["created_at"] == "2025-05-01T10:00:00+00:00"
     assert crate_nodes[1]["created_at"] == "2025-06-15T12:30:00+00:00"
     assert crate_nodes[2]["created_at"] is None  # no matching file node
+
+
+# --- Test 9: Build contributor-crate edges ---
+
+def test_build_contributor_crate_edges():
+    """Verify contributed_to edges with deduplication and correct aggregation."""
+    # Two crates, three files
+    contains_edges = [
+        {"source": "crate_1", "target": "file_1", "type": "contains"},
+        {"source": "crate_1", "target": "file_2", "type": "contains"},
+        {"source": "crate_2", "target": "file_3", "type": "contains"},
+    ]
+
+    # Contributor_1 touched file_1 and file_2 in the SAME commit (commit_a) —
+    # should deduplicate to 1 commit for crate_1.
+    # Contributor_1 also touched file_3 in commit_b → 1 commit for crate_2.
+    # Contributor_2 touched file_1 in commit_c.
+    authored_edges = [
+        {"source": "contributor_1", "target": "file_1", "type": "authored",
+         "commits": ["commit_a"]},
+        {"source": "contributor_1", "target": "file_2", "type": "authored",
+         "commits": ["commit_a", "commit_b"]},
+        {"source": "contributor_1", "target": "file_3", "type": "authored",
+         "commits": ["commit_b"]},
+        {"source": "contributor_2", "target": "file_1", "type": "authored",
+         "commits": ["commit_c"]},
+    ]
+
+    commits_lookup = {
+        "commit_a": {"timestamp": "2025-06-01T10:00:00+00:00", "message": "a", "author": "contributor_1"},
+        "commit_b": {"timestamp": "2025-05-01T08:00:00+00:00", "message": "b", "author": "contributor_1"},
+        "commit_c": {"timestamp": "2025-07-01T12:00:00+00:00", "message": "c", "author": "contributor_2"},
+    }
+
+    edges = build_contributor_crate_edges(authored_edges, contains_edges, commits_lookup)
+
+    # 3 pairs: (contributor_1, crate_1), (contributor_1, crate_2), (contributor_2, crate_1)
+    assert len(edges) == 3
+
+    for e in edges:
+        assert e["type"] == "contributed_to"
+        assert "total_commits" in e
+        assert "first_contribution_at" in e
+
+    # contributor_1 → crate_1: commits {commit_a, commit_b} = 2 distinct commits
+    c1_cr1 = [e for e in edges if e["source"] == "contributor_1" and e["target"] == "crate_1"]
+    assert len(c1_cr1) == 1
+    assert c1_cr1[0]["total_commits"] == 2
+    # commit_b is earlier
+    assert c1_cr1[0]["first_contribution_at"] == "2025-05-01T08:00:00+00:00"
+
+    # contributor_1 → crate_2: commits {commit_b} = 1 commit
+    c1_cr2 = [e for e in edges if e["source"] == "contributor_1" and e["target"] == "crate_2"]
+    assert len(c1_cr2) == 1
+    assert c1_cr2[0]["total_commits"] == 1
+    assert c1_cr2[0]["first_contribution_at"] == "2025-05-01T08:00:00+00:00"
+
+    # contributor_2 → crate_1: commits {commit_c} = 1 commit
+    c2_cr1 = [e for e in edges if e["source"] == "contributor_2" and e["target"] == "crate_1"]
+    assert len(c2_cr1) == 1
+    assert c2_cr1[0]["total_commits"] == 1
+    assert c2_cr1[0]["first_contribution_at"] == "2025-07-01T12:00:00+00:00"
+
+
+def test_build_contributor_crate_edges_unmapped_files():
+    """Files not in any crate should not produce contributed_to edges."""
+    contains_edges = [
+        {"source": "crate_1", "target": "file_1", "type": "contains"},
+    ]
+    authored_edges = [
+        {"source": "contributor_1", "target": "file_2", "type": "authored",
+         "commits": ["commit_a"]},
+    ]
+    commits_lookup = {
+        "commit_a": {"timestamp": "2025-06-01T10:00:00+00:00", "message": "a", "author": "contributor_1"},
+    }
+
+    edges = build_contributor_crate_edges(authored_edges, contains_edges, commits_lookup)
+    assert len(edges) == 0
