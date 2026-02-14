@@ -89,11 +89,12 @@ def collect_run(run_dir: Path) -> list[dict]:
     return results
 
 
-def collect(run_dir_name: str) -> Path:
+def collect(run_dir_name: str, prefix: str = "summary") -> Path:
     """Collect all results from a run folder into a single summary JSON.
 
     Args:
         run_dir_name: Name of the timestamped run folder inside output/.
+        prefix: Filename prefix for the output (e.g. "summarize_file", "tag_file").
 
     Returns:
         Path to the generated summary file.
@@ -109,7 +110,7 @@ def collect(run_dir_name: str) -> Path:
         "files": results,
     }
 
-    out_path = OUTPUT_DIR / f"summary_{run_dir_name}.json"
+    out_path = OUTPUT_DIR / f"{prefix}_{run_dir_name}.json"
     with open(out_path, "w") as f:
         json.dump(summary, f, indent=2)
         f.write("\n")
@@ -137,6 +138,7 @@ def main():
     # Collect: gather results into a single JSON
     collect_parser = subparsers.add_parser("collect", help="Collect a run folder into a single summary JSON")
     collect_parser.add_argument("run_dir", help="Name of the timestamped run folder (e.g. 20260214_222035)")
+    collect_parser.add_argument("--prefix", default="summary", help="Filename prefix for collected output (default: summary)")
 
     args = parser.parse_args()
 
@@ -150,7 +152,7 @@ def main():
     )
 
     if args.command == "collect":
-        collect(args.run_dir)
+        collect(args.run_dir, prefix=args.prefix)
         return
 
     # command == "run"
@@ -164,6 +166,7 @@ def main():
         sys.exit(1)
 
     template = load_template(args.template)
+    prefix = Path(args.template).stem  # e.g. "summarize_file", "tag_file"
 
     extra_substitutions = {}
     if args.definitions:
@@ -203,7 +206,7 @@ def main():
     log.info("Done in %.1fs — %d succeeded, %d failed, %d total", elapsed, ok, errors, len(files))
 
     if not args.no_collect:
-        collect(run_dir.name)
+        collect(run_dir.name, prefix=prefix)
 
 
 if __name__ == "__main__":
