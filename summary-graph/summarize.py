@@ -13,10 +13,13 @@ Usage as library:
 
 import argparse
 import json
+import logging
 import os
 import sys
 
 import anthropic
+
+log = logging.getLogger(__name__)
 
 TOKEN_CONTENT = "%FILE_CONTENT%"
 TOKEN_PATH = "%FILE_PATH%"
@@ -61,13 +64,16 @@ def summarize_content(
         Dict with keys: model, source_length, response.
     """
     prompt = build_prompt(template, source_content, file_path)
+    log.debug("Prompt length: %d chars for %s", len(prompt), file_path or "<inline>")
     client = anthropic.Anthropic()  # reads ANTHROPIC_API_KEY from env
+    log.info("Calling %s for %s (%d chars)", model, file_path or "<inline>", len(source_content))
     message = client.messages.create(
         model=model,
         max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
     )
     response_text = message.content[0].text
+    log.info("Got response for %s (%d chars)", file_path or "<inline>", len(response_text))
     return {
         "model": model,
         "source_length": len(source_content),
@@ -102,17 +108,23 @@ def main():
     parser.add_argument("--max-tokens", type=int, default=4096, help="Max response tokens (default: 4096)")
     args = parser.parse_args()
 
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+
     if not os.environ.get("ANTHROPIC_API_KEY"):
-        print("Error: ANTHROPIC_API_KEY environment variable is not set.", file=sys.stderr)
+        log.error("ANTHROPIC_API_KEY environment variable is not set.")
         sys.exit(1)
 
+    log.info("Summarizing %s with template %s", args.source, args.template)
     result = summarize_file(args.template, args.source, args.model, args.max_tokens)
     output = json.dumps(result, indent=2)
 
     if args.output:
         with open(args.output, "w") as f:
             f.write(output + "\n")
-        print(f"Result written to {args.output}", file=sys.stderr)
+        log.info("Result written to %s", args.output)
     else:
         print(output)
 

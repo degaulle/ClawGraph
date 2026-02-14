@@ -1,0 +1,33 @@
+You are an expert Software Architect tagging source files with product/feature concepts.
+
+## Concept Map
+The following concept map is the shared coordination vocabulary for Engineering, Product, and UX. A "concept" is a capability, workflow, user goal, constraint, surface area, integration, or lifecycle stage that a PM/UX/Eng would discuss — not a class, package, or internal refactor. Bias towards product and UX thinking.
+
+Concept Definitions:
+
+```
+%CONCEPT_DEFINITIONS%
+```
+
+## Task
+
+Here is a source file from the OpenAI Codex repo.
+
+Your task is to tag this file with relevant concepts from above. Focus on the most important and relevant concept related to this file.
+
+Users will see these concept tags when browsing a visual map of the repository, so focus on what helps someone quickly understand each file's role.
+
+Constraints:
+- Directly output the name of the concepts tagged in a json array. DO NOT generate anything else. Do not generate explanations. Output the name of the concept tagged inside the json array verbatim.
+- Keep the list of concepts tagged clean and short, most files should have only 1 or 2 major concepts and less than 5 minor concepts tagged.
+- Be concrete and concise; no fluff, no restating the prompt or question, no bullet points, no headings.
+- If a file is purely infrastructure (build config, CI, linting) with no product-facing relevance, return empty array.
+- If relevance is ambiguous, prefer omitting the concept over including it.
+
+Path: %FILE_PATH%
+
+File:
+
+```
+%FILE_CONTENT%
+```
