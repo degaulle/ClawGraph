@@ -410,7 +410,12 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
-  window.addEventListener('resize', () => { resize(); draw(); });
+  window.addEventListener('resize', () => {
+    resize();
+    centerX = width / 2;
+    centerY = height / 2;
+    draw();
+  });
 
   // Colors
   const CONTRIBUTOR_COLOR = '#f59e0b';
@@ -828,13 +833,45 @@
   // --- Simulation setup (initial empty — rebuildGraph populates) ---
   const linkForce = d3.forceLink([]).id(d => d.id).distance(30).strength(0.1);
   const chargeForce = d3.forceManyBody().strength(-8).distanceMax(200).distanceMin(1).theta(0.9);
-  const centerForce = d3.forceCenter(width / 2, height / 2).strength(1);
+  let centerX = width / 2, centerY = height / 2;
+
+  // Custom center gravity: attractive when positive, repulsive with falloff when negative
+  function makeCenterGravity() {
+    let strength = 0.05, falloffRadius = 400, _nodes = [];
+    function force(alpha) {
+      for (const n of _nodes) {
+        const dx = centerX - n.x;
+        const dy = centerY - n.y;
+        if (strength >= 0) {
+          // Standard linear spring toward center
+          n.vx += dx * strength * alpha;
+          n.vy += dy * strength * alpha;
+        } else {
+          // Repulsive with distance falloff + weak global pull to contain
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const pull = 0.005;
+          n.vx += dx * pull * alpha;
+          n.vy += dy * pull * alpha;
+          if (dist >= falloffRadius || dist < 1e-6) continue;
+          const t = 1 - dist / falloffRadius;
+          n.vx += dx * strength * t * t * alpha;
+          n.vy += dy * strength * t * t * alpha;
+        }
+      }
+    }
+    force.initialize = function(n) { _nodes = n; };
+    force.strength = function(v) { return arguments.length ? (strength = v, force) : strength; };
+    force.falloffRadius = function(v) { return arguments.length ? (falloffRadius = v, force) : falloffRadius; };
+    return force;
+  }
+
+  const centerGravity = makeCenterGravity();
   const collisionForce = d3.forceCollide().radius(d => d.radius + 0.5).strength(0.3).iterations(1);
 
   const simulation = d3.forceSimulation([])
     .force('link', linkForce)
     .force('charge', chargeForce)
-    .force('center', centerForce)
+    .force('center', centerGravity)
     .force('collision', collisionForce)
     .alphaDecay(0.01)
     .alphaMin(0.001)
@@ -1094,8 +1131,11 @@
   makeSlider(chargeGroup, 'Distance Max', 50, 2000, 10, 200, v => { chargeForce.distanceMax(v); });
   makeSlider(chargeGroup, 'Theta', 0, 2, 0.01, 0.9, v => { chargeForce.theta(v); });
 
-  const centerGroup = makeGroup('Center Force', ctrlBody);
-  makeSlider(centerGroup, 'Strength', 0, 2, 0.01, 1, v => { centerForce.strength(v); });
+  const centerGroup = makeGroup('Center Gravity', ctrlBody);
+  makeSlider(centerGroup, 'Strength', -0.5, 0.5, 0.005, 0.05, v => {
+    centerGravity.strength(v);
+    if (v < 0) centerGravity.falloffRadius(50 + (Math.abs(v) / 0.5) * 1950);
+  });
 
   const collGroup = makeGroup('Collision', ctrlBody);
   makeSlider(collGroup, 'Strength', 0, 2, 0.01, 0.3, v => { collisionForce.strength(v); });
@@ -1166,6 +1206,28 @@
 
     // Size compensation for fixed-size mode
     const zk = fixedSize ? (1 / transform.k) : 1;
+
+    // Center cross marker
+    const crossSize = 10 * zk;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1 * zk;
+    ctx.beginPath();
+    ctx.moveTo(centerX - crossSize, centerY);
+    ctx.lineTo(centerX + crossSize, centerY);
+    ctx.moveTo(centerX, centerY - crossSize);
+    ctx.lineTo(centerX, centerY + crossSize);
+    ctx.stroke();
+
+    // Falloff radius ring (visible when repulsive)
+    if (centerGravity.strength() < 0) {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 1 * zk;
+      ctx.setLineDash([4 * zk, 4 * zk]);
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, centerGravity.falloffRadius(), 0, 2 * Math.PI);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     // Edges
     for (const link of links) {
