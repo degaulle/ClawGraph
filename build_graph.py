@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Main entry point: builds a knowledge graph from the codex repository's git history."""
 
+import argparse
 import json
 import os
 import subprocess
@@ -8,6 +9,12 @@ import sys
 
 from git_log_parser import parse_git_log
 from graph_builder import build_graph
+from concept_extractor import (
+    extract_concepts,
+    build_concept_hierarchy_edges,
+    build_concept_file_edges,
+    enrich_file_summaries,
+)
 
 # Allow importing from rust-graph/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rust-graph"))
@@ -43,6 +50,14 @@ def _find_cargo_workspaces(repo_path: str) -> list[str]:
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Build a knowledge graph from a git repository's history."
+    )
+    parser.add_argument("--concept-yaml", help="Path to concept map YAML file")
+    parser.add_argument("--summary-json", help="Path to file summary JSON")
+    parser.add_argument("--tag-json", help="Path to file tag JSON")
+    args = parser.parse_args()
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     repo_path = os.path.normpath(os.path.join(script_dir, "..", "codex"))
 
@@ -69,6 +84,33 @@ def main():
     # Parse and build
     parsed_commits = parse_git_log(result.stdout)
     graph = build_graph(parsed_commits, repo_path)
+
+    # Enrich file nodes with summaries
+    if args.summary_json:
+        enrich_file_summaries(graph["nodes"]["files"], args.summary_json)
+        n_with_summary = sum(1 for f in graph["nodes"]["files"] if f.get("summary"))
+        print(f"  File summaries: {n_with_summary}")
+
+    # Add concept layer
+    if args.concept_yaml:
+        major_concepts, minor_concepts = extract_concepts(args.concept_yaml)
+        graph["nodes"]["major_concepts"] = major_concepts
+        graph["nodes"]["minor_concepts"] = minor_concepts
+
+        hierarchy_edges = build_concept_hierarchy_edges(major_concepts, minor_concepts)
+        graph["edges"].extend(hierarchy_edges)
+
+        print(f"  Major concepts: {len(major_concepts)}")
+        print(f"  Minor concepts: {len(minor_concepts)}")
+        print(f"  has_minor edges: {len(hierarchy_edges)}")
+
+        if args.tag_json:
+            tagged_edges = build_concept_file_edges(
+                args.tag_json, major_concepts, minor_concepts,
+                graph["nodes"]["files"],
+            )
+            graph["edges"].extend(tagged_edges)
+            print(f"  tagged_with edges: {len(tagged_edges)}")
 
     # Add crate layer for each Cargo workspace found
     all_crate_nodes = []
