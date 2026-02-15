@@ -48,6 +48,23 @@ def result_filename(source_path: Path, root: str) -> str:
     return str(rel).replace("/", "__") + ".json"
 
 
+def filter_already_done(files: list[Path], root: str, run_dir: Path) -> tuple[list[Path], int]:
+    """Filter out files whose output JSON already exists in run_dir.
+
+    Returns:
+        (remaining_files, skipped_count)
+    """
+    remaining = []
+    skipped = 0
+    for f in files:
+        out_name = result_filename(f, root)
+        if (run_dir / out_name).exists():
+            skipped += 1
+        else:
+            remaining.append(f)
+    return remaining, skipped
+
+
 def process_one(
     template: str,
     source_path: Path,
@@ -134,6 +151,7 @@ def main():
     run_parser.add_argument("--no-collect", action="store_true", help="Skip auto-collecting results into a summary JSON")
     run_parser.add_argument("--definitions", help="Path to file whose contents replace %%CONCEPT_DEFINITIONS%%")
     run_parser.add_argument("--json-schema", help="Path to JSON schema file for structured output")
+    run_parser.add_argument("--resume", metavar="RUN_DIR", help="Resume a previous run (e.g. 20260214_222035)")
 
     # Collect: gather results into a single JSON
     collect_parser = subparsers.add_parser("collect", help="Collect a run folder into a single summary JSON")
@@ -177,12 +195,31 @@ def main():
         with open(args.json_schema, "r") as f:
             schema = json.load(f)
 
-    run_dir = make_run_dir()
-    log.info("Found %d files. Writing results to %s/", len(files), run_dir)
+    if args.resume:
+        run_dir = OUTPUT_DIR / args.resume
+        if not run_dir.is_dir():
+            log.error("Resume directory not found: %s", run_dir)
+            sys.exit(1)
+        log.info("Resuming run %s", run_dir)
+    else:
+        run_dir = make_run_dir()
+
+    files, skipped = filter_already_done(files, args.root, run_dir)
+    if skipped:
+        log.info("Skipped %d already-completed files", skipped)
+
+    if not files:
+        log.info("All files already completed.")
+        if not args.no_collect:
+            collect(run_dir.name, prefix=prefix)
+        return
+
+    log.info("Processing %d files. Writing results to %s/", len(files), run_dir)
     log.info("Workers: %d, Model: %s", args.workers, args.model)
 
     t0 = time.time()
     ok, errors = 0, 0
+    total = len(files) + skipped
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
         futures = {
@@ -197,13 +234,13 @@ def main():
             result = future.result()
             if result["status"] == "ok":
                 ok += 1
-                log.info("[%d/%d] OK  %s", ok + errors, len(files), result["path"])
+                log.info("[%d/%d] OK  %s", skipped + ok + errors, total, result["path"])
             else:
                 errors += 1
-                log.error("[%d/%d] ERR %s: %s", ok + errors, len(files), result["path"], result["error"])
+                log.error("[%d/%d] ERR %s: %s", skipped + ok + errors, total, result["path"], result["error"])
 
     elapsed = time.time() - t0
-    log.info("Done in %.1fs — %d succeeded, %d failed, %d total", elapsed, ok, errors, len(files))
+    log.info("Done in %.1fs — %d succeeded, %d failed, %d skipped, %d total", elapsed, ok, errors, skipped, total)
 
     if not args.no_collect:
         collect(run_dir.name, prefix=prefix)

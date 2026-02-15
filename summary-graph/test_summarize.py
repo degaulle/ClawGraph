@@ -7,13 +7,16 @@ Integration tests use codex-rs/apply-patch/src/ as a real file set.
 
 import json
 import tempfile
+import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
+import anthropic
+import httpx
 import pytest
 
 from summarize import build_prompt, load_template, load_source, summarize_content, summarize_file
-from batch_summarize import discover_files, result_filename, process_one
+from batch_summarize import discover_files, result_filename, process_one, filter_already_done
 
 CODEX_ROOT = Path(__file__).resolve().parent.parent.parent / "codex"
 APPLY_PATCH_SRC = CODEX_ROOT / "codex-rs" / "apply-patch" / "src"
@@ -246,3 +249,214 @@ class TestProcessOne:
             prompt = call_args.kwargs["messages"][0]["content"]
             assert "concept A" in prompt
             assert "%CONCEPT_DEFINITIONS%" not in prompt
+
+
+# ---------------------------------------------------------------------------
+# Rate-limit retry tests
+# ---------------------------------------------------------------------------
+
+def _make_rate_limit_error(retry_after=None):
+    """Create a realistic anthropic.RateLimitError for testing."""
+    headers = {"request-id": "test-req"}
+    if retry_after is not None:
+        headers["retry-after"] = str(retry_after)
+    response = httpx.Response(
+        status_code=429,
+        headers=headers,
+        request=httpx.Request("POST", "https://api.anthropic.com/v1/messages"),
+    )
+    return anthropic.RateLimitError(
+        message="Rate limit exceeded",
+        response=response,
+        body={"error": {"type": "rate_limit_error", "message": "Rate limit exceeded"}},
+    )
+
+
+class TestRateLimitRetry:
+    @patch("time.sleep")
+    @patch("summarize.anthropic.Anthropic")
+    def test_retries_then_succeeds(self, mock_cls, mock_sleep):
+        """Two rate-limit failures then success → 3 API calls, 2 sleeps."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        client.messages.create.side_effect = [
+            _make_rate_limit_error(),
+            _make_rate_limit_error(),
+            MagicMock(content=[MagicMock(text=MOCK_RESPONSE_TEXT)]),
+        ]
+        result = summarize_content(
+            "Summarize:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "fn main() {}", "%FILE_PATH%": "test.rs"},
+        )
+        assert result["response"] == MOCK_RESPONSE_TEXT
+        assert client.messages.create.call_count == 3
+        assert mock_sleep.call_count == 2
+
+    @patch("time.sleep")
+    @patch("summarize.anthropic.Anthropic")
+    def test_raises_after_max_retries(self, mock_cls, mock_sleep):
+        """Always fails → max_retries+1 calls, then raises RateLimitError."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        client.messages.create.side_effect = [_make_rate_limit_error() for _ in range(4)]
+        with pytest.raises(anthropic.RateLimitError):
+            summarize_content(
+                "Summarize:\n%FILE_CONTENT%",
+                {"%FILE_CONTENT%": "code", "%FILE_PATH%": "test.rs"},
+                max_retries=3,
+            )
+        assert client.messages.create.call_count == 4  # initial + 3 retries
+
+    @patch("time.sleep")
+    @patch("summarize.anthropic.Anthropic")
+    def test_non_rate_limit_error_not_retried(self, mock_cls, mock_sleep):
+        """A non-rate-limit API error propagates immediately, no retries."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        response = httpx.Response(
+            status_code=500,
+            headers={"request-id": "test"},
+            request=httpx.Request("POST", "https://api.anthropic.com/v1/messages"),
+        )
+        client.messages.create.side_effect = anthropic.InternalServerError(
+            message="Internal error", response=response, body=None,
+        )
+        with pytest.raises(anthropic.InternalServerError):
+            summarize_content(
+                "Summarize:\n%FILE_CONTENT%",
+                {"%FILE_CONTENT%": "code", "%FILE_PATH%": "test.rs"},
+            )
+        assert client.messages.create.call_count == 1
+        assert mock_sleep.call_count == 0
+
+    @patch("time.sleep")
+    @patch("summarize.anthropic.Anthropic")
+    def test_respects_retry_after_header(self, mock_cls, mock_sleep):
+        """Uses max(exponential, retry-after) for sleep duration."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        client.messages.create.side_effect = [
+            _make_rate_limit_error(retry_after=30),
+            MagicMock(content=[MagicMock(text=MOCK_RESPONSE_TEXT)]),
+        ]
+        result = summarize_content(
+            "Summarize:\n%FILE_CONTENT%",
+            {"%FILE_CONTENT%": "code", "%FILE_PATH%": "test.rs"},
+            retry_base_delay=2.0,
+        )
+        assert result["response"] == MOCK_RESPONSE_TEXT
+        # First attempt: backoff = 2.0 * 2^0 = 2.0, retry-after = 30 → sleep(30)
+        mock_sleep.assert_called_once()
+        sleep_arg = mock_sleep.call_args[0][0]
+        assert sleep_arg == 30
+
+    @patch("time.sleep")
+    @patch("summarize.anthropic.Anthropic")
+    def test_process_one_ok_after_transient_rate_limit(self, mock_cls, mock_sleep):
+        """Integration: process_one returns OK after a transient rate limit."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        client.messages.create.side_effect = [
+            _make_rate_limit_error(),
+            MagicMock(content=[MagicMock(text=MOCK_RESPONSE_TEXT)]),
+        ]
+        with tempfile.TemporaryDirectory() as tmp:
+            src = Path(tmp) / "test.rs"
+            src.write_text("fn main() {}")
+            template = "Summarize:\n%FILE_CONTENT%"
+            status = process_one(
+                template, src, tmp,
+                Path(tmp), "claude-haiku-4-5-20251001", 4096,
+            )
+            assert status["status"] == "ok"
+            assert client.messages.create.call_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Resume / filter_already_done tests
+# ---------------------------------------------------------------------------
+
+class TestResume:
+    def test_filter_skips_existing(self):
+        """filter_already_done skips files whose output JSON already exists."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "src"
+            root.mkdir()
+            run_dir = Path(tmp) / "run"
+            run_dir.mkdir()
+            files = []
+            for name in ["a.rs", "b.rs", "c.rs"]:
+                f = root / name
+                f.write_text("code")
+                files.append(f)
+            # Mark a.rs as done
+            done_name = result_filename(files[0], str(root))
+            (run_dir / done_name).write_text("{}")
+            remaining, skipped = filter_already_done(files, str(root), run_dir)
+            assert skipped == 1
+            assert len(remaining) == 2
+            assert files[0] not in remaining
+
+    def test_filter_skips_none_on_fresh_run(self):
+        """On a fresh run dir with no outputs, nothing is skipped."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "src"
+            root.mkdir()
+            run_dir = Path(tmp) / "run"
+            run_dir.mkdir()
+            files = []
+            for name in ["a.rs", "b.rs"]:
+                f = root / name
+                f.write_text("code")
+                files.append(f)
+            remaining, skipped = filter_already_done(files, str(root), run_dir)
+            assert skipped == 0
+            assert remaining == files
+
+    def test_filter_all_complete(self):
+        """If all files are already done, remaining is empty."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "src"
+            root.mkdir()
+            run_dir = Path(tmp) / "run"
+            run_dir.mkdir()
+            files = []
+            for name in ["a.rs", "b.rs"]:
+                f = root / name
+                f.write_text("code")
+                files.append(f)
+                done_name = result_filename(f, str(root))
+                (run_dir / done_name).write_text("{}")
+            remaining, skipped = filter_already_done(files, str(root), run_dir)
+            assert skipped == 2
+            assert remaining == []
+
+    @patch("summarize.anthropic.Anthropic")
+    def test_resume_processes_only_remaining(self, mock_cls):
+        """End-to-end: resume skips completed files and only processes remaining."""
+        client = _mock_anthropic_client()
+        mock_cls.return_value = client
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "src"
+            root.mkdir()
+            run_dir = Path(tmp) / "run"
+            run_dir.mkdir()
+            files = []
+            for name in ["a.rs", "b.rs", "c.rs"]:
+                f = root / name
+                f.write_text("fn main() {}")
+                files.append(f)
+            # Mark a.rs as already done
+            done_name = result_filename(files[0], str(root))
+            (run_dir / done_name).write_text(json.dumps({
+                "model": "test", "source_length": 12,
+                "response": "done", "source_path": "a.rs",
+            }))
+            remaining, skipped = filter_already_done(files, str(root), run_dir)
+            assert skipped == 1
+            template = "Summarize:\n%FILE_CONTENT%"
+            for f in remaining:
+                process_one(template, f, str(root), run_dir, "claude-haiku-4-5-20251001", 4096)
+            # Only 2 API calls (b.rs and c.rs), not 3
+            assert client.messages.create.call_count == 2
+            assert len(list(run_dir.glob("*.json"))) == 3  # a + b + c

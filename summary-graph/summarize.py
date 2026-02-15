@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import sys
+import time
 
 import anthropic
 
@@ -54,6 +55,9 @@ def summarize_content(
     model: str = DEFAULT_MODEL,
     max_tokens: int = 4096,
     json_schema: dict | None = None,
+    *,
+    max_retries: int = 5,
+    retry_base_delay: float = 2.0,
 ) -> dict:
     """Summarize source content using a prompt template.
 
@@ -63,6 +67,8 @@ def summarize_content(
         model: Anthropic model to use.
         max_tokens: Max tokens in the response.
         json_schema: Optional JSON schema for structured output.
+        max_retries: Max number of retries on rate-limit errors.
+        retry_base_delay: Base delay in seconds for exponential backoff.
 
     Returns:
         Dict with keys: model, source_length, response.
@@ -82,7 +88,22 @@ def summarize_content(
         api_kwargs["output_config"] = {
             "format": {"type": "json_schema", "schema": json_schema},
         }
-    message = client.messages.create(**api_kwargs)
+    for attempt in range(max_retries + 1):
+        try:
+            message = client.messages.create(**api_kwargs)
+            break
+        except anthropic.RateLimitError:
+            if attempt == max_retries:
+                raise
+            backoff = retry_base_delay * (2 ** attempt)
+            retry_after_hdr = sys.exc_info()[1].response.headers.get("retry-after")
+            if retry_after_hdr is not None:
+                backoff = max(backoff, float(retry_after_hdr))
+            log.warning(
+                "Rate-limited on %s (attempt %d/%d), sleeping %.1fs",
+                file_path, attempt + 1, max_retries, backoff,
+            )
+            time.sleep(backoff)
     response_text = message.content[0].text
     log.info("Got response for %s (%d chars)", file_path, len(response_text))
     return {
