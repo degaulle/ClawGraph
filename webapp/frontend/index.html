@@ -356,10 +356,13 @@
   <h3>Knowledge Graph</h3>
   <div class="legend-section">
     <div class="legend-section-title">Nodes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffffff"></div> Codex (root)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Contributors</div>
     <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Files (active)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Files (deleted)</div>
     <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Crates</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> Major Concepts</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Minor Concepts</div>
   </div>
   <div class="legend-section">
     <div class="legend-section-title">Edges</div>
@@ -367,6 +370,8 @@
     <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on (directed)</div>
     <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
     <div class="legend-item"><div class="legend-line" style="background:#a855f7"></div> Contributed to</div>
+    <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div> Has minor</div>
+    <div class="legend-item"><div class="legend-line" style="background:#06b6d4"></div> Tagged with</div>
   </div>
 </div>
 <div id="controls">
@@ -422,6 +427,9 @@
   const FILE_COLOR = '#3b82f6';
   const DELETED_FILE_COLOR = '#6b7280';
   const CRATE_COLOR = '#10b981';
+  const MAJOR_CONCEPT_COLOR = '#ec4899';
+  const MINOR_CONCEPT_COLOR = '#f472b6';
+  const ROOT_COLOR = '#ffffff';
 
   // Edge colors as RGB components (alpha applied dynamically)
   const EDGE_RGB = {
@@ -429,6 +437,9 @@
     depends_on: '239, 68, 68',
     contains: '16, 185, 129',
     contributed_to: '168, 85, 247',
+    has_minor: '236, 72, 153',
+    has_major: '255, 255, 255',
+    tagged_with: '6, 182, 212',
   };
 
   // Perceived-luminance correction so all edge colors look equally bright.
@@ -440,6 +451,9 @@
     depends_on: refLum / luminance(239, 68, 68),
     contains:   refLum / luminance(16, 185, 129),
     contributed_to: refLum / luminance(168, 85, 247),
+    has_minor: refLum / luminance(236, 72, 153),
+    has_major: 1,
+    tagged_with: refLum / luminance(6, 182, 212),
   };
 
   // Load data
@@ -479,6 +493,7 @@
       deleted: f.deleted,
       fileType: f.file_type,
       lineCount: loc,
+      summary: f.summary || null,
       createdAt: f.created_at ? new Date(f.created_at).getTime() : null,
       radius: loc > 0 ? Math.max(1.5, Math.min(12, 1.5 + Math.sqrt(loc) * 0.3)) : 1.5,
     };
@@ -501,6 +516,47 @@
     allNodes.push(node);
     nodeMap.set(cr.id, node);
   }
+
+  for (const mc of (raw.nodes.major_concepts || [])) {
+    const node = {
+      id: mc.id,
+      name: mc.name,
+      type: 'major_concept',
+      definition: mc.definition,
+      evidence: mc.evidence || [],
+      createdAt: null,
+      radius: 10,
+    };
+    allNodes.push(node);
+    nodeMap.set(mc.id, node);
+  }
+
+  for (const mc of (raw.nodes.minor_concepts || [])) {
+    const node = {
+      id: mc.id,
+      name: mc.name,
+      type: 'minor_concept',
+      definition: mc.definition,
+      evidence: mc.evidence || [],
+      majorConcept: mc.major_concept,
+      createdAt: null,
+      radius: 6,
+    };
+    allNodes.push(node);
+    nodeMap.set(mc.id, node);
+  }
+
+  // Synthetic root node — fixed at center, connects to major concepts
+  const ROOT_ID = '__root__';
+  const rootNode = {
+    id: ROOT_ID,
+    name: 'Codex',
+    type: 'root',
+    createdAt: null,
+    radius: 14,
+  };
+  allNodes.push(rootNode);
+  nodeMap.set(ROOT_ID, rootNode);
 
   // Build commit timestamp lookup
   const commitTs = new Map();
@@ -537,6 +593,13 @@
     }
     return link;
   });
+
+  // Synthetic edges: root → each major concept
+  for (const n of allNodes) {
+    if (n.type === 'major_concept') {
+      allLinksRaw.push({ source: ROOT_ID, target: n.id, type: 'has_major', commits: 0 });
+    }
+  }
 
   // Compute global time range and commit histogram for timeline
   const allTimestamps = [];
@@ -661,10 +724,14 @@
     activeSource: 'visible',
     otherFiles: 'off',
     crates: 'visible',
+    majorConcepts: 'visible',
+    minorConcepts: 'visible',
     authored: 'visible',
     dependsOn: 'visible',
     contains: 'visible',
     contributedTo: 'visible',
+    hasMinor: 'visible',
+    taggedWith: 'visible',
   };
 
   // Source code file extensions
@@ -683,8 +750,11 @@
   }
 
   function nodeTypeState(node) {
+    if (node.type === 'root') return 'visible'; // always visible
     if (node.type === 'contributor') return vis.contributors;
     if (node.type === 'crate') return vis.crates;
+    if (node.type === 'major_concept') return vis.majorConcepts;
+    if (node.type === 'minor_concept') return vis.minorConcepts;
     if (node.type === 'file') return isActiveSourceCode(node) ? vis.activeSource : vis.otherFiles;
     return vis.otherFiles;
   }
@@ -694,6 +764,9 @@
     if (link.type === 'depends_on') return vis.dependsOn;
     if (link.type === 'contains') return vis.contains;
     if (link.type === 'contributed_to') return vis.contributedTo;
+    if (link.type === 'has_minor') return vis.hasMinor;
+    if (link.type === 'has_major') return vis.majorConcepts; // tied to major concepts visibility
+    if (link.type === 'tagged_with') return vis.taggedWith;
     return 'visible';
   }
 
@@ -732,8 +805,10 @@
   }
 
   function getNodeScale(node) {
+    if (node.type === 'root') return conceptScale;
     if (node.type === 'contributor') return contributorScale;
     if (node.type === 'crate') return crateScale;
+    if (node.type === 'major_concept' || node.type === 'minor_concept') return conceptScale;
     return fileScale;
   }
 
@@ -741,8 +816,9 @@
     const nc = nodes.filter(n => n.type === 'contributor').length;
     const nf = nodes.filter(n => n.type === 'file').length;
     const ncr = nodes.filter(n => n.type === 'crate').length;
+    const ncon = nodes.filter(n => n.type === 'major_concept' || n.type === 'minor_concept').length;
     statsEl.style.display = 'block';
-    statsEl.textContent = `${nc} contributors | ${nf} files | ${ncr} crates | ${links.length} edges`;
+    statsEl.textContent = `${nc} contributors | ${nf} files | ${ncr} crates | ${ncon} concepts | ${links.length} edges`;
   }
 
   function rebuildGraph() {
@@ -883,6 +959,7 @@
   let contributorScale = 1;
   let fileScale = 1;
   let crateScale = 1;
+  let conceptScale = 1;
   let edgeWidth = 0.5;
   let edgeOpacity = 0.04;
   let highlightEdgeWidth = 1;
@@ -994,7 +1071,7 @@
   modeBtns.className = 'mode-switch-btns';
 
   const freeBtn = document.createElement('button');
-  freeBtn.className = 'mode-switch-btn active';
+  freeBtn.className = 'mode-switch-btn';
   freeBtn.textContent = 'Free';
   freeBtn.addEventListener('click', () => {
     if (!centricMode) return;
@@ -1006,10 +1083,10 @@
   });
 
   const centricBtn = document.createElement('button');
-  centricBtn.className = 'mode-switch-btn';
+  centricBtn.className = 'mode-switch-btn active';
   centricBtn.textContent = 'Centric';
-  centricBtn.title = 'Please select at least 1 node';
-  centricBtn.disabled = true;
+  centricBtn.title = '';
+  centricBtn.disabled = false;
   centricBtn.addEventListener('click', () => {
     if (centricBtn.disabled || centricMode) return;
     centricMode = true;
@@ -1030,7 +1107,7 @@
 
   // Depth slider (disabled in Free mode)
   const depthRow = document.createElement('div');
-  depthRow.className = 'ctrl-row disabled';
+  depthRow.className = 'ctrl-row';
   const depthLabel = document.createElement('label');
   depthLabel.textContent = 'Depth';
   const depthWrap = document.createElement('div');
@@ -1091,16 +1168,21 @@
   makeTriSwitch(visGroup, 'Active Source Code',  'visible', onVisChange('activeSource'));
   makeTriSwitch(visGroup, 'All Other Files',     'off',     onVisChange('otherFiles'));
   makeTriSwitch(visGroup, 'Crates',              'visible', onVisChange('crates'));
+  makeTriSwitch(visGroup, 'Major Concepts',      'visible', onVisChange('majorConcepts'));
+  makeTriSwitch(visGroup, 'Minor Concepts',      'visible', onVisChange('minorConcepts'));
   makeTriSwitch(visGroup, 'Authored edges',       'visible', onVisChange('authored'));
   makeTriSwitch(visGroup, 'Dependency edges',    'visible', onVisChange('dependsOn'));
   makeTriSwitch(visGroup, 'Contains edges',      'visible', onVisChange('contains'));
   makeTriSwitch(visGroup, 'Contributed-to edges', 'visible', onVisChange('contributedTo'));
+  makeTriSwitch(visGroup, 'Has-minor edges',     'visible', onVisChange('hasMinor'));
+  makeTriSwitch(visGroup, 'Tagged-with edges',   'visible', onVisChange('taggedWith'));
 
   // Node sizing group
   const nodeGroup = makeGroup('Nodes', appearBody);
   makeSlider(nodeGroup, 'Contributor Size', 0.1, 5, 0.1, 1, v => { contributorScale = v; draw(); });
   makeSlider(nodeGroup, 'File Size', 0.1, 5, 0.1, 1, v => { fileScale = v; draw(); });
   makeSlider(nodeGroup, 'Crate Size', 0.1, 5, 0.1, 1, v => { crateScale = v; draw(); });
+  makeSlider(nodeGroup, 'Concept Size', 0.1, 5, 0.1, 1, v => { conceptScale = v; draw(); });
   makeCheckbox(nodeGroup, 'Fixed size (ignore zoom)', true, v => { fixedSize = v; draw(); });
 
   const edgeGroup = makeGroup('Edges', appearBody);
@@ -1184,8 +1266,13 @@
   let hoveredNode = null;
   let draggedNode = null;
   const selectedNodes = new Set(); // node IDs that are pinned
-  let centricMode = false;
+  let centricMode = true;
   let centricDepth = 0;
+
+  // Fix root node at center and select it
+  rootNode.fx = centerX;
+  rootNode.fy = centerY;
+  selectedNodes.add(ROOT_ID);
 
   // --- Initial graph build ---
   rebuildGraph();
@@ -1297,10 +1384,16 @@
       ctx.beginPath();
       ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
 
-      if (node.type === 'contributor') {
+      if (node.type === 'root') {
+        ctx.fillStyle = ROOT_COLOR;
+      } else if (node.type === 'contributor') {
         ctx.fillStyle = CONTRIBUTOR_COLOR;
       } else if (node.type === 'crate') {
         ctx.fillStyle = CRATE_COLOR;
+      } else if (node.type === 'major_concept') {
+        ctx.fillStyle = MAJOR_CONCEPT_COLOR;
+      } else if (node.type === 'minor_concept') {
+        ctx.fillStyle = MINOR_CONCEPT_COLOR;
       } else if (node.deleted) {
         ctx.fillStyle = DELETED_FILE_COLOR;
       } else {
@@ -1367,7 +1460,9 @@
       if (node) {
         tooltip.style.display = 'block';
         let html = `<div class="value">${node.name}</div>`;
-        if (node.type === 'contributor') {
+        if (node.type === 'root') {
+          html += `<div class="label">Root node</div>`;
+        } else if (node.type === 'contributor') {
           html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
         } else if (node.type === 'crate') {
           const targets = [];
@@ -1376,9 +1471,18 @@
           html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
           html += `<div class="label">${node.rootDir}</div>`;
           if (node.createdAt) html += `<div class="label">Created ${new Date(node.createdAt).toLocaleDateString()}</div>`;
+        } else if (node.type === 'major_concept') {
+          html += `<div class="label">Major Concept</div>`;
+          html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
+          if (node.evidence.length) html += `<div class="label">${node.evidence.length} evidence files</div>`;
+        } else if (node.type === 'minor_concept') {
+          html += `<div class="label">Minor Concept</div>`;
+          html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
+          if (node.evidence.length) html += `<div class="label">${node.evidence.length} evidence files</div>`;
         } else {
           const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
           html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
+          if (node.summary) html += `<div class="label" style="white-space:normal;max-width:350px">${node.summary}</div>`;
         }
         const neighbors = adjacency.get(node.id);
         if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
@@ -1417,6 +1521,7 @@
         return node;
       })
       .on('start', (event) => {
+        if (event.subject.id === ROOT_ID) return; // root is immovable
         if (!event.active) simulation.alphaTarget(0.1).restart();
         draggedNode = event.subject;
         dragStartX = event.x;
@@ -1426,10 +1531,12 @@
         tooltip.style.display = 'none';
       })
       .on('drag', (event) => {
+        if (event.subject.id === ROOT_ID) return;
         event.subject.fx = transform.invertX(event.x);
         event.subject.fy = transform.invertY(event.y);
       })
       .on('end', (event) => {
+        if (event.subject.id === ROOT_ID) return;
         if (!event.active) simulation.alphaTarget(0);
         const node = event.subject;
         const dx = event.x - dragStartX;
@@ -1464,12 +1571,14 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && selectedNodes.size > 0) {
       for (const node of allNodes) {
-        if (selectedNodes.has(node.id)) {
+        if (selectedNodes.has(node.id) && node.id !== ROOT_ID) {
           node.fx = null;
           node.fy = null;
         }
       }
       selectedNodes.clear();
+      // Root always stays selected
+      selectedNodes.add(ROOT_ID);
       updateCentricAvailability(); // switches back to Free if in centric mode
       draw();
     }

@@ -6,7 +6,13 @@ Output file: `output/knowledge_graph.json`
 
 ```json
 {
-  "nodes": { "files": [...], "contributors": [...], "crates": [...] },
+  "nodes": {
+    "files": [...],
+    "contributors": [...],
+    "crates": [...],
+    "major_concepts": [...],
+    "minor_concepts": [...]
+  },
   "edges": [...],
   "commits": { "<hash>": {...}, ... }
 }
@@ -25,7 +31,8 @@ Output file: `output/knowledge_graph.json`
   "created_at": "2025-04-16T16:56:08+00:00",
   "last_modified_at": "2025-12-18T19:53:36+00:00",
   "file_type": "yml",
-  "latest_line_count": 66
+  "latest_line_count": 66,
+  "summary": "CI workflow configuration for GitHub Actions."
 }
 ```
 
@@ -39,6 +46,7 @@ Output file: `output/knowledge_graph.json`
 | `last_modified_at` | `ISO 8601` | Timestamp of most recent commit |
 | `file_type` | `string \| null` | Extension (e.g. `"rs"`, `"yml"`); `null` for dotfiles |
 | `latest_line_count` | `int \| null` | Line count at HEAD; `null` if deleted |
+| `summary` | `string \| null` | AI-generated summary of the file's purpose; `null` if not available |
 
 ### Contributor
 
@@ -86,9 +94,47 @@ Output file: `output/knowledge_graph.json`
 | `has_bin` | `bool` | Has a `bin` target |
 | `created_at` | `ISO 8601 \| null` | Timestamp of first commit adding the crate's `Cargo.toml`; `null` if not in git history |
 
+### Major Concept
+
+```json
+{
+  "id": "major_concept_1",
+  "name": "Conversation",
+  "definition": "The primary interaction paradigm: a streaming, turn-based chat...",
+  "evidence": ["codex-rs/tui/src/chatwidget.rs", "codex-rs/core/src/context_manager.rs"]
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `"major_concept_N"` | Deterministic — sorted by concept name |
+| `name` | `string` | Product/feature concept name |
+| `definition` | `string` | 1–2 sentence description |
+| `evidence` | `string[]` | File paths that exemplify this concept |
+
+### Minor Concept
+
+```json
+{
+  "id": "minor_concept_1",
+  "name": "User Prompt",
+  "definition": "A natural-language message the user types into the composer...",
+  "evidence": ["codex-rs/tui/src/bottom_pane/chat_composer.rs"],
+  "major_concept": "major_concept_1"
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `"minor_concept_N"` | Deterministic — sorted by (major name, minor name) |
+| `name` | `string` | Product/feature concept name |
+| `definition` | `string` | 1–2 sentence description |
+| `evidence` | `string[]` | File paths that exemplify this concept |
+| `major_concept` | `"major_concept_N"` | ID of the parent major concept |
+
 ## Edge types
 
-All edges have a `type` field. Four types exist:
+All edges have a `type` field. Six types exist:
 
 ### `authored` — contributor wrote/modified a file
 
@@ -146,6 +192,31 @@ edges. One edge per (contributor, crate) pair. `total_commits` is the number of
 distinct commits where the contributor touched files in the crate.
 `first_contribution_at` is the timestamp of the earliest such commit.
 
+### `has_minor` — major concept contains a minor concept
+
+```json
+{
+  "source": "major_concept_1",
+  "target": "minor_concept_3",
+  "type": "has_minor"
+}
+```
+
+One edge per minor concept, linking it to its parent major concept.
+
+### `tagged_with` — concept is associated with a file
+
+```json
+{
+  "source": "minor_concept_3",
+  "target": "file_42",
+  "type": "tagged_with"
+}
+```
+
+Derived from AI-generated tags. Both major and minor concepts can tag files.
+One edge per (concept, file) pair. Deduplicated.
+
 ## Commits
 
 ```json
@@ -165,10 +236,16 @@ Keyed by full SHA. `author` references a contributor ID.
 | Metric | Count |
 |---|---|
 | Files | 4,237 |
+| Files with summaries | 888 |
 | Contributors | 353 |
 | Crates | 66 |
+| Major concepts | 9 |
+| Minor concepts | 88 |
 | Commits | 3,632 |
 | `authored` edges | 10,674 |
 | `depends_on` edges | 205 |
 | `contains` edges | 2,873 |
-| Total edges | 13,752 |
+| `contributed_to` edges | 958 |
+| `has_minor` edges | 88 |
+| `tagged_with` edges | 2,167 |
+| Total edges | 16,965 |
