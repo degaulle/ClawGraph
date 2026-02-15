@@ -1412,16 +1412,37 @@
     }
     ctx.globalAlpha = 1;
 
+    // Label font size: constant screen size when fixedSize, else world-space
+    const fontSize = fixedSize ? 12 * zk : Math.max(4, 12);
+    const labelPad = fixedSize ? 4 * zk : 4;
+
+    // Always-visible labels for concept and root nodes
+    for (const node of nodes) {
+      if (!nodeDrawn(node)) continue;
+      if (node.type !== 'root' && node.type !== 'major_concept' && node.type !== 'minor_concept') continue;
+      if (hoveredNode && node.id === hoveredNode.id) continue; // drawn below with hover styling
+
+      const highlighted = hoveredNode ? highlightSet.has(node.id) : true;
+      const scale = getNodeScale(node);
+      const r = node.radius * scale * zk;
+      ctx.globalAlpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 0.9;
+      ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(node.name, node.x + r + labelPad, node.y);
+    }
+    ctx.globalAlpha = 1;
+
     // Label for hovered node
     if (hoveredNode && nodeDrawn(hoveredNode)) {
       const hScale = getNodeScale(hoveredNode);
       const hR = hoveredNode.radius * hScale * zk;
-      const fontSize = Math.max(10, 12 * zk);
       ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(hoveredNode.name, hoveredNode.x + hR + 4 * zk, hoveredNode.y - 4 * zk);
+      ctx.fillText(hoveredNode.name, hoveredNode.x + hR + labelPad, hoveredNode.y - labelPad);
     }
 
     ctx.restore();
