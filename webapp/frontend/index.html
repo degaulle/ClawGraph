@@ -320,9 +320,8 @@
     line-height: 1.4;
   }
   .mode-switch-btn:last-child { border-right: none; }
-  .mode-switch-btn:hover:not(:disabled) { color: #999; }
+  .mode-switch-btn:hover { color: #999; }
   .mode-switch-btn.active { background: #1a2a3a; color: #3b82f6; }
-  .mode-switch-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .ctrl-row.disabled label,
   .ctrl-row.disabled .ctrl-val { opacity: 0.3; }
   .ctrl-row.disabled input[type="range"] { opacity: 0.3; pointer-events: none; }
@@ -341,6 +340,7 @@
     text-align: center;
   }
   .ctrl-row.disabled .depth-ticks span { opacity: 0.3; }
+
 </style>
 </head>
 <body>
@@ -477,6 +477,9 @@
       name: c.name,
       type: 'contributor',
       totalCommits: c.total_commits,
+      firstCommitAt: c.first_commit_at || null,
+      role: c.role || null,
+      contributions: c.contributions || null,
       createdAt: c.first_commit_at ? new Date(c.first_commit_at).getTime() : null,
       radius: Math.max(4, Math.min(16, 3 + Math.sqrt(c.total_commits))),
     };
@@ -821,139 +824,272 @@
     statsEl.textContent = `${nc} contributors | ${nf} files | ${ncr} crates | ${ncon} concepts | ${links.length} edges`;
   }
 
-  function rebuildGraph() {
-    // Clear hover state (hovered node may no longer exist in the graph)
+  // Radial layout radii (mutable via controls)
+  const RING_RADII = [200, 400, 550, 800, 1000]; // [concepts, minors, files_near, files_far, contributors]
+  let centerX = width / 2, centerY = height / 2;
+
+  // Track previous node set for positioning new nodes near the trigger
+  let prevNodeIds = new Set();
+
+  function rebuildGraph(triggerNode) {
     hoveredNode = null;
     tooltip.style.display = 'none';
 
-    // Filter nodes — 'visible' and 'hidden' are in simulation, 'off' is excluded
-    // Also apply timeline range filter
-    nodes = allNodes.filter(n => nodeTypeState(n) !== 'off' && nodeInTimeRange(n));
-    const activeIds = new Set(nodes.map(n => n.id));
+    const allowedIds = new Set();
+    allowedIds.add(ROOT_ID);
+    let edgeFilter;
 
-    // Filter candidate edges (before D3 mutates source/target)
-    let filteredLinks = allLinksRaw.filter(l => {
-      if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
-      if (linkTypeState(l) === 'off') return false;
-      return linkInTimeRange(l);
-    });
-
-    // Centric mode: BFS from selected nodes, filter by depth
-    if (centricMode && selectedNodes.size > 0) {
-      // Build BFS adjacency from candidate edges
-      const bfsAdj = new Map();
-      for (const e of filteredLinks) {
-        if (!bfsAdj.has(e.source)) bfsAdj.set(e.source, []);
-        if (!bfsAdj.has(e.target)) bfsAdj.set(e.target, []);
-        bfsAdj.get(e.source).push(e.target);
-        bfsAdj.get(e.target).push(e.source);
+    if (mode === 'overview') {
+      // Overview: show all nodes (respecting visibility 'off' and timeline)
+      for (const n of allNodes) {
+        if (nodeTypeState(n) !== 'off' && nodeInTimeRange(n)) allowedIds.add(n.id);
       }
-
-      // BFS from selected nodes
-      const depthMap = new Map();
-      const queue = [];
-      for (const id of selectedNodes) {
-        if (activeIds.has(id)) {
-          depthMap.set(id, 0);
-          queue.push(id);
+      edgeFilter = l => linkTypeState(l) !== 'off' && linkInTimeRange(l);
+    } else if (activeContributor) {
+      // Contributor view: root + concepts + contributor + authored files + concept connections
+      for (const mc of majorConceptNodes) allowedIds.add(mc.id);
+      allowedIds.add(activeContributor.id);
+      const authoredFiles = contributorToFiles.get(activeContributor.id) || new Set();
+      for (const fid of authoredFiles) allowedIds.add(fid);
+      // Include minor concepts that tag the authored files
+      const relatedConcepts = new Set();
+      for (const [cid, taggedFiles] of conceptToFiles) {
+        for (const fid of authoredFiles) {
+          if (taggedFiles.has(fid)) { relatedConcepts.add(cid); allowedIds.add(cid); break; }
         }
       }
-      let qi = 0;
-      while (qi < queue.length) {
-        const id = queue[qi++];
-        const d = depthMap.get(id);
-        if (d >= centricDepth) continue;
-        for (const neighbor of (bfsAdj.get(id) || [])) {
-          if (!depthMap.has(neighbor)) {
-            depthMap.set(neighbor, d + 1);
-            queue.push(neighbor);
-          }
-        }
+      edgeFilter = l => {
+        if (l.type === 'has_major') return true;
+        if (l.type === 'authored' && l.source === activeContributor.id) return true;
+        if (l.type === 'tagged_with' && authoredFiles.has(l.target)) return true;
+        if (l.type === 'has_minor' && relatedConcepts.has(l.target)) return true;
+        return false;
+      };
+    } else if (activeFile) {
+      // File view: root + concept context + file + its contributors
+      if (activeMajor) {
+        allowedIds.add(activeMajor.id);
+        if (activeMinor) allowedIds.add(activeMinor.id);
       }
-
-      // Keep only nodes within depth range
-      nodes = nodes.filter(n => depthMap.has(n.id));
-
-      // Keep edges where both endpoints are in range and at least one
-      // is strictly inside the boundary (discovery-order rule)
-      filteredLinks = filteredLinks.filter(e => {
-        const ds = depthMap.get(e.source);
-        const dt = depthMap.get(e.target);
-        if (ds === undefined || dt === undefined) return false;
-        return Math.min(ds, dt) < centricDepth;
-      });
+      allowedIds.add(activeFile.id);
+      const fileContribs = fileToContributors.get(activeFile.id) || new Set();
+      for (const cid of fileContribs) allowedIds.add(cid);
+      edgeFilter = l => {
+        if (activeMajor && l.type === 'has_major' && l.target === activeMajor.id) return true;
+        if (activeMinor && l.type === 'has_minor' && l.source === activeMajor.id && l.target === activeMinor.id) return true;
+        if (l.type === 'tagged_with' && l.target === activeFile.id) return true;
+        if (l.type === 'authored' && l.target === activeFile.id) return true;
+        return false;
+      };
+    } else if (activeMajor && activeMinor) {
+      // Minor concept drill-down: root + major + minor + minor's files
+      allowedIds.add(activeMajor.id);
+      allowedIds.add(activeMinor.id);
+      const minorFiles = conceptToFiles.get(activeMinor.id) || new Set();
+      for (const fid of minorFiles) allowedIds.add(fid);
+      edgeFilter = l => {
+        if (l.type === 'has_major' && l.target === activeMajor.id) return true;
+        if (l.type === 'has_minor' && l.source === activeMajor.id && l.target === activeMinor.id) return true;
+        if (l.type === 'tagged_with' && l.source === activeMinor.id) return true;
+        return false;
+      };
+    } else if (activeMajor) {
+      // Major concept drill-down: root + major + its minors + DIRECT files only
+      allowedIds.add(activeMajor.id);
+      for (const m of (majorToMinorNodes.get(activeMajor.id) || [])) allowedIds.add(m.id);
+      const directFiles = conceptToFiles.get(activeMajor.id) || new Set();
+      for (const fid of directFiles) allowedIds.add(fid);
+      edgeFilter = l => {
+        if (l.type === 'has_major' && l.target === activeMajor.id) return true;
+        if (l.type === 'has_minor' && l.source === activeMajor.id) return true;
+        if (l.type === 'tagged_with' && l.source === activeMajor.id) return true;
+        return false;
+      };
+    } else {
+      // Level 1: root + all major concepts
+      for (const mc of majorConceptNodes) allowedIds.add(mc.id);
+      edgeFilter = l => l.type === 'has_major';
     }
 
-    // Create fresh link objects (D3 mutates source/target to object refs)
-    links = filteredLinks.map(l => ({ ...l }));
+    nodes = allNodes.filter(n => allowedIds.has(n.id) && nodeInTimeRange(n));
+    const activeIds = new Set(nodes.map(n => n.id));
+
+    links = allLinksRaw.filter(l => {
+      if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
+      return edgeFilter(l);
+    }).map(l => ({ ...l }));
 
     // Rebuild adjacency
     adjacency = new Map();
     for (const l of links) {
-      // source/target are still strings here (fresh copies)
       if (!adjacency.has(l.source)) adjacency.set(l.source, new Set());
       if (!adjacency.has(l.target)) adjacency.set(l.target, new Set());
       adjacency.get(l.source).add(l.target);
       adjacency.get(l.target).add(l.source);
     }
 
-    // Update simulation
-    simulation.nodes(nodes);
-    linkForce.links(links);
-    collisionForce.radius(d => d.radius + collisionPadding);
-    simulation.alpha(1).restart();
+    // --- Positioning & simulation ---
+    if (mode === 'overview') {
+      // Overview: pin all nodes on concentric rings (no animation)
+      const mcInView = nodes.filter(n => n.type === 'major_concept');
+      const nMC = mcInView.length || 1;
+      const wedge = 2 * Math.PI / nMC;
+      const mcAngle = new Map();
+      mcInView.forEach((mc, i) => {
+        const a = (i / nMC) * 2 * Math.PI - Math.PI / 2;
+        mcAngle.set(mc.id, a);
+        mc.x = mc.fx = centerX + RING_RADII[0] * Math.cos(a);
+        mc.y = mc.fy = centerY + RING_RADII[0] * Math.sin(a);
+      });
+      for (const mc of mcInView) {
+        const ba = mcAngle.get(mc.id);
+        const minorIds = majorToMinors.get(mc.id) || new Set();
+        const minors = nodes.filter(n => minorIds.has(n.id));
+        const sp = wedge * 0.85;
+        minors.forEach((mn, j) => {
+          const a = ba - sp / 2 + (j + 0.5) / Math.max(minors.length, 1) * sp;
+          mn.x = mn.fx = centerX + RING_RADII[1] * Math.cos(a);
+          mn.y = mn.fy = centerY + RING_RADII[1] * Math.sin(a);
+        });
+      }
+      for (const mc of mcInView) {
+        const ba = mcAngle.get(mc.id);
+        const sectorFiles = nodes.filter(n => n.type === 'file' && fileToMajor.get(n.id) === mc.id);
+        const sp = wedge * 0.85;
+        sectorFiles.forEach((f, j) => {
+          const a = ba - sp / 2 + (j + 0.5) / Math.max(sectorFiles.length, 1) * sp;
+          const r = sectorFiles.length > 1
+            ? RING_RADII[2] + (RING_RADII[3] - RING_RADII[2]) * (j / (sectorFiles.length - 1))
+            : (RING_RADII[2] + RING_RADII[3]) / 2;
+          f.x = f.fx = centerX + r * Math.cos(a);
+          f.y = f.fy = centerY + r * Math.sin(a);
+        });
+      }
+      const unassigned = nodes.filter(n => n.type === 'file' && !fileToMajor.has(n.id));
+      unassigned.forEach((f, i) => {
+        const a = (i / Math.max(unassigned.length, 1)) * 2 * Math.PI;
+        const r = (RING_RADII[2] + RING_RADII[3]) / 2;
+        f.x = f.fx = centerX + r * Math.cos(a);
+        f.y = f.fy = centerY + r * Math.sin(a);
+      });
+      const contribs = nodes.filter(n => n.type === 'contributor');
+      contribs.forEach((c, i) => {
+        const a = (i / Math.max(contribs.length, 1)) * 2 * Math.PI - Math.PI / 2;
+        c.x = c.fx = centerX + RING_RADII[4] * Math.cos(a);
+        c.y = c.fy = centerY + RING_RADII[4] * Math.sin(a);
+      });
+      const crateR = (RING_RADII[3] + RING_RADII[4]) / 2;
+      const crates = nodes.filter(n => n.type === 'crate');
+      crates.forEach((cr, i) => {
+        const a = (i / Math.max(crates.length, 1)) * 2 * Math.PI - Math.PI / 2;
+        cr.x = cr.fx = centerX + crateR * Math.cos(a);
+        cr.y = cr.fy = centerY + crateR * Math.sin(a);
+      });
+      rootNode.x = centerX; rootNode.y = centerY;
+      rootNode.fx = centerX; rootNode.fy = centerY;
+      prevNodeIds = activeIds;
+      simulation.stop();
+      simulation.nodes(nodes);
+      simulation.force('link').links(links);
+      simulation.tick();
+      draw();
+      updateStats();
+    } else {
+      // Explore: animated forces with smart initial positioning
 
-    updateStats();
-  }
+      // Pre-position major concepts evenly around center
+      const mcInView = nodes.filter(n => n.type === 'major_concept');
+      if (mcInView.length > 0) {
+        mcInView.forEach((mc, i) => {
+          if (!prevNodeIds.has(mc.id)) {
+            const a = (i / mcInView.length) * 2 * Math.PI - Math.PI / 2;
+            mc.x = centerX + RING_RADII[0] * Math.cos(a);
+            mc.y = centerY + RING_RADII[0] * Math.sin(a);
+          }
+        });
+      }
 
-  // --- Simulation setup (initial empty — rebuildGraph populates) ---
-  const linkForce = d3.forceLink([]).id(d => d.id).distance(30).strength(0.1);
-  const chargeForce = d3.forceManyBody().strength(-8).distanceMax(200).distanceMin(1).theta(0.9);
-  let centerX = width / 2, centerY = height / 2;
-
-  // Custom center gravity: attractive when positive, repulsive with falloff when negative
-  function makeCenterGravity() {
-    let strength = 0.05, falloffRadius = 400, _nodes = [];
-    function force(alpha) {
-      for (const n of _nodes) {
-        const dx = centerX - n.x;
-        const dy = centerY - n.y;
-        if (strength >= 0) {
-          // Standard linear spring toward center
-          n.vx += dx * strength * alpha;
-          n.vy += dy * strength * alpha;
-        } else {
-          // Repulsive with distance falloff + weak global pull to contain
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const pull = 0.005;
-          n.vx += dx * pull * alpha;
-          n.vy += dy * pull * alpha;
-          if (dist >= falloffRadius || dist < 1e-6) continue;
-          const t = 1 - dist / falloffRadius;
-          n.vx += dx * strength * t * t * alpha;
-          n.vy += dy * strength * t * t * alpha;
+      // Pre-position minor concepts with wide angular spread
+      if (activeMajor) {
+        const minorIds = majorToMinors.get(activeMajor.id) || new Set();
+        const minorsInView = nodes.filter(n => minorIds.has(n.id));
+        if (minorsInView.length > 0) {
+          const pa = Math.atan2(
+            (activeMajor.y || centerY) - centerY,
+            (activeMajor.x || centerX) - centerX
+          );
+          const totalSpread = Math.PI * 1.5;
+          minorsInView.forEach((mn, j) => {
+            if (!prevNodeIds.has(mn.id)) {
+              const a = pa - totalSpread / 2 + (j + 0.5) / minorsInView.length * totalSpread;
+              mn.x = centerX + RING_RADII[1] * Math.cos(a);
+              mn.y = centerY + RING_RADII[1] * Math.sin(a);
+            }
+          });
         }
       }
+
+      // Pre-position contributors evenly when showing file's contributors
+      if (activeFile) {
+        const contribs = nodes.filter(n => n.type === 'contributor');
+        contribs.forEach((c, i) => {
+          if (!prevNodeIds.has(c.id)) {
+            const a = (i / Math.max(contribs.length, 1)) * 2 * Math.PI - Math.PI / 2;
+            c.x = centerX + RING_RADII[4] * Math.cos(a);
+            c.y = centerY + RING_RADII[4] * Math.sin(a);
+          }
+        });
+      }
+
+      // Position remaining new nodes near the trigger
+      const tx = triggerNode ? (triggerNode.x || centerX) : centerX;
+      const ty = triggerNode ? (triggerNode.y || centerY) : centerY;
+      for (const node of nodes) {
+        if (node.x == null) {
+          node.x = tx + (Math.random() - 0.5) * 30;
+          node.y = ty + (Math.random() - 0.5) * 30;
+        }
+        if (node.id !== ROOT_ID) { node.fx = null; node.fy = null; }
+      }
+      prevNodeIds = activeIds;
+      rootNode.x = centerX; rootNode.y = centerY;
+      rootNode.fx = centerX; rootNode.fy = centerY;
+      radialForce.x(centerX).y(centerY);
+      simulation.nodes(nodes);
+      simulation.force('link').links(links);
+      simulation.alpha(0.8).restart();
+      updateStats();
     }
-    force.initialize = function(n) { _nodes = n; };
-    force.strength = function(v) { return arguments.length ? (strength = v, force) : strength; };
-    force.falloffRadius = function(v) { return arguments.length ? (falloffRadius = v, force) : falloffRadius; };
-    return force;
   }
 
-  const centerGravity = makeCenterGravity();
-  const collisionForce = d3.forceCollide().radius(d => d.radius + 0.5).strength(0.3).iterations(1);
-
+  // Force simulation with radial positioning
+  function getTargetRadius(d) {
+    if (d.type === 'root') return 0;
+    if (d.type === 'major_concept') return RING_RADII[0];
+    if (d.type === 'minor_concept') return RING_RADII[1];
+    if (d.type === 'file') return (RING_RADII[2] + RING_RADII[3]) / 2;
+    if (d.type === 'contributor') return RING_RADII[4];
+    return 300;
+  }
+  const linkForce = d3.forceLink([]).id(d => d.id).distance(60).strength(0.15);
+  const chargeForce = d3.forceManyBody().strength(-25).distanceMax(400);
+  const radialForce = d3.forceRadial(d => getTargetRadius(d), centerX, centerY).strength(0.4);
+  const collisionForce = d3.forceCollide(d => d.radius + 1).strength(0.6);
   const simulation = d3.forceSimulation([])
     .force('link', linkForce)
     .force('charge', chargeForce)
-    .force('center', centerGravity)
+    .force('radial', radialForce)
     .force('collision', collisionForce)
-    .alphaDecay(0.01)
-    .alphaMin(0.001)
-    .alphaTarget(0)
-    .velocityDecay(0.3)
+    .alphaDecay(0.03)
+    .velocityDecay(0.35)
     .on('tick', draw);
+
+  // --- Navigation state (must be before appearance panel) ---
+  let mode = 'explore'; // 'explore' or 'overview'
+  let activeMajor = null; // major concept drilled into
+  let activeMinor = null; // minor concept drilled into
+  let activeFile = null; // file clicked to show its contributors
+  let activeContributor = null; // contributor clicked to show their files
 
   // --- Appearance state ---
   let contributorScale = 1;
@@ -961,12 +1097,11 @@
   let crateScale = 1;
   let conceptScale = 1;
   let edgeWidth = 0.5;
-  let edgeOpacity = 0.04;
+  let edgeOpacity = 0.25;
   let highlightEdgeWidth = 1;
   let highlightEdgeOpacity = 0.35;
   let commitWidthScale = 0;
   let fixedSize = true;
-  let collisionPadding = 0.5;
 
   // --- Shared UI builders ---
   function makeGroup(title, parent) {
@@ -1062,91 +1197,31 @@
   // --- Appearance panel ---
   const appearBody = document.getElementById('appear-body');
 
-  // --- Mode group ---
+  // Mode switch (Explore / Overview)
   const modeGroup = makeGroup('Mode', appearBody);
-
   const modeRow = document.createElement('div');
   modeRow.className = 'mode-switch';
   const modeBtns = document.createElement('div');
   modeBtns.className = 'mode-switch-btns';
-
-  const freeBtn = document.createElement('button');
-  freeBtn.className = 'mode-switch-btn';
-  freeBtn.textContent = 'Free';
-  freeBtn.addEventListener('click', () => {
-    if (!centricMode) return;
-    centricMode = false;
-    freeBtn.classList.add('active');
-    centricBtn.classList.remove('active');
-    depthRow.classList.add('disabled');
-    rebuildGraph();
-  });
-
-  const centricBtn = document.createElement('button');
-  centricBtn.className = 'mode-switch-btn active';
-  centricBtn.textContent = 'Centric';
-  centricBtn.title = '';
-  centricBtn.disabled = false;
-  centricBtn.addEventListener('click', () => {
-    if (centricBtn.disabled || centricMode) return;
-    centricMode = true;
-    centricBtn.classList.add('active');
-    freeBtn.classList.remove('active');
-    depthRow.classList.remove('disabled');
-    rebuildGraph();
-  });
-
-  modeBtns.appendChild(freeBtn);
-  modeBtns.appendChild(centricBtn);
+  const exploreBtn = document.createElement('button');
+  exploreBtn.className = 'mode-switch-btn active';
+  exploreBtn.textContent = 'Explore';
+  const overviewBtn = document.createElement('button');
+  overviewBtn.className = 'mode-switch-btn';
+  overviewBtn.textContent = 'Overview';
+  function setMode(m) {
+    mode = m;
+    exploreBtn.className = 'mode-switch-btn' + (m === 'explore' ? ' active' : '');
+    overviewBtn.className = 'mode-switch-btn' + (m === 'overview' ? ' active' : '');
+    activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null;
+    rebuildGraph(rootNode);
+  }
+  exploreBtn.addEventListener('click', () => setMode('explore'));
+  overviewBtn.addEventListener('click', () => setMode('overview'));
+  modeBtns.appendChild(exploreBtn);
+  modeBtns.appendChild(overviewBtn);
   modeRow.appendChild(modeBtns);
-  const modeLabel = document.createElement('span');
-  modeLabel.className = 'tri-switch-label';
-  modeLabel.textContent = 'View Mode';
-  modeRow.appendChild(modeLabel);
   modeGroup.appendChild(modeRow);
-
-  // Depth slider (disabled in Free mode)
-  const depthRow = document.createElement('div');
-  depthRow.className = 'ctrl-row';
-  const depthLabel = document.createElement('label');
-  depthLabel.textContent = 'Depth';
-  const depthWrap = document.createElement('div');
-  depthWrap.className = 'depth-slider-wrap';
-  const depthInput = document.createElement('input');
-  depthInput.type = 'range';
-  depthInput.min = 0;
-  depthInput.max = 4;
-  depthInput.step = 1;
-  depthInput.value = 0;
-  const depthTicks = document.createElement('div');
-  depthTicks.className = 'depth-ticks';
-  for (let i = 0; i <= 4; i++) {
-    const tick = document.createElement('span');
-    tick.textContent = i;
-    depthTicks.appendChild(tick);
-  }
-  depthWrap.appendChild(depthInput);
-  depthWrap.appendChild(depthTicks);
-  depthInput.addEventListener('input', () => {
-    centricDepth = parseInt(depthInput.value);
-    if (centricMode) rebuildGraph();
-  });
-  depthRow.appendChild(depthLabel);
-  depthRow.appendChild(depthWrap);
-  modeGroup.appendChild(depthRow);
-
-  function updateCentricAvailability() {
-    const canCentric = selectedNodes.size > 0;
-    centricBtn.disabled = !canCentric;
-    centricBtn.title = canCentric ? '' : 'Please select at least 1 node';
-    if (!canCentric && centricMode) {
-      centricMode = false;
-      freeBtn.classList.add('active');
-      centricBtn.classList.remove('active');
-      depthRow.classList.add('disabled');
-      rebuildGraph();
-    }
-  }
 
   // Visibility group — tri-switches
   const visGroup = makeGroup('Visibility', appearBody);
@@ -1187,7 +1262,7 @@
 
   const edgeGroup = makeGroup('Edges', appearBody);
   makeSlider(edgeGroup, 'Width', 0.1, 5, 0.1, 0.5, v => { edgeWidth = v; draw(); });
-  makeSlider(edgeGroup, 'Opacity', 0, 0.3, 0.005, 0.04, v => { edgeOpacity = v; draw(); });
+  makeSlider(edgeGroup, 'Opacity', 0, 1, 0.005, 0.25, v => { edgeOpacity = v; draw(); });
   makeSlider(edgeGroup, 'Commit Width', 0, 3, 0.05, 0, v => { commitWidthScale = v; draw(); });
   makeSlider(edgeGroup, 'Highlight Width', 0.1, 5, 0.1, 1, v => { highlightEdgeWidth = v; draw(); });
   makeSlider(edgeGroup, 'Highlight Opacity', 0, 1, 0.01, 0.35, v => { highlightEdgeOpacity = v; draw(); });
@@ -1195,37 +1270,18 @@
   // --- Force controls panel ---
   const ctrlBody = document.getElementById('ctrl-body');
 
-  const simGroup = makeGroup('Simulation', ctrlBody);
-  makeSlider(simGroup, 'Alpha', 0, 1, 0.01, 0.01, v => simulation.alpha(v));
-  makeSlider(simGroup, 'Alpha Decay', 0, 0.1, 0.001, 0.01, v => simulation.alphaDecay(v));
-  makeSlider(simGroup, 'Alpha Min', 0, 0.1, 0.001, 0.001, v => simulation.alphaMin(v));
-  makeSlider(simGroup, 'Alpha Target', 0, 1, 0.01, 0, v => simulation.alphaTarget(v));
-  makeSlider(simGroup, 'Velocity Decay', 0, 1, 0.01, 0.3, v => simulation.velocityDecay(v));
+  const forceGroup = makeGroup('Forces', ctrlBody);
+  makeSlider(forceGroup, 'Charge', -100, 0, 1, -25, v => { chargeForce.strength(v); });
+  makeSlider(forceGroup, 'Radial Pull', 0, 1, 0.01, 0.4, v => { radialForce.strength(v); });
+  makeSlider(forceGroup, 'Link Distance', 10, 300, 5, 60, v => { linkForce.distance(v); });
+  makeSlider(forceGroup, 'Link Strength', 0, 1, 0.01, 0.15, v => { linkForce.strength(v); });
+  makeSlider(forceGroup, 'Collision', 0, 2, 0.05, 0.6, v => { collisionForce.strength(v); });
 
-  const linkGroup = makeGroup('Link Force', ctrlBody);
-  makeSlider(linkGroup, 'Distance', 1, 300, 1, 30, v => { linkForce.distance(v); });
-  makeSlider(linkGroup, 'Strength', 0, 2, 0.01, 0.1, v => { linkForce.strength(v); });
-  makeSlider(linkGroup, 'Iterations', 1, 10, 1, 1, v => { linkForce.iterations(v); });
-
-  const chargeGroup = makeGroup('Charge (Many-Body)', ctrlBody);
-  makeSlider(chargeGroup, 'Strength', -100, 10, 0.5, -8, v => { chargeForce.strength(v); });
-  makeSlider(chargeGroup, 'Distance Min', 0, 50, 0.5, 1, v => { chargeForce.distanceMin(v); });
-  makeSlider(chargeGroup, 'Distance Max', 50, 2000, 10, 200, v => { chargeForce.distanceMax(v); });
-  makeSlider(chargeGroup, 'Theta', 0, 2, 0.01, 0.9, v => { chargeForce.theta(v); });
-
-  const centerGroup = makeGroup('Center Gravity', ctrlBody);
-  makeSlider(centerGroup, 'Strength', -0.5, 0.5, 0.005, 0.05, v => {
-    centerGravity.strength(v);
-    if (v < 0) centerGravity.falloffRadius(50 + (Math.abs(v) / 0.5) * 1950);
-  });
-
-  const collGroup = makeGroup('Collision', ctrlBody);
-  makeSlider(collGroup, 'Strength', 0, 2, 0.01, 0.3, v => { collisionForce.strength(v); });
-  makeSlider(collGroup, 'Padding', 0, 10, 0.5, 0.5, v => {
-    collisionPadding = v;
-    collisionForce.radius(d => d.radius + v);
-  });
-  makeSlider(collGroup, 'Iterations', 1, 10, 1, 1, v => { collisionForce.iterations(v); });
+  const layoutGroup = makeGroup('Ring Radii', ctrlBody);
+  makeSlider(layoutGroup, 'Concepts', 50, 500, 10, 200, v => { RING_RADII[0] = v; simulation.alpha(0.3).restart(); });
+  makeSlider(layoutGroup, 'Subconcepts', 100, 800, 10, 400, v => { RING_RADII[1] = v; simulation.alpha(0.3).restart(); });
+  makeSlider(layoutGroup, 'Files', 200, 1200, 10, 675, v => { RING_RADII[2] = v; RING_RADII[3] = v; simulation.alpha(0.3).restart(); });
+  makeSlider(layoutGroup, 'Contributors', 400, 2000, 10, 1000, v => { RING_RADII[4] = v; simulation.alpha(0.3).restart(); });
 
   const btnRow = document.createElement('div');
   btnRow.style.marginTop = '8px';
@@ -1265,11 +1321,92 @@
   // State
   let hoveredNode = null;
   let draggedNode = null;
-  const selectedNodes = new Set(); // node IDs that are pinned
-  let centricMode = true;
-  let centricDepth = 0;
+  const selectedNodes = new Set();
+  // Pre-compute lookup: major concept id → set of minor concept ids
+  const majorToMinors = new Map();
+  for (const link of allLinksRaw) {
+    if (link.type === 'has_minor') {
+      if (!majorToMinors.has(link.source)) majorToMinors.set(link.source, new Set());
+      majorToMinors.get(link.source).add(link.target);
+    }
+  }
+  // Pre-compute lookup: concept id → set of tagged file ids
+  const conceptToFiles = new Map();
+  for (const link of allLinksRaw) {
+    if (link.type === 'tagged_with') {
+      if (!conceptToFiles.has(link.source)) conceptToFiles.set(link.source, new Set());
+      conceptToFiles.get(link.source).add(link.target);
+    }
+  }
+  // Pre-compute: contributor id → set of authored file ids
+  const contributorToFiles = new Map();
+  for (const link of allLinksRaw) {
+    if (link.type === 'authored') {
+      if (!contributorToFiles.has(link.source)) contributorToFiles.set(link.source, new Set());
+      contributorToFiles.get(link.source).add(link.target);
+    }
+  }
 
-  // Fix root node at center and select it
+  // Pre-compute: file id → set of contributor ids (inverse of contributorToFiles)
+  const fileToContributors = new Map();
+  for (const link of allLinksRaw) {
+    if (link.type === 'authored') {
+      if (!fileToContributors.has(link.target)) fileToContributors.set(link.target, new Set());
+      fileToContributors.get(link.target).add(link.source);
+    }
+  }
+
+  // Assign each file to exactly one major concept sector (for radial layout)
+  // Uses the major concept with the most tagged_with connections (direct + via minors)
+  const fileToMajor = new Map();
+  const majorConceptNodes = allNodes.filter(n => n.type === 'major_concept');
+  const fileMajorScores = new Map(); // file_id → Map<major_id, count>
+  for (const mc of majorConceptNodes) {
+    const minorIds = majorToMinors.get(mc.id) || new Set();
+    const allConceptIds = [mc.id, ...minorIds];
+    for (const cid of allConceptIds) {
+      const files = conceptToFiles.get(cid) || new Set();
+      for (const fid of files) {
+        if (!fileMajorScores.has(fid)) fileMajorScores.set(fid, new Map());
+        const scores = fileMajorScores.get(fid);
+        scores.set(mc.id, (scores.get(mc.id) || 0) + 1);
+      }
+    }
+  }
+  fileToMajor.clear();
+  for (const [fid, scores] of fileMajorScores) {
+    let best = null, bestCount = 0;
+    for (const [mid, count] of scores) {
+      if (count > bestCount) { best = mid; bestCount = count; }
+    }
+    if (best) fileToMajor.set(fid, best);
+  }
+
+  // Group minor concepts by major concept
+  const majorToMinorNodes = new Map();
+  for (const mc of majorConceptNodes) {
+    const minorIds = majorToMinors.get(mc.id) || new Set();
+    const minorNodes = allNodes.filter(n => minorIds.has(n.id));
+    majorToMinorNodes.set(mc.id, minorNodes);
+  }
+
+  // Group files by major concept
+  const majorToFileNodes = new Map();
+  for (const mc of majorConceptNodes) {
+    majorToFileNodes.set(mc.id, []);
+  }
+  for (const [fid, mid] of fileToMajor) {
+    const fnode = nodeMap.get(fid);
+    if (fnode && majorToFileNodes.has(mid)) {
+      majorToFileNodes.get(mid).push(fnode);
+    }
+  }
+  // Sort files in each sector: largest first
+  for (const [mid, files] of majorToFileNodes) {
+    files.sort((a, b) => b.radius - a.radius);
+  }
+
+  // Fix root node at center
   rootNode.fx = centerX;
   rootNode.fy = centerY;
   selectedNodes.add(ROOT_ID);
@@ -1304,17 +1441,6 @@
     ctx.moveTo(centerX, centerY - crossSize);
     ctx.lineTo(centerX, centerY + crossSize);
     ctx.stroke();
-
-    // Falloff radius ring (visible when repulsive)
-    if (centerGravity.strength() < 0) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-      ctx.lineWidth = 1 * zk;
-      ctx.setLineDash([4 * zk, 4 * zk]);
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, centerGravity.falloffRadius(), 0, 2 * Math.PI);
-      ctx.stroke();
-      ctx.setLineDash([]);
-    }
 
     // Edges
     for (const link of links) {
@@ -1351,7 +1477,6 @@
         if (len < 1e-6) continue;
         const ux = dx / len;
         const uy = dy / len;
-        // Place arrow tip at the edge of the target node
         const tScale = getNodeScale(t);
         const tr = t.radius * tScale * zk;
         const tipX = t.x - ux * tr;
@@ -1376,7 +1501,10 @@
       if (!nodeDrawn(node)) continue;
 
       const highlighted = highlightSet.has(node.id);
-      const alpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 1;
+      let alpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 1;
+
+      // No extra dimming — filtering handles what's visible
+
       const scale = getNodeScale(node);
       const r = node.radius * scale * zk;
 
@@ -1401,6 +1529,24 @@
       }
       ctx.fill();
 
+      // Active file ring
+      if (activeFile && node.id === activeFile.id) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = Math.max(2 * zk, 1);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
+      // Active contributor ring
+      if (activeContributor && node.id === activeContributor.id) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = Math.max(2 * zk, 1);
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
+        ctx.stroke();
+      }
+
       // Selection ring
       if (selectedNodes.has(node.id)) {
         ctx.strokeStyle = '#fff';
@@ -1416,10 +1562,12 @@
     const fontSize = fixedSize ? 12 * zk : Math.max(4, 12);
     const labelPad = fixedSize ? 4 * zk : 4;
 
-    // Always-visible labels for concept and root nodes
+    // Always-visible labels for concepts, root, and contributors when file is selected
     for (const node of nodes) {
       if (!nodeDrawn(node)) continue;
-      if (node.type !== 'root' && node.type !== 'major_concept' && node.type !== 'minor_concept') continue;
+      const showLabel = node.type === 'root' || node.type === 'major_concept' || node.type === 'minor_concept'
+        || (node.type === 'contributor' && activeFile);
+      if (!showLabel) continue;
       if (hoveredNode && node.id === hoveredNode.id) continue; // drawn below with hover styling
 
       const highlighted = hoveredNode ? highlightSet.has(node.id) : true;
@@ -1483,8 +1631,23 @@
         let html = `<div class="value">${node.name}</div>`;
         if (node.type === 'root') {
           html += `<div class="label">Root node</div>`;
+          if (activeMajor || activeMinor || activeContributor) {
+            html += `<div class="label" style="color:#93c5fd">Click to go back</div>`;
+          }
         } else if (node.type === 'contributor') {
           html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
+          if (node.createdAt) html += `<div class="label">First commit: ${fmtDate(node.createdAt)}</div>`;
+          if (node.role) html += `<div class="label" style="color:#d4d4d4">Role: ${node.role}</div>`;
+          if (node.contributions) {
+            const text = node.contributions.length > 180 ? node.contributions.slice(0, 180) + '\u2026' : node.contributions;
+            html += `<div class="label" style="white-space:normal;max-width:340px;max-height:60px;overflow:hidden;line-height:1.3">${text}</div>`;
+          }
+          const files = contributorToFiles.get(node.id);
+          if (files) html += `<div class="label">${files.size} files authored</div>`;
+          if (mode === 'explore') {
+            const isActive = activeContributor && activeContributor.id === node.id;
+            html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show authored files'}</div>`;
+          }
         } else if (node.type === 'crate') {
           const targets = [];
           if (node.hasLib) targets.push('lib');
@@ -1495,19 +1658,30 @@
         } else if (node.type === 'major_concept') {
           html += `<div class="label">Major Concept</div>`;
           html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
-          if (node.evidence.length) html += `<div class="label">${node.evidence.length} evidence files</div>`;
+          const directFiles = conceptToFiles.get(node.id) || new Set();
+          const minorCount = (majorToMinors.get(node.id) || new Set()).size;
+          html += `<div class="label">${minorCount} subconcepts · ${directFiles.size} direct files</div>`;
+          if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to explore</div>`;
         } else if (node.type === 'minor_concept') {
           html += `<div class="label">Minor Concept</div>`;
           html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
-          if (node.evidence.length) html += `<div class="label">${node.evidence.length} evidence files</div>`;
+          const taggedFiles = conceptToFiles.get(node.id) || new Set();
+          html += `<div class="label">${taggedFiles.size} files</div>`;
+          if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to show files</div>`;
         } else {
           const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
           html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
           if (node.summary) html += `<div class="label" style="white-space:normal;max-width:350px">${node.summary}</div>`;
+          if (mode === 'explore') {
+            const nContribs = (fileToContributors.get(node.id) || new Set()).size;
+            if (nContribs > 0) {
+              const isActive = activeFile && activeFile.id === node.id;
+              html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show ' + nContribs + ' contributors'}</div>`;
+            }
+          }
         }
         const neighbors = adjacency.get(node.id);
         if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
-        if (selectedNodes.has(node.id)) html += `<div class="label" style="color:#93c5fd">Pinned (click to unpin)</div>`;
         tooltip.innerHTML = html;
       } else {
         tooltip.style.display = 'none';
@@ -1542,7 +1716,13 @@
         return node;
       })
       .on('start', (event) => {
-        if (event.subject.id === ROOT_ID) return; // root is immovable
+        if (event.subject.id === ROOT_ID) {
+          // Root is immovable but track click start for navigation
+          dragStartX = event.x;
+          dragStartY = event.y;
+          draggedNode = event.subject;
+          return;
+        }
         if (!event.active) simulation.alphaTarget(0.1).restart();
         draggedNode = event.subject;
         dragStartX = event.x;
@@ -1557,51 +1737,57 @@
         event.subject.fy = transform.invertY(event.y);
       })
       .on('end', (event) => {
-        if (event.subject.id === ROOT_ID) return;
-        if (!event.active) simulation.alphaTarget(0);
-        const node = event.subject;
         const dx = event.x - dragStartX;
         const dy = event.y - dragStartY;
         const wasDragged = Math.sqrt(dx * dx + dy * dy) >= CLICK_THRESHOLD;
 
-        if (!wasDragged) {
-          // Click — toggle selection
-          if (selectedNodes.has(node.id)) {
-            selectedNodes.delete(node.id);
-            node.fx = null;
-            node.fy = null;
-          } else {
-            selectedNodes.add(node.id);
-            // keep fx/fy at current position
+        if (event.subject.id === ROOT_ID) {
+          if (!wasDragged && mode === 'explore') {
+            if (activeContributor) { activeContributor = null; }
+            else if (activeFile) { activeFile = null; }
+            else if (activeMinor) { activeMinor = null; }
+            else if (activeMajor) { activeMajor = null; }
+            rebuildGraph(rootNode);
           }
-          updateCentricAvailability();
-          if (centricMode) rebuildGraph();
-        } else if (selectedNodes.has(node.id)) {
-          // Dragged a selected node — keep it pinned at new position
-        } else {
-          // Dragged an unselected node — release
-          node.fx = null;
-          node.fy = null;
+          draggedNode = null;
+          return;
+        }
+        if (!event.active) simulation.alphaTarget(0);
+        const node = event.subject;
+
+        if (!wasDragged && mode === 'explore') {
+          if (node.type === 'major_concept') {
+            activeContributor = null; activeFile = null; activeMinor = null;
+            activeMajor = (activeMajor && activeMajor.id === node.id) ? null : node;
+            rebuildGraph(node);
+          } else if (node.type === 'minor_concept') {
+            activeFile = null;
+            activeMinor = (activeMinor && activeMinor.id === node.id) ? null : node;
+            rebuildGraph(node);
+          } else if (node.type === 'file') {
+            activeContributor = null;
+            activeFile = (activeFile && activeFile.id === node.id) ? null : node;
+            rebuildGraph(node);
+          } else if (node.type === 'contributor') {
+            activeMajor = null; activeMinor = null; activeFile = null;
+            activeContributor = (activeContributor && activeContributor.id === node.id) ? null : node;
+            rebuildGraph(node);
+          }
         }
         draggedNode = null;
         draw();
       })
   );
 
-  // Escape to deselect all
+  // Escape to go back / deselect
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && selectedNodes.size > 0) {
-      for (const node of allNodes) {
-        if (selectedNodes.has(node.id) && node.id !== ROOT_ID) {
-          node.fx = null;
-          node.fy = null;
-        }
-      }
-      selectedNodes.clear();
-      // Root always stays selected
-      selectedNodes.add(ROOT_ID);
-      updateCentricAvailability(); // switches back to Free if in centric mode
-      draw();
+    if (e.key === 'Escape') {
+      if (mode === 'overview') return;
+      if (activeContributor) { activeContributor = null; }
+      else if (activeFile) { activeFile = null; }
+      else if (activeMinor) { activeMinor = null; }
+      else if (activeMajor) { activeMajor = null; }
+      rebuildGraph(rootNode);
     }
   });
 })();
