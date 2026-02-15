@@ -1057,7 +1057,7 @@
       radialForce.x(centerX).y(centerY);
       simulation.nodes(nodes);
       simulation.force('link').links(links);
-      simulation.alpha(0.8).restart();
+      simulation.alpha(0.35).restart();
       updateStats();
     }
   }
@@ -1080,8 +1080,8 @@
     .force('charge', chargeForce)
     .force('radial', radialForce)
     .force('collision', collisionForce)
-    .alphaDecay(0.03)
-    .velocityDecay(0.35)
+    .alphaDecay(0.06)
+    .velocityDecay(0.55)
     .on('tick', draw);
 
   // --- Navigation state (must be before appearance panel) ---
