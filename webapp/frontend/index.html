@@ -1489,6 +1489,132 @@
   // --- Initial graph build ---
   rebuildGraph();
 
+  // --- Remote command SSE ---
+  (function() {
+    function connectCommands() {
+      const es = new EventSource('/commands');
+      es.onopen = function() { console.log('[Commands] SSE connection established'); };
+      es.onmessage = function(ev) {
+        try {
+          const cmd = JSON.parse(ev.data);
+          handleCommand(cmd);
+        } catch (e) {
+          console.warn('[Commands] Bad payload:', ev.data, e);
+        }
+      };
+      es.onerror = function() { es.close(); setTimeout(connectCommands, 2000); };
+    }
+
+    function handleCommand(cmd) {
+      switch (cmd.action) {
+        case 'select_node': {
+          const node = nodeMap.get(cmd.node_id);
+          if (!node) { console.warn('[Commands] Unknown node_id:', cmd.node_id); return; }
+          activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null;
+          if (mode === 'overview') { setMode('explore'); }
+          if (node.type === 'major_concept') {
+            activeMajor = node;
+          } else if (node.type === 'minor_concept') {
+            // Find parent major concept via has_minor links
+            for (const l of allLinksRaw) {
+              if (l.type === 'has_minor' && l.target === node.id) {
+                activeMajor = nodeMap.get(l.source) || null;
+                break;
+              }
+            }
+            activeMinor = node;
+          } else if (node.type === 'file') {
+            // Find concept context: walk tagged_with to find a concept, then its major
+            for (const l of allLinksRaw) {
+              if (l.type === 'tagged_with' && l.target === node.id) {
+                const concept = nodeMap.get(l.source);
+                if (concept && concept.type === 'major_concept') {
+                  activeMajor = concept;
+                  break;
+                } else if (concept && concept.type === 'minor_concept') {
+                  activeMinor = concept;
+                  for (const l2 of allLinksRaw) {
+                    if (l2.type === 'has_minor' && l2.target === concept.id) {
+                      activeMajor = nodeMap.get(l2.source) || null;
+                      break;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
+            activeFile = node;
+          } else if (node.type === 'contributor') {
+            activeContributor = node;
+          }
+          rebuildGraph(node);
+          break;
+        }
+        case 'set_mode': {
+          if (cmd.mode === 'explore' || cmd.mode === 'overview') setMode(cmd.mode);
+          break;
+        }
+        case 'set_visibility': {
+          if (cmd.key in vis) {
+            const wasOff = vis[cmd.key] === 'off';
+            vis[cmd.key] = cmd.value;
+            const isOff = cmd.value === 'off';
+            if (wasOff !== isOff) {
+              rebuildGraph();
+            } else {
+              draw();
+              pushState();
+            }
+          }
+          break;
+        }
+        case 'set_timeline': {
+          if (cmd.start != null) tlStart = cmd.start;
+          if (cmd.end != null) tlEnd = cmd.end;
+          updateTimeline();
+          rebuildGraph();
+          break;
+        }
+        case 'go_back': {
+          if (mode === 'overview') break;
+          if (activeContributor) { activeContributor = null; }
+          else if (activeFile) { activeFile = null; }
+          else if (activeMinor) { activeMinor = null; }
+          else if (activeMajor) { activeMajor = null; }
+          rebuildGraph(rootNode);
+          break;
+        }
+        case 'set_viewport': {
+          const t = d3.zoomIdentity.translate(cmd.x, cmd.y).scale(cmd.k);
+          d3.select(canvas).call(zoom.transform, t);
+          break;
+        }
+        case 'center_on_node': {
+          const node = nodeMap.get(cmd.node_id);
+          if (!node || node.x == null) { console.warn('[Commands] Cannot center on node:', cmd.node_id); break; }
+          const k = cmd.k || transform.k;
+          const tx = width / 2 - node.x * k;
+          const ty = height / 2 - node.y * k;
+          const t = d3.zoomIdentity.translate(tx, ty).scale(k);
+          d3.select(canvas).call(zoom.transform, t);
+          break;
+        }
+        case 'reheat': {
+          simulation.alpha(1).restart();
+          break;
+        }
+        case 'stop_simulation': {
+          simulation.stop();
+          break;
+        }
+        default:
+          console.warn('[Commands] Unknown action:', cmd.action);
+      }
+    }
+
+    connectCommands();
+  })();
+
   // Draw
   function draw() {
     ctx.save();

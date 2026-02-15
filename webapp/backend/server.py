@@ -40,6 +40,25 @@ _clients_lock = threading.Lock()
 _frontend_state: dict = {}
 _state_lock = threading.Lock()
 
+_command_clients: list = []  # SSE client wfile handles for /commands
+_command_clients_lock = threading.Lock()
+
+
+def _push_command(data: dict):
+    """Broadcast a command to all connected /commands SSE clients."""
+    payload = "data: " + json.dumps(data) + "\n\n"
+    raw = payload.encode()
+    with _command_clients_lock:
+        dead = []
+        for wfile in _command_clients:
+            try:
+                wfile.write(raw)
+                wfile.flush()
+            except Exception:
+                dead.append(wfile)
+        for d in dead:
+            _command_clients.remove(d)
+
 
 def _snapshot(directory: Path) -> dict[str, float]:
     """Return {relative_path: mtime} for all files under directory."""
@@ -94,9 +113,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         path = self.path.split("?")[0]
 
-        # SSE endpoint
+        # SSE endpoint (live-reload)
         if path == "/events":
             self._handle_sse()
+            return
+
+        # SSE endpoint (remote commands)
+        if path == "/commands":
+            self._handle_command_sse()
             return
 
         # Frontend state endpoint
@@ -151,6 +175,22 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             return
 
+        if path == "/command":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+            except (json.JSONDecodeError, ValueError):
+                self.send_error(400, "Invalid JSON")
+                return
+            if "action" not in data:
+                self.send_error(400, "Missing 'action' field")
+                return
+            _push_command(data)
+            self.send_response(204)
+            self.end_headers()
+            return
+
         self.send_error(404)
 
     def _serve_file(self, file_path: Path, content_type: str | None = None):
@@ -189,6 +229,24 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 if self.wfile in _clients:
                     _clients.remove(self.wfile)
 
+    def _handle_command_sse(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+        with _command_clients_lock:
+            _command_clients.append(self.wfile)
+        try:
+            while True:
+                time.sleep(1)
+        except Exception:
+            pass
+        finally:
+            with _command_clients_lock:
+                if self.wfile in _command_clients:
+                    _command_clients.remove(self.wfile)
+
     @staticmethod
     def _guess_type(path: Path) -> str:
         ext = path.suffix.lower()
@@ -208,7 +266,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # Route HTTP request logging through the logging module
         # Skip SSE /events since those are long-lived connections
         msg = format % args if args else format
-        if "/events" not in msg:
+        if "/events" not in msg and "/commands" not in msg:
             log.info("%s %s", self.client_address[0], msg)
 
     def log_error(self, format, *args):
