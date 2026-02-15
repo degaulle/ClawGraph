@@ -12,6 +12,7 @@ Usage:
 """
 
 import http.server
+import json
 import logging
 import os
 import socketserver
@@ -35,6 +36,9 @@ POLL_INTERVAL = 0.5  # seconds
 
 _clients: list = []  # SSE client wfile handles
 _clients_lock = threading.Lock()
+
+_frontend_state: dict = {}
+_state_lock = threading.Lock()
 
 
 def _snapshot(directory: Path) -> dict[str, float]:
@@ -95,6 +99,18 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._handle_sse()
             return
 
+        # Frontend state endpoint
+        if path == "/state":
+            with _state_lock:
+                body = json.dumps(_frontend_state).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
         # Serve knowledge_graph.json from project root
         if path == "/knowledge_graph.json":
             self._serve_file(ROOT / "output" / "knowledge_graph.json", "application/json")
@@ -116,6 +132,26 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._serve_file(file_path)
         else:
             self.send_error(404)
+
+    def do_POST(self):
+        path = self.path.split("?")[0]
+
+        if path == "/state":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+            except (json.JSONDecodeError, ValueError):
+                self.send_error(400, "Invalid JSON")
+                return
+            global _frontend_state
+            with _state_lock:
+                _frontend_state = data
+            self.send_response(204)
+            self.end_headers()
+            return
+
+        self.send_error(404)
 
     def _serve_file(self, file_path: Path, content_type: str | None = None):
         if content_type is None:

@@ -420,6 +420,7 @@
     centerX = width / 2;
     centerY = height / 2;
     draw();
+    pushState();
   });
 
   // Colors
@@ -994,6 +995,7 @@
       simulation.tick();
       draw();
       updateStats();
+      pushState();
     } else {
       // Explore: animated forces with smart initial positioning
 
@@ -1059,6 +1061,7 @@
       simulation.force('link').links(links);
       simulation.alpha(0.35).restart();
       updateStats();
+      pushState();
     }
   }
 
@@ -1235,6 +1238,7 @@
         rebuildGraph();
       } else {
         draw();
+        pushState();
       }
     };
   }
@@ -1315,6 +1319,7 @@
     .on('zoom', (event) => {
       transform = event.transform;
       draw();
+      pushState();
     });
   d3.select(canvas).call(zoom);
 
@@ -1410,6 +1415,76 @@
   rootNode.fx = centerX;
   rootNode.fy = centerY;
   selectedNodes.add(ROOT_ID);
+
+  // --- Push visualization state to backend ---
+  let _pushTimer = null;
+  function pushState() {
+    if (_pushTimer) clearTimeout(_pushTimer);
+    _pushTimer = setTimeout(() => { _pushTimer = null; _doPushState(); }, 300);
+  }
+
+  function _nodeRef(node) {
+    return node ? { id: node.id, name: node.name, type: node.type } : null;
+  }
+
+  function _computeNodesInView() {
+    const topLeft = transform.invert([0, 0]);
+    const bottomRight = transform.invert([width, height]);
+    const x0 = topLeft[0], y0 = topLeft[1];
+    const x1 = bottomRight[0], y1 = bottomRight[1];
+
+    const result = [];
+    for (const node of nodes) {
+      if (!nodeDrawn(node)) continue;
+      if (node.x >= x0 && node.x <= x1 && node.y >= y0 && node.y <= y1) {
+        result.push({ id: node.id, name: node.name, type: node.type });
+      }
+    }
+    return result;
+  }
+
+  function _doPushState() {
+    const byType = {};
+    for (const node of nodes) {
+      byType[node.type] = (byType[node.type] || 0) + 1;
+    }
+
+    const state = {
+      timestamp: new Date().toISOString(),
+      mode: mode,
+      selection: {
+        activeMajor: _nodeRef(activeMajor),
+        activeMinor: _nodeRef(activeMinor),
+        activeFile: _nodeRef(activeFile),
+        activeContributor: _nodeRef(activeContributor),
+      },
+      viewport: {
+        x: transform.x,
+        y: transform.y,
+        k: transform.k,
+        canvasWidth: width,
+        canvasHeight: height,
+      },
+      visibility: { ...vis },
+      timeline: {
+        start: tlStart,
+        end: tlEnd,
+        startDate: fmtDate(tlStart),
+        endDate: fmtDate(tlEnd),
+      },
+      nodesInView: _computeNodesInView(),
+      nodesInSimulation: {
+        total: nodes.length,
+        byType: byType,
+      },
+    };
+
+    fetch('/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state),
+    }).catch(() => {}); // fire-and-forget
+  }
 
   // --- Initial graph build ---
   rebuildGraph();
@@ -1790,6 +1865,7 @@
       rebuildGraph(rootNode);
     }
   });
+
 })();
 </script>
 </body>
