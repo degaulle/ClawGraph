@@ -4,3 +4,4 @@ __pycache__/
 knowledge_graph.json
 summary-graph/output/*/
 webapp/server.log*
+.playwright-mcp/
