@@ -1,7 +1,6 @@
 __pycache__/
 .pytest_cache/
 .venv/
-knowledge_graph.json
 summary-graph/output/*/
 webapp/server.log*
 .playwright-mcp/
