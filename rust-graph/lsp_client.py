@@ -40,6 +40,10 @@ PROJECT_ROOT = os.environ.get(
     ),
 )
 
+# Optional: restrict rust-analyzer to a single crate (relative Cargo.toml path).
+# e.g. RA_SINGLE_CRATE="core/Cargo.toml"  — only indexes that crate + its deps.
+RA_SINGLE_CRATE = os.environ.get("RA_SINGLE_CRATE", "")
+
 RA_BINARY = os.environ.get("RA_BINARY", shutil.which("rust-analyzer") or "rust-analyzer")
 
 # ---------------------------------------------------------------------------
@@ -50,9 +54,10 @@ RA_BINARY = os.environ.get("RA_BINARY", shutil.which("rust-analyzer") or "rust-a
 class LspClient:
     """Manages a rust-analyzer subprocess and speaks LSP over stdio."""
 
-    def __init__(self, project_root: str, binary: str = RA_BINARY):
+    def __init__(self, project_root: str, binary: str = RA_BINARY, single_crate: str = ""):
         self.project_root = os.path.abspath(project_root)
         self.root_uri = f"file://{self.project_root}"
+        self.single_crate = single_crate
         self._id = 0
         self._pending: dict[int, threading.Event] = {}
         self._results: dict[int, object] = {}
@@ -169,6 +174,38 @@ class LspClient:
     # -- LSP lifecycle ------------------------------------------------------
 
     def initialize(self, wait_for_indexing: bool = True, index_timeout: float = 300):
+        cargo_opts: dict = {
+            "buildScripts": {"enable": False},
+            # Skip sysroot entirely (std types won't resolve but saves ~100 crates).
+            "sysroot": None,
+            "sysrootSrc": None,
+        }
+
+        # Exclude external dependency sources so RA only indexes workspace code.
+        cargo_home = os.environ.get("CARGO_HOME", os.path.expanduser("~/.cargo"))
+        exclude_dirs = [
+            os.path.join(cargo_home, "registry"),
+            os.path.join(cargo_home, "git"),
+        ]
+
+        init_options: dict = {
+            # Skip proc-macro expansion (biggest memory saver).
+            "procMacro": {"enable": False},
+            "cargo": cargo_opts,
+            # Cap syntax-tree LRU cache (default is 128).
+            "lru": {"capacity": 32},
+            # Disable background cargo-check (we only need queries).
+            "checkOnSave": False,
+            # Don't crawl external dependency sources.
+            "files": {"excludeDirs": exclude_dirs},
+        }
+
+        # When single_crate is set, use linkedProjects to restrict indexing
+        # to just that crate (+ its deps) instead of the full workspace.
+        if self.single_crate:
+            manifest = os.path.join(self.project_root, self.single_crate)
+            init_options["linkedProjects"] = [manifest]
+
         result = self.request(
             "initialize",
             {
@@ -179,7 +216,10 @@ class LspClient:
                         "callHierarchy": {"dynamicRegistration": False},
                         "definition": {"dynamicRegistration": False},
                         "references": {"dynamicRegistration": False},
-                        "documentSymbol": {"dynamicRegistration": False},
+                        "documentSymbol": {
+                            "dynamicRegistration": False,
+                            "hierarchicalDocumentSymbolSupport": True,
+                        },
                         "hover": {"dynamicRegistration": False},
                     },
                     "workspace": {
@@ -190,24 +230,7 @@ class LspClient:
                     },
                 },
                 "workspaceFolders": [{"uri": self.root_uri, "name": "codex-rs"}],
-                # rust-analyzer reads these to configure itself.
-                # These options are tuned to reduce memory usage for large
-                # workspaces. Trade-off: derived impls (e.g. #[derive(Serialize)])
-                # won't be visible, but all hand-written code is fully analyzed.
-                "initializationOptions": {
-                    # Skip proc-macro expansion (biggest memory saver).
-                    "procMacro": {"enable": False},
-                    # Don't run build.rs scripts.
-                    "cargo": {
-                        "buildScripts": {"enable": False},
-                        # Only load the workspace sysroot, not full source.
-                        "sysrootSrc": None,
-                    },
-                    # Cap syntax-tree LRU cache (default is 128, 0 = no limit).
-                    "lru": {"capacity": 64},
-                    # Disable background cargo-check (we only need queries).
-                    "checkOnSave": False,
-                },
+                "initializationOptions": init_options,
             },
         )
         self.notify("initialized", {})
@@ -264,6 +287,12 @@ class LspClient:
                     "text": text,
                 }
             },
+        )
+
+    def close_file(self, relpath: str):
+        self.notify(
+            "textDocument/didClose",
+            {"textDocument": {"uri": self.file_uri(relpath)}},
         )
 
     # -- LSP queries --------------------------------------------------------
@@ -370,10 +399,11 @@ def main():
 
     cmd = sys.argv[1]
 
-    print(f"Connecting to rust-analyzer for project: {PROJECT_ROOT}", file=sys.stderr)
-    client = LspClient(PROJECT_ROOT)
+    scope = f" (crate: {RA_SINGLE_CRATE})" if RA_SINGLE_CRATE else " (full workspace)"
+    print(f"Connecting to rust-analyzer for project: {PROJECT_ROOT}{scope}", file=sys.stderr)
+    client = LspClient(PROJECT_ROOT, single_crate=RA_SINGLE_CRATE)
     client.initialize()
-    print("Initialized. Waiting for server to index (first run may be slow)...", file=sys.stderr)
+    print("Ready.", file=sys.stderr)
 
     try:
         if cmd == "symbols":
@@ -399,10 +429,15 @@ def main():
             def print_symbols(symbols, indent=0):
                 for sym in symbols:
                     kind = SYMBOL_KINDS.get(sym.get("kind", 0), "?")
-                    rng = sym.get("selectionRange", sym.get("range", {}))
+                    # DocumentSymbol format: selectionRange / range at top level.
+                    # SymbolInformation format: location.range.
+                    rng = sym.get("selectionRange") or sym.get("range") or \
+                        sym.get("location", {}).get("range", {})
                     start = rng.get("start", {})
                     loc = f"L{start.get('line', 0)+1}"
-                    print(f"{'  ' * indent}  {kind:12s}  {sym['name']:40s}  {loc}")
+                    container = sym.get("containerName", "")
+                    prefix = f"[{container}] " if container else ""
+                    print(f"{'  ' * indent}  {kind:12s}  {prefix}{sym['name']:40s}  {loc}")
                     if "children" in sym:
                         print_symbols(sym["children"], indent + 1)
 
