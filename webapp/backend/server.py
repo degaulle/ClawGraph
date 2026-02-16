@@ -14,6 +14,7 @@ Usage:
 import http.server
 import json
 import logging
+import logging.handlers
 import os
 import socketserver
 import threading
@@ -21,15 +22,22 @@ import time
 import argparse
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent.parent  # knowledge-graph/
+FRONTEND = ROOT / "webapp" / "frontend"
+LOG_FILE = ROOT / "webapp" / "server.log"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%H:%M:%S",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.StreamHandler(),
+        logging.handlers.RotatingFileHandler(
+            LOG_FILE, maxBytes=2 * 1024 * 1024, backupCount=3,
+        ),
+    ],
 )
 log = logging.getLogger("devserver")
-
-ROOT = Path(__file__).resolve().parent.parent.parent  # knowledge-graph/
-FRONTEND = ROOT / "webapp" / "frontend"
 POLL_INTERVAL = 0.5  # seconds
 
 # ── File watcher ──────────────────────────────────────────────────────

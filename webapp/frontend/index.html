@@ -142,6 +142,20 @@
   }
   #controls .ctrl-body { display: block; }
   #controls .ctrl-body.collapsed { display: none; }
+  .tab-bar { display: flex; gap: 0; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .tab-btn {
+    background: transparent; border: none; color: #666;
+    padding: 6px 14px; font-size: 12px; cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-btn:hover { color: #999; }
+  .tab-btn.active { color: #fff; border-bottom-color: #3b82f6; }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+  #info-pane { font-size: 14px; line-height: 1.6; }
+  #info-pane .value { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  #info-pane .label { color: #999; font-size: 13px; margin-bottom: 4px; white-space: normal; }
+  #info-pane .info-empty { color: #555; font-style: italic; }
   .ctrl-btn {
     background: #333;
     color: #ccc;
@@ -375,10 +389,14 @@
   </div>
 </div>
 <div id="controls">
-  <h3 onclick="document.getElementById('ctrl-body').classList.toggle('collapsed')">
-    Force Simulation <span class="toggle">&#9660;</span>
-  </h3>
-  <div class="ctrl-body" id="ctrl-body"></div>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="info-pane">Info</button>
+    <button class="tab-btn" data-tab="forces-pane">Forces</button>
+  </div>
+  <div class="tab-pane active" id="info-pane">
+    <div class="info-empty">Click a node to see details</div>
+  </div>
+  <div class="tab-pane" id="forces-pane"></div>
 </div>
 <div id="stats" style="display:none"></div>
 <div id="timeline">
@@ -401,6 +419,17 @@
   const tooltip = document.getElementById('tooltip');
   const statsEl = document.getElementById('stats');
   const loadingEl = document.getElementById('loading');
+  const infoPaneEl = document.getElementById('info-pane');
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
 
   // High-DPI support
   let width, height, dpr;
@@ -1218,6 +1247,7 @@
     overviewBtn.className = 'mode-switch-btn' + (m === 'overview' ? ' active' : '');
     activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null;
     rebuildGraph(rootNode);
+    updateInfoPane();
   }
   exploreBtn.addEventListener('click', () => setMode('explore'));
   overviewBtn.addEventListener('click', () => setMode('overview'));
@@ -1272,7 +1302,7 @@
   makeSlider(edgeGroup, 'Highlight Opacity', 0, 1, 0.01, 0.35, v => { highlightEdgeOpacity = v; draw(); });
 
   // --- Force controls panel ---
-  const ctrlBody = document.getElementById('ctrl-body');
+  const ctrlBody = document.getElementById('forces-pane');
 
   const forceGroup = makeGroup('Forces', ctrlBody);
   makeSlider(forceGroup, 'Charge', -100, 0, 1, -25, v => { chargeForce.strength(v); });
@@ -1358,6 +1388,122 @@
     if (link.type === 'authored') {
       if (!fileToContributors.has(link.target)) fileToContributors.set(link.target, new Set());
       fileToContributors.get(link.target).add(link.source);
+    }
+  }
+
+  // Build tooltip HTML for hovered node (includes action hints like "Click to...")
+  function buildTooltipHTML(node) {
+    let html = `<div class="value">${node.name}</div>`;
+    if (node.type === 'root') {
+      html += `<div class="label">Root node</div>`;
+      if (activeMajor || activeMinor || activeContributor) {
+        html += `<div class="label" style="color:#93c5fd">Click to go back</div>`;
+      }
+    } else if (node.type === 'contributor') {
+      html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
+      if (node.createdAt) html += `<div class="label">First commit: ${fmtDate(node.createdAt)}</div>`;
+      if (node.role) html += `<div class="label" style="color:#d4d4d4">Role: ${node.role}</div>`;
+      if (node.contributions) {
+        const text = node.contributions.length > 180 ? node.contributions.slice(0, 180) + '\u2026' : node.contributions;
+        html += `<div class="label" style="white-space:normal;max-width:340px;max-height:60px;overflow:hidden;line-height:1.3">${text}</div>`;
+      }
+      const files = contributorToFiles.get(node.id);
+      if (files) html += `<div class="label">${files.size} files authored</div>`;
+      if (mode === 'explore') {
+        const isActive = activeContributor && activeContributor.id === node.id;
+        html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show authored files'}</div>`;
+      }
+    } else if (node.type === 'crate') {
+      const targets = [];
+      if (node.hasLib) targets.push('lib');
+      if (node.hasBin) targets.push('bin');
+      html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
+      html += `<div class="label">${node.rootDir}</div>`;
+      if (node.createdAt) html += `<div class="label">Created ${new Date(node.createdAt).toLocaleDateString()}</div>`;
+    } else if (node.type === 'major_concept') {
+      html += `<div class="label">Major Concept</div>`;
+      html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
+      const directFiles = conceptToFiles.get(node.id) || new Set();
+      const minorCount = (majorToMinors.get(node.id) || new Set()).size;
+      html += `<div class="label">${minorCount} subconcepts · ${directFiles.size} direct files</div>`;
+      if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to explore</div>`;
+    } else if (node.type === 'minor_concept') {
+      html += `<div class="label">Minor Concept</div>`;
+      html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
+      const taggedFiles = conceptToFiles.get(node.id) || new Set();
+      html += `<div class="label">${taggedFiles.size} files</div>`;
+      if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to show files</div>`;
+    } else {
+      const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
+      html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
+      if (node.summary) html += `<div class="label" style="white-space:normal;max-width:350px">${node.summary}</div>`;
+      if (mode === 'explore') {
+        const nContribs = (fileToContributors.get(node.id) || new Set()).size;
+        if (nContribs > 0) {
+          const isActive = activeFile && activeFile.id === node.id;
+          html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show ' + nContribs + ' contributors'}</div>`;
+        }
+      }
+    }
+    const neighbors = adjacency.get(node.id);
+    if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
+    return html;
+  }
+
+  // Build info pane HTML for selected node (no action hints)
+  function buildInfoPaneHTML(node) {
+    let html = `<div class="value">${node.name}</div>`;
+    if (node.type === 'root') {
+      html += `<div class="label">Root node</div>`;
+    } else if (node.type === 'contributor') {
+      html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
+      if (node.createdAt) html += `<div class="label">First commit: ${fmtDate(node.createdAt)}</div>`;
+      if (node.role) html += `<div class="label" style="color:#d4d4d4">Role: ${node.role}</div>`;
+      if (node.contributions) {
+        html += `<div class="label" style="white-space:normal;line-height:1.3">${node.contributions}</div>`;
+      }
+      const files = contributorToFiles.get(node.id);
+      if (files) html += `<div class="label">${files.size} files authored</div>`;
+    } else if (node.type === 'crate') {
+      const targets = [];
+      if (node.hasLib) targets.push('lib');
+      if (node.hasBin) targets.push('bin');
+      html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
+      html += `<div class="label">${node.rootDir}</div>`;
+      if (node.createdAt) html += `<div class="label">Created ${new Date(node.createdAt).toLocaleDateString()}</div>`;
+    } else if (node.type === 'major_concept') {
+      html += `<div class="label">Major Concept</div>`;
+      html += `<div class="label" style="white-space:normal">${node.definition}</div>`;
+      const directFiles = conceptToFiles.get(node.id) || new Set();
+      const minorCount = (majorToMinors.get(node.id) || new Set()).size;
+      html += `<div class="label">${minorCount} subconcepts · ${directFiles.size} direct files</div>`;
+    } else if (node.type === 'minor_concept') {
+      html += `<div class="label">Minor Concept</div>`;
+      html += `<div class="label" style="white-space:normal">${node.definition}</div>`;
+      const taggedFiles = conceptToFiles.get(node.id) || new Set();
+      html += `<div class="label">${taggedFiles.size} files</div>`;
+    } else {
+      const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
+      html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
+      if (node.summary) html += `<div class="label" style="white-space:normal">${node.summary}</div>`;
+    }
+    const neighbors = adjacency.get(node.id);
+    if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
+    return html;
+  }
+
+  // Get the currently selected node from active* state
+  function getSelectedNode() {
+    return activeContributor || activeFile || activeMinor || activeMajor || null;
+  }
+
+  // Update Info pane with selected node details
+  function updateInfoPane() {
+    const node = getSelectedNode();
+    if (!node) {
+      infoPaneEl.innerHTML = '<div class="info-empty">Click a node to see details</div>';
+    } else {
+      infoPaneEl.innerHTML = buildInfoPaneHTML(node);
     }
   }
 
@@ -1548,6 +1694,7 @@
             activeContributor = node;
           }
           rebuildGraph(node);
+          updateInfoPane();
           break;
         }
         case 'set_mode': {
@@ -1582,6 +1729,7 @@
           else if (activeMinor) { activeMinor = null; }
           else if (activeMajor) { activeMajor = null; }
           rebuildGraph(rootNode);
+          updateInfoPane();
           break;
         }
         case 'set_viewport': {
@@ -1829,61 +1977,7 @@
       canvas.style.cursor = node ? 'pointer' : 'default';
       if (node) {
         tooltip.style.display = 'block';
-        let html = `<div class="value">${node.name}</div>`;
-        if (node.type === 'root') {
-          html += `<div class="label">Root node</div>`;
-          if (activeMajor || activeMinor || activeContributor) {
-            html += `<div class="label" style="color:#93c5fd">Click to go back</div>`;
-          }
-        } else if (node.type === 'contributor') {
-          html += `<div class="label">Contributor | ${node.totalCommits} commits</div>`;
-          if (node.createdAt) html += `<div class="label">First commit: ${fmtDate(node.createdAt)}</div>`;
-          if (node.role) html += `<div class="label" style="color:#d4d4d4">Role: ${node.role}</div>`;
-          if (node.contributions) {
-            const text = node.contributions.length > 180 ? node.contributions.slice(0, 180) + '\u2026' : node.contributions;
-            html += `<div class="label" style="white-space:normal;max-width:340px;max-height:60px;overflow:hidden;line-height:1.3">${text}</div>`;
-          }
-          const files = contributorToFiles.get(node.id);
-          if (files) html += `<div class="label">${files.size} files authored</div>`;
-          if (mode === 'explore') {
-            const isActive = activeContributor && activeContributor.id === node.id;
-            html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show authored files'}</div>`;
-          }
-        } else if (node.type === 'crate') {
-          const targets = [];
-          if (node.hasLib) targets.push('lib');
-          if (node.hasBin) targets.push('bin');
-          html += `<div class="label">Crate | edition ${node.edition} | ${targets.join(', ') || 'no targets'}</div>`;
-          html += `<div class="label">${node.rootDir}</div>`;
-          if (node.createdAt) html += `<div class="label">Created ${new Date(node.createdAt).toLocaleDateString()}</div>`;
-        } else if (node.type === 'major_concept') {
-          html += `<div class="label">Major Concept</div>`;
-          html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
-          const directFiles = conceptToFiles.get(node.id) || new Set();
-          const minorCount = (majorToMinors.get(node.id) || new Set()).size;
-          html += `<div class="label">${minorCount} subconcepts · ${directFiles.size} direct files</div>`;
-          if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to explore</div>`;
-        } else if (node.type === 'minor_concept') {
-          html += `<div class="label">Minor Concept</div>`;
-          html += `<div class="label" style="white-space:normal;max-width:350px">${node.definition}</div>`;
-          const taggedFiles = conceptToFiles.get(node.id) || new Set();
-          html += `<div class="label">${taggedFiles.size} files</div>`;
-          if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to show files</div>`;
-        } else {
-          const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
-          html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
-          if (node.summary) html += `<div class="label" style="white-space:normal;max-width:350px">${node.summary}</div>`;
-          if (mode === 'explore') {
-            const nContribs = (fileToContributors.get(node.id) || new Set()).size;
-            if (nContribs > 0) {
-              const isActive = activeFile && activeFile.id === node.id;
-              html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to deselect' : 'Click to show ' + nContribs + ' contributors'}</div>`;
-            }
-          }
-        }
-        const neighbors = adjacency.get(node.id);
-        if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
-        tooltip.innerHTML = html;
+        tooltip.innerHTML = buildTooltipHTML(node);
       } else {
         tooltip.style.display = 'none';
       }
@@ -1949,6 +2043,7 @@
             else if (activeMinor) { activeMinor = null; }
             else if (activeMajor) { activeMajor = null; }
             rebuildGraph(rootNode);
+            updateInfoPane();
           }
           draggedNode = null;
           return;
@@ -1974,6 +2069,7 @@
             activeContributor = (activeContributor && activeContributor.id === node.id) ? null : node;
             rebuildGraph(node);
           }
+          updateInfoPane();
         }
         draggedNode = null;
         draw();
@@ -1989,6 +2085,7 @@
       else if (activeMinor) { activeMinor = null; }
       else if (activeMajor) { activeMajor = null; }
       rebuildGraph(rootNode);
+      updateInfoPane();
     }
   });
 
