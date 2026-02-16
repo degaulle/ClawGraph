@@ -2,6 +2,8 @@
 
 **An interactive visual interface for human-agent co-coding, built on knowledge graphs.**
 
+![ClawGraph visualization of the OpenAI Codex codebase](p1.png)
+
 ---
 
 ## Why ClawGraph?
