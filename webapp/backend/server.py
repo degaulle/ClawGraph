@@ -17,6 +17,7 @@ import logging
 import logging.handlers
 import os
 import socketserver
+import subprocess
 import threading
 import time
 import argparse
@@ -66,6 +67,37 @@ def _push_command(data: dict):
                 dead.append(wfile)
         for d in dead:
             _command_clients.remove(d)
+
+
+def _resolve_cursor_cli() -> Path | None:
+    """Find the latest cursor-server remote CLI binary."""
+    base = Path.home() / ".cursor-server" / "bin" / "linux-x64"
+    if not base.is_dir():
+        return None
+    # Pick the most recently modified version directory
+    versions = sorted(
+        (d for d in base.iterdir() if d.is_dir()),
+        key=lambda d: d.stat().st_mtime,
+        reverse=True,
+    )
+    for v in versions:
+        cli = v / "bin" / "remote-cli" / "cursor"
+        if cli.is_file():
+            return cli
+    return None
+
+
+def _resolve_cursor_ipc() -> Path | None:
+    """Find the most recent VS Code IPC socket for the Cursor connection."""
+    ipc_dir = Path(f"/run/user/{os.getuid()}")
+    if not ipc_dir.is_dir():
+        return None
+    socks = sorted(
+        ipc_dir.glob("vscode-ipc-*.sock"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    return socks[0] if socks else None
 
 
 def _snapshot(directory: Path) -> dict[str, float]:
@@ -199,7 +231,89 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.end_headers()
             return
 
+        if path == "/cursor-running":
+            cli = _resolve_cursor_cli()
+            if cli is None:
+                self._send_json(200, {"running": False, "error": "No cursor-server installation found"})
+                return
+            env = os.environ.copy()
+            if not env.get("VSCODE_IPC_HOOK_CLI"):
+                sock = _resolve_cursor_ipc()
+                if sock is None:
+                    self._send_json(200, {"running": False, "error": "No active IPC socket found"})
+                    return
+                env["VSCODE_IPC_HOOK_CLI"] = str(sock)
+            try:
+                result = subprocess.run(
+                    [str(cli), "--list-extensions"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=env,
+                    timeout=5,
+                )
+                self._send_json(200, {"running": result.returncode == 0})
+            except (OSError, subprocess.TimeoutExpired):
+                self._send_json(200, {"running": False, "error": "CLI check failed"})
+            return
+
+        if path == "/open-in-cursor":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length)
+            try:
+                data = json.loads(body)
+            except (json.JSONDecodeError, ValueError):
+                self.send_error(400, "Invalid JSON")
+                return
+            file_arg = data.get("file")
+            if not file_arg:
+                self.send_error(400, "Missing 'file' field")
+                return
+            # Resolve relative paths against the neighboring codex repo
+            fp = Path(file_arg)
+            if not fp.is_absolute():
+                fp = ROOT.parent / "codex" / fp
+            file_path = str(fp)
+            cli = _resolve_cursor_cli()
+            if cli is None:
+                self._send_json(500, {"error": "No cursor-server installation found"})
+                return
+            # Resolve IPC socket if not already in the environment
+            env = os.environ.copy()
+            if not env.get("VSCODE_IPC_HOOK_CLI"):
+                sock = _resolve_cursor_ipc()
+                if sock is None:
+                    self._send_json(500, {"error": "No active IPC socket found (is Cursor connected?)"})
+                    return
+                env["VSCODE_IPC_HOOK_CLI"] = str(sock)
+            # Build the --goto argument: file:line:column
+            target = file_path
+            if "line" in data:
+                target += f":{data['line']}"
+                if "column" in data:
+                    target += f":{data['column']}"
+            try:
+                subprocess.Popen(
+                    [str(cli), "--goto", target],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    env=env,
+                )
+            except OSError as e:
+                self._send_json(500, {"error": f"Failed to launch cursor: {e}"})
+                return
+            self.send_response(204)
+            self.end_headers()
+            return
+
         self.send_error(404)
+
+    def _send_json(self, status: int, data: dict):
+        body = json.dumps(data).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
 
     def _serve_file(self, file_path: Path, content_type: str | None = None):
         if content_type is None:

@@ -432,6 +432,20 @@
     flex-shrink: 0;
   }
   .symbol-item.indented { padding-left: 22px; }
+  .cursor-btn {
+    display: inline-block;
+    background: #1a3a5c;
+    color: #60a5fa;
+    border: 1px solid #2563eb44;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+  .cursor-btn:hover { background: #1e4a7a; color: #93c5fd; }
+  .sym-lines.clickable { cursor: pointer; color: #60a5fa; }
+  .sym-lines.clickable:hover { color: #93c5fd; text-decoration: underline; }
 
 </style>
 </head>
@@ -617,6 +631,23 @@
     return;
   }
   loadingEl.style.display = 'none';
+
+  // Check if Cursor IDE is connected (non-blocking)
+  let cursorConnected = false;
+  fetch('/cursor-running', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => { cursorConnected = d.running === true; })
+    .catch(() => {});
+
+  function openInCursor(file, line) {
+    const body = { file };
+    if (line) body.line = line;
+    fetch('/open-in-cursor', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  }
 
   // Build ALL nodes (kept permanently — D3 adds x/y/vx/vy to these)
   const allNodes = [];
@@ -1842,6 +1873,9 @@
       html += `<div class="label">Lines ${node.startLine}\u2013${node.endLine} (${node.lineCount} lines)</div>`;
       html += `<div class="label" style="color:#888">${node.file}</div>`;
     } else {
+      if (cursorConnected) {
+        html += `<div><span class="cursor-btn" data-cursor-file="${node.name}">Open in Cursor</span></div>`;
+      }
       const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
       html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
       if (node.summary) html += `<div class="label" style="white-space:normal">${node.summary}</div>`;
@@ -1862,7 +1896,7 @@
           html += `<span class="sym-name">${sym.name}</span>`;
           if (nChildren > 0) html += `<span class="sym-badge">${nChildren}</span>`;
           html += `<span class="sym-kind">${sym.kind}</span>`;
-          html += `<span class="sym-lines">${sym.startLine}\u2013${sym.endLine}</span>`;
+          html += `<span class="sym-lines${cursorConnected ? ' clickable' : ''}" data-cursor-file="${sym.file}" data-cursor-line="${sym.startLine}">${sym.startLine}\u2013${sym.endLine}</span>`;
           html += `</div>`;
           // If this symbol is active, show children indented
           if (isActive) {
@@ -1873,7 +1907,7 @@
               html += `<div class="sym-diamond" style="background:${chColor}"></div>`;
               html += `<span class="sym-name">${ch.name}</span>`;
               html += `<span class="sym-kind">${ch.kind}</span>`;
-              html += `<span class="sym-lines">${ch.startLine}\u2013${ch.endLine}</span>`;
+              html += `<span class="sym-lines${cursorConnected ? ' clickable' : ''}" data-cursor-file="${ch.file}" data-cursor-line="${ch.startLine}">${ch.startLine}\u2013${ch.endLine}</span>`;
               html += `</div>`;
             }
           }
@@ -1899,7 +1933,9 @@
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
       // Wire up symbol browser click handlers
       infoPaneEl.querySelectorAll('.symbol-item').forEach(el => {
-        el.addEventListener('click', () => {
+        el.addEventListener('click', (e) => {
+          // Don't toggle symbol if clicking a sym-lines link
+          if (e.target.classList.contains('sym-lines')) return;
           const symId = el.dataset.symbolId;
           const sym = symbolNodeMap.get(symId);
           if (!sym) return;
@@ -1910,6 +1946,17 @@
           }
           rebuildGraph(sym || activeFile);
           updateInfoPane();
+        });
+      });
+      // Wire up "Open in Cursor" button
+      infoPaneEl.querySelectorAll('.cursor-btn').forEach(el => {
+        el.addEventListener('click', () => openInCursor(el.dataset.cursorFile));
+      });
+      // Wire up clickable sym-lines spans
+      infoPaneEl.querySelectorAll('.sym-lines.clickable').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openInCursor(el.dataset.cursorFile, parseInt(el.dataset.cursorLine, 10));
         });
       });
     }
@@ -1978,7 +2025,17 @@
   }
 
   function _nodeRef(node) {
-    return node ? { id: node.id, name: node.name, type: node.type } : null;
+    if (!node) return null;
+    const ref = { id: node.id, name: node.name, type: node.type };
+    if (node.type === 'symbol') {
+      ref.kind = node.kind;
+      ref.file = node.file;
+      ref.start_line = node.startLine;
+      ref.end_line = node.endLine;
+      ref.line_count = node.lineCount;
+      if (node.detail) ref.detail = node.detail;
+    }
+    return ref;
   }
 
   function _computeNodesInView() {

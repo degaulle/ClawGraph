@@ -7,6 +7,10 @@
         "DISPLAY": ":10",
         "PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH": "/usr/bin/google-chrome-stable"
       }
+    },
+    "knowledge-graph": {
+      "command": "/home/charleswangsy/workstation/knowledge-graph/.venv/bin/python",
+      "args": ["webapp/backend/mcp_server.py"]
     }
   }
 }
