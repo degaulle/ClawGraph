@@ -24,18 +24,7 @@
   }
   #tooltip .label { color: #888; font-size: 11px; }
   #tooltip .value { color: #fff; font-weight: 500; }
-  #legend {
-    position: absolute;
-    bottom: 64px;
-    right: 16px;
-    background: rgba(20, 20, 20, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 14px 18px;
-    color: #ccc;
-    font-size: 13px;
-  }
-  #legend h3 { margin-bottom: 10px; color: #fff; font-size: 14px; }
+  /* Legend styles (inside appearance panel tabs) */
   .legend-section { margin-bottom: 8px; }
   .legend-section:last-child { margin-bottom: 0; }
   .legend-section-title { color: #888; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
@@ -154,7 +143,7 @@
   .tab-pane.active { display: block; }
   #info-pane { font-size: 14px; line-height: 1.6; }
   #info-pane .value { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
-  #info-pane .label { color: #999; font-size: 13px; margin-bottom: 4px; white-space: normal; }
+  #info-pane .label { color: #e0e0e0; font-size: 13px; margin-bottom: 4px; white-space: normal; }
   #info-pane .info-empty { color: #555; font-style: italic; }
   .ctrl-btn {
     background: #333;
@@ -170,7 +159,7 @@
   .ctrl-btn:hover { background: #444; color: #fff; }
   #appearance {
     position: absolute;
-    top: 16px;
+    top: 64px;
     left: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -365,38 +354,133 @@
     text-align: center;
   }
   .ctrl-row.disabled .depth-ticks span { opacity: 0.3; }
+  /* Mode switch standalone (always visible, top-left) */
+  #mode-switch-standalone {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    z-index: 5;
+  }
+  #mode-switch-standalone .mode-switch { margin-bottom: 0; }
+  /* Legend diamond indicator */
+  .legend-diamond {
+    width: 10px;
+    height: 10px;
+    transform: rotate(45deg);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  /* Legend dashed line */
+  .legend-line-dashed {
+    width: 16px;
+    height: 0;
+    border-top: 3px dashed;
+    flex-shrink: 0;
+  }
+  /* Symbol browser in info pane */
+  .symbol-browser {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 10px;
+    padding-top: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #444 transparent;
+  }
+  .symbol-browser::-webkit-scrollbar { width: 4px; }
+  .symbol-browser::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+  .symbol-browser-title {
+    color: #aaa;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .symbol-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #ccc;
+  }
+  .symbol-item:hover { background: rgba(255,255,255,0.06); }
+  .symbol-item.active { background: rgba(59,130,246,0.2); color: #fff; }
+  .symbol-item .sym-diamond {
+    width: 8px;
+    height: 8px;
+    transform: rotate(45deg);
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+  .symbol-item .sym-name { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .symbol-item .sym-kind { color: #888; font-size: 10px; flex-shrink: 0; }
+  .symbol-item .sym-lines { color: #666; font-size: 10px; font-family: monospace; flex-shrink: 0; }
+  .symbol-item .sym-badge {
+    background: rgba(255,255,255,0.1);
+    color: #aaa;
+    font-size: 9px;
+    padding: 0 4px;
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  .symbol-item.indented { padding-left: 22px; }
 
 </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
 <div id="tooltip"></div>
+<div id="mode-switch-standalone"></div>
 <div id="appearance">
   <h3 onclick="document.getElementById('appear-body').classList.toggle('collapsed')">
     Appearance <span class="toggle">&#9660;</span>
   </h3>
-  <div class="ctrl-body" id="appear-body"></div>
-</div>
-<div id="legend">
-  <h3>Knowledge Graph</h3>
-  <div class="legend-section">
-    <div class="legend-section-title">Nodes</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#ffffff"></div> Codex (root)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Contributors</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Files (active)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Files (deleted)</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Crates</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> Major Concepts</div>
-    <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Minor Concepts</div>
-  </div>
-  <div class="legend-section">
-    <div class="legend-section-title">Edges</div>
-    <div class="legend-item"><div class="legend-line" style="background:rgba(255,255,255,0.6)"></div> Authored</div>
-    <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on (directed)</div>
-    <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
-    <div class="legend-item"><div class="legend-line" style="background:#a855f7"></div> Contributed to</div>
-    <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div> Has minor</div>
-    <div class="legend-item"><div class="legend-line" style="background:#06b6d4"></div> Tagged with</div>
+  <div class="ctrl-body" id="appear-body">
+    <div class="tab-bar" id="appear-tab-bar">
+      <button class="tab-btn active" data-tab="legend-pane">Legend</button>
+      <button class="tab-btn" data-tab="settings-pane">Settings</button>
+    </div>
+    <div class="tab-pane active" id="legend-pane">
+      <div class="legend-section">
+        <div class="legend-section-title">Nodes</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffffff"></div> Codex (root)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Contributors</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div> Files (active)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6b7280"></div> Files (deleted)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div> Crates</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ec4899"></div> Major Concepts</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div> Minor Concepts</div>
+      </div>
+      <div class="legend-section">
+        <div class="legend-section-title">Symbols</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#60a5fa"></div> Function / Method</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#f59e0b"></div> Struct</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#a78bfa"></div> Enum</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#34d399"></div> Trait / Interface</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#94a3b8"></div> Field</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#fb923c"></div> Module</div>
+        <div class="legend-item"><div class="legend-diamond" style="background:#e879f9"></div> Constant</div>
+      </div>
+      <div class="legend-section">
+        <div class="legend-section-title">Edges</div>
+        <div class="legend-item"><div class="legend-line" style="background:rgba(255,255,255,0.6)"></div> Authored</div>
+        <div class="legend-item"><div class="legend-line" style="background:#ef4444"></div> Depends on (directed)</div>
+        <div class="legend-item"><div class="legend-line" style="background:#10b981"></div> Contains</div>
+        <div class="legend-item"><div class="legend-line" style="background:#a855f7"></div> Contributed to</div>
+        <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div> Has minor</div>
+        <div class="legend-item"><div class="legend-line" style="background:#06b6d4"></div> Tagged with</div>
+        <div class="legend-item"><div class="legend-line-dashed" style="border-color:#64748b"></div> Defined in</div>
+      </div>
+    </div>
+    <div class="tab-pane" id="settings-pane"></div>
   </div>
 </div>
 <div id="controls">
@@ -434,15 +518,19 @@
   const loadingEl = document.getElementById('loading');
   const infoPaneEl = document.getElementById('info-pane');
 
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById(btn.dataset.tab).classList.add('active');
+  // Tab switching (scoped per tab bar)
+  function initTabBar(tabBar) {
+    const container = tabBar.parentElement;
+    tabBar.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBar.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        container.querySelectorAll(':scope > .tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      });
     });
-  });
+  }
+  document.querySelectorAll('.tab-bar').forEach(initTabBar);
 
   // High-DPI support
   let width, height, dpr;
@@ -474,6 +562,24 @@
   const MINOR_CONCEPT_COLOR = '#f472b6';
   const ROOT_COLOR = '#ffffff';
 
+  // Symbol colors by kind
+  const SYMBOL_COLORS = {
+    Function: '#60a5fa',
+    Method: '#60a5fa',
+    Struct: '#f59e0b',
+    Enum: '#a78bfa',
+    EnumMember: '#c4b5fd',
+    Field: '#94a3b8',
+    Interface: '#34d399',
+    Trait: '#34d399',
+    Module: '#fb923c',
+    Namespace: '#fb923c',
+    Constant: '#e879f9',
+    Object: '#fbbf24',
+    TypeParameter: '#67e8f9',
+  };
+  const DEFAULT_SYMBOL_COLOR = '#94a3b8';
+
   // Edge colors as RGB components (alpha applied dynamically)
   const EDGE_RGB = {
     authored: '255, 255, 255',
@@ -483,6 +589,7 @@
     has_minor: '236, 72, 153',
     has_major: '255, 255, 255',
     tagged_with: '6, 182, 212',
+    defined_in: '100, 116, 139',
   };
 
   // Perceived-luminance correction so all edge colors look equally bright.
@@ -497,6 +604,7 @@
     has_minor: refLum / luminance(236, 72, 153),
     has_major: 1,
     tagged_with: refLum / luminance(6, 182, 212),
+    defined_in: refLum / luminance(100, 116, 139),
   };
 
   // Load data
@@ -613,13 +721,19 @@
   }
 
   // Raw link data (never passed to D3 — source/target stay as strings)
-  const allLinksRaw = raw.edges.map(e => {
+  const allLinksRaw = [];
+  const allSymbolLinksRaw = []; // defined_in edges kept separate
+  for (const e of raw.edges) {
     const link = {
       source: e.source,
       target: e.target,
       type: e.type || 'authored',
       commits: e.commits ? e.commits.length : 0,
     };
+    if (link.type === 'defined_in') {
+      allSymbolLinksRaw.push(link);
+      continue;
+    }
     // For authored edges, store earliest/latest commit timestamp
     if (e.commits && e.commits.length > 0) {
       let earliest = Infinity, latest = -Infinity;
@@ -637,8 +751,8 @@
       link.firstContributionAt = new Date(e.first_contribution_at).getTime();
       link.totalCommits = e.total_commits || 0;
     }
-    return link;
-  });
+    allLinksRaw.push(link);
+  }
 
   // Synthetic edges: root → each major concept
   for (const n of allNodes) {
@@ -646,6 +760,52 @@
       allLinksRaw.push({ source: ROOT_ID, target: n.id, type: 'has_major', commits: 0 });
     }
   }
+
+  // --- Symbol nodes (kept separate from allNodes for performance) ---
+  const allSymbolNodes = [];
+  const symbolNodeMap = new Map(); // symbol ID → symbol node
+  const fileNameToId = new Map(); // file name → file node ID
+  for (const n of allNodes) {
+    if (n.type === 'file') fileNameToId.set(n.name, n.id);
+  }
+  const fileToSymbols = new Map(); // file ID → sorted array of top-level symbols
+  const symbolToChildren = new Map(); // parent symbol ID → sorted array of child symbols
+
+  for (const s of (raw.nodes.symbols || [])) {
+    const fileId = fileNameToId.get(s.file) || null;
+    const node = {
+      id: s.id,
+      name: s.name,
+      type: 'symbol',
+      kind: s.kind,
+      file: s.file,
+      fileId: fileId,
+      startLine: s.start_line,
+      endLine: s.end_line,
+      lineCount: s.line_count,
+      detail: s.detail || null,
+      parentSymbol: s.parent_symbol || null,
+      createdAt: null,
+      radius: 5,
+    };
+    allSymbolNodes.push(node);
+    symbolNodeMap.set(s.id, node);
+    nodeMap.set(s.id, node); // for hit detection and command routing
+  }
+
+  // Build fileToSymbols (top-level only) and symbolToChildren
+  for (const sym of allSymbolNodes) {
+    if (sym.parentSymbol) {
+      if (!symbolToChildren.has(sym.parentSymbol)) symbolToChildren.set(sym.parentSymbol, []);
+      symbolToChildren.get(sym.parentSymbol).push(sym);
+    } else if (sym.fileId) {
+      if (!fileToSymbols.has(sym.fileId)) fileToSymbols.set(sym.fileId, []);
+      fileToSymbols.get(sym.fileId).push(sym);
+    }
+  }
+  // Sort by start_line
+  for (const arr of fileToSymbols.values()) arr.sort((a, b) => a.startLine - b.startLine);
+  for (const arr of symbolToChildren.values()) arr.sort((a, b) => a.startLine - b.startLine);
 
   // Compute global time range and commit histogram for timeline
   const allTimestamps = [];
@@ -846,6 +1006,8 @@
     contributedTo: 'visible',
     hasMinor: 'visible',
     taggedWith: 'visible',
+    symbols: 'off',
+    definedIn: 'visible',
   };
 
   // Source code file extensions
@@ -865,6 +1027,7 @@
 
   function nodeTypeState(node) {
     if (node.type === 'root') return 'visible'; // always visible
+    if (node.type === 'symbol') return mode === 'overview' ? 'off' : vis.symbols;
     if (node.type === 'contributor') return vis.contributors;
     if (node.type === 'crate') return vis.crates;
     if (node.type === 'major_concept') return vis.majorConcepts;
@@ -874,6 +1037,7 @@
   }
 
   function linkTypeState(link) {
+    if (link.type === 'defined_in') return mode === 'overview' ? 'off' : vis.definedIn;
     if (link.type === 'authored') return vis.authored;
     if (link.type === 'depends_on') return vis.dependsOn;
     if (link.type === 'contains') return vis.contains;
@@ -920,6 +1084,7 @@
 
   function getNodeScale(node) {
     if (node.type === 'root') return conceptScale;
+    if (node.type === 'symbol') return fileScale;
     if (node.type === 'contributor') return contributorScale;
     if (node.type === 'crate') return crateScale;
     if (node.type === 'major_concept' || node.type === 'minor_concept') return conceptScale;
@@ -931,8 +1096,12 @@
     const nf = nodes.filter(n => n.type === 'file').length;
     const ncr = nodes.filter(n => n.type === 'crate').length;
     const ncon = nodes.filter(n => n.type === 'major_concept' || n.type === 'minor_concept').length;
+    const nsym = nodes.filter(n => n.type === 'symbol').length;
     statsEl.style.display = 'block';
-    statsEl.textContent = `${nc} contributors | ${nf} files | ${ncr} crates | ${ncon} concepts | ${links.length} edges`;
+    let text = `${nc} contributors | ${nf} files | ${ncr} crates | ${ncon} concepts`;
+    if (nsym > 0) text += ` | ${nsym} symbols`;
+    text += ` | ${links.length} edges`;
+    statsEl.textContent = text;
   }
 
   // Radial layout radii (mutable via controls)
@@ -1005,7 +1174,7 @@
         return false;
       };
     } else if (activeFile) {
-      // File view: root + concept context + file + its contributors
+      // File view: root + concept context + file + its contributors + symbols
       if (activeMajor) {
         allowedIds.add(activeMajor.id);
         if (activeMinor) allowedIds.add(activeMinor.id);
@@ -1013,6 +1182,17 @@
       allowedIds.add(activeFile.id);
       const fileContribs = fileToContributors.get(activeFile.id) || new Set();
       for (const cid of fileContribs) allowedIds.add(cid);
+      // Add symbols: if one is active, show only it + its children; otherwise show all top-level
+      if (vis.symbols !== 'off') {
+        if (activeSymbol) {
+          allowedIds.add(activeSymbol.id);
+          const children = symbolToChildren.get(activeSymbol.id) || [];
+          for (const ch of children) allowedIds.add(ch.id);
+        } else {
+          const topSymbols = fileToSymbols.get(activeFile.id) || [];
+          for (const sym of topSymbols) allowedIds.add(sym.id);
+        }
+      }
       edgeFilter = l => {
         if (activeMajor && l.type === 'has_major' && l.target === activeMajor.id) return true;
         if (activeMinor && l.type === 'has_minor' && l.source === activeMajor.id && l.target === activeMinor.id) return true;
@@ -1051,12 +1231,39 @@
     }
 
     nodes = allNodes.filter(n => allowedIds.has(n.id) && nodeInTimeRange(n));
+    // Add symbol nodes when activeFile is set
+    if (activeFile) {
+      for (const sym of allSymbolNodes) {
+        if (allowedIds.has(sym.id)) nodes.push(sym);
+      }
+    }
     const activeIds = new Set(nodes.map(n => n.id));
 
     links = allLinksRaw.filter(l => {
       if (!activeIds.has(l.source) || !activeIds.has(l.target)) return false;
       return edgeFilter(l);
     }).map(l => ({ ...l }));
+    // Add edges for symbols in the active set
+    if (activeFile && vis.definedIn !== 'off') {
+      // Top-level symbols: defined_in edge to file
+      for (const sl of allSymbolLinksRaw) {
+        if (activeIds.has(sl.source) && activeIds.has(sl.target)) {
+          const sym = symbolNodeMap.get(sl.source);
+          if (sym && !sym.parentSymbol) {
+            links.push({ ...sl });
+          }
+        }
+      }
+      // Child symbols: synthetic edge to parent symbol
+      if (activeSymbol) {
+        const children = symbolToChildren.get(activeSymbol.id) || [];
+        for (const ch of children) {
+          if (activeIds.has(ch.id)) {
+            links.push({ source: ch.id, target: activeSymbol.id, type: 'defined_in', commits: 0 });
+          }
+        }
+      }
+    }
 
     // Rebuild adjacency
     adjacency = new Map();
@@ -1179,6 +1386,30 @@
             c.y = centerY + RING_RADII[4] * Math.sin(a);
           }
         });
+
+        // Pre-position symbols in a ring around the active file/symbol
+        const topSyms = nodes.filter(n => n.type === 'symbol' && !n.parentSymbol);
+        const fileCx = activeFile.x || centerX;
+        const fileCy = activeFile.y || centerY;
+        topSyms.forEach((sym, i) => {
+          if (!prevNodeIds.has(sym.id)) {
+            const a = (i / Math.max(topSyms.length, 1)) * 2 * Math.PI - Math.PI / 2;
+            sym.x = fileCx + 240 * Math.cos(a);
+            sym.y = fileCy + 240 * Math.sin(a);
+          }
+        });
+        if (activeSymbol) {
+          const childSyms = nodes.filter(n => n.type === 'symbol' && n.parentSymbol === activeSymbol.id);
+          const symCx = activeSymbol.x || fileCx;
+          const symCy = activeSymbol.y || fileCy;
+          childSyms.forEach((ch, i) => {
+            if (!prevNodeIds.has(ch.id)) {
+              const a = (i / Math.max(childSyms.length, 1)) * 2 * Math.PI - Math.PI / 2;
+              ch.x = symCx + 160 * Math.cos(a);
+              ch.y = symCy + 160 * Math.sin(a);
+            }
+          });
+        }
       }
 
       // Position remaining new nodes near the trigger
@@ -1206,15 +1437,16 @@
   // Force simulation with radial positioning
   function getTargetRadius(d) {
     if (d.type === 'root') return 0;
+    if (d.type === 'symbol') return 120;
     if (d.type === 'major_concept') return RING_RADII[0];
     if (d.type === 'minor_concept') return RING_RADII[1];
     if (d.type === 'file') return (RING_RADII[2] + RING_RADII[3]) / 2;
     if (d.type === 'contributor') return RING_RADII[4];
     return 300;
   }
-  const linkForce = d3.forceLink([]).id(d => d.id).distance(60).strength(0.15);
+  const linkForce = d3.forceLink([]).id(d => d.id).distance(l => l.type === 'defined_in' ? 200 : 60).strength(0.15);
   const chargeForce = d3.forceManyBody().strength(-25).distanceMax(400);
-  const radialForce = d3.forceRadial(d => getTargetRadius(d), centerX, centerY).strength(0.4);
+  const radialForce = d3.forceRadial(d => getTargetRadius(d), centerX, centerY).strength(d => d.type === 'symbol' ? 0 : 0.4);
   const collisionForce = d3.forceCollide(d => d.radius + 1).strength(0.6);
   const simulation = d3.forceSimulation([])
     .force('link', linkForce)
@@ -1231,6 +1463,7 @@
   let activeMinor = null; // minor concept drilled into
   let activeFile = null; // file clicked to show its contributors
   let activeContributor = null; // contributor clicked to show their files
+  let activeSymbol = null; // symbol drilled into
 
   // --- Appearance state ---
   let contributorScale = 1;
@@ -1335,11 +1568,8 @@
     parent.appendChild(row);
   }
 
-  // --- Appearance panel ---
-  const appearBody = document.getElementById('appear-body');
-
-  // Mode switch (Explore / Overview)
-  const modeGroup = makeGroup('Mode', appearBody);
+  // --- Mode switch (standalone, always visible) ---
+  const modeSwitchEl = document.getElementById('mode-switch-standalone');
   const modeRow = document.createElement('div');
   modeRow.className = 'mode-switch';
   const modeBtns = document.createElement('div');
@@ -1354,7 +1584,7 @@
     mode = m;
     exploreBtn.className = 'mode-switch-btn' + (m === 'explore' ? ' active' : '');
     overviewBtn.className = 'mode-switch-btn' + (m === 'overview' ? ' active' : '');
-    activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null;
+    activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null; activeSymbol = null;
     rebuildGraph(rootNode);
     updateInfoPane();
   }
@@ -1363,7 +1593,10 @@
   modeBtns.appendChild(exploreBtn);
   modeBtns.appendChild(overviewBtn);
   modeRow.appendChild(modeBtns);
-  modeGroup.appendChild(modeRow);
+  modeSwitchEl.appendChild(modeRow);
+
+  // --- Appearance panel (Settings tab pane) ---
+  const appearBody = document.getElementById('settings-pane');
 
   // Visibility group — tri-switches
   const visGroup = makeGroup('Visibility', appearBody);
@@ -1394,6 +1627,8 @@
   makeTriSwitch(visGroup, 'Contributed-to edges', 'visible', onVisChange('contributedTo'));
   makeTriSwitch(visGroup, 'Has-minor edges',     'visible', onVisChange('hasMinor'));
   makeTriSwitch(visGroup, 'Tagged-with edges',   'visible', onVisChange('taggedWith'));
+  makeTriSwitch(visGroup, 'Symbols',             'off',     onVisChange('symbols'));
+  makeTriSwitch(visGroup, 'Defined-in edges',    'visible', onVisChange('definedIn'));
 
   // Node sizing group
   const nodeGroup = makeGroup('Nodes', appearBody);
@@ -1542,6 +1777,16 @@
       const taggedFiles = conceptToFiles.get(node.id) || new Set();
       html += `<div class="label">${taggedFiles.size} files</div>`;
       if (mode === 'explore') html += `<div class="label" style="color:#93c5fd">Click to show files</div>`;
+    } else if (node.type === 'symbol') {
+      html += `<div class="label">${node.kind}</div>`;
+      if (node.detail) html += `<div class="label" style="font-family:monospace;font-size:11px">${node.detail}</div>`;
+      html += `<div class="label">Lines ${node.startLine}\u2013${node.endLine} (${node.lineCount} lines)</div>`;
+      html += `<div class="label" style="color:#888">${node.file}</div>`;
+      const nChildren = (symbolToChildren.get(node.id) || []).length;
+      if (nChildren > 0 && mode === 'explore') {
+        const isActive = activeSymbol && activeSymbol.id === node.id;
+        html += `<div class="label" style="color:#93c5fd">${isActive ? 'Click to collapse' : 'Click to expand ' + nChildren + ' children'}</div>`;
+      }
     } else {
       const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
       html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
@@ -1591,6 +1836,11 @@
       html += `<div class="label" style="white-space:normal">${node.definition}</div>`;
       const taggedFiles = conceptToFiles.get(node.id) || new Set();
       html += `<div class="label">${taggedFiles.size} files</div>`;
+    } else if (node.type === 'symbol') {
+      html += `<div class="label">${node.kind}</div>`;
+      if (node.detail) html += `<div class="label" style="font-family:monospace;font-size:11px">${node.detail}</div>`;
+      html += `<div class="label">Lines ${node.startLine}\u2013${node.endLine} (${node.lineCount} lines)</div>`;
+      html += `<div class="label" style="color:#888">${node.file}</div>`;
     } else {
       const locStr = node.lineCount > 0 ? ` | ${node.lineCount.toLocaleString()} lines` : '';
       html += `<div class="label">File${node.deleted ? ' (deleted)' : ''} | ${node.fileType || 'unknown'}${locStr}</div>`;
@@ -1598,21 +1848,70 @@
     }
     const neighbors = adjacency.get(node.id);
     if (neighbors) html += `<div class="label">${neighbors.size} connections</div>`;
+    // Symbol browser for file nodes
+    if (node.type === 'file') {
+      const syms = fileToSymbols.get(node.id) || [];
+      if (syms.length > 0) {
+        html += `<div class="symbol-browser"><div class="symbol-browser-title">Symbols (${syms.length})</div>`;
+        for (const sym of syms) {
+          const color = SYMBOL_COLORS[sym.kind] || DEFAULT_SYMBOL_COLOR;
+          const nChildren = (symbolToChildren.get(sym.id) || []).length;
+          const isActive = activeSymbol && activeSymbol.id === sym.id;
+          html += `<div class="symbol-item${isActive ? ' active' : ''}" data-symbol-id="${sym.id}">`;
+          html += `<div class="sym-diamond" style="background:${color}"></div>`;
+          html += `<span class="sym-name">${sym.name}</span>`;
+          if (nChildren > 0) html += `<span class="sym-badge">${nChildren}</span>`;
+          html += `<span class="sym-kind">${sym.kind}</span>`;
+          html += `<span class="sym-lines">${sym.startLine}\u2013${sym.endLine}</span>`;
+          html += `</div>`;
+          // If this symbol is active, show children indented
+          if (isActive) {
+            const children = symbolToChildren.get(sym.id) || [];
+            for (const ch of children) {
+              const chColor = SYMBOL_COLORS[ch.kind] || DEFAULT_SYMBOL_COLOR;
+              html += `<div class="symbol-item indented" data-symbol-id="${ch.id}">`;
+              html += `<div class="sym-diamond" style="background:${chColor}"></div>`;
+              html += `<span class="sym-name">${ch.name}</span>`;
+              html += `<span class="sym-kind">${ch.kind}</span>`;
+              html += `<span class="sym-lines">${ch.startLine}\u2013${ch.endLine}</span>`;
+              html += `</div>`;
+            }
+          }
+        }
+        html += `</div>`;
+      }
+    }
     return html;
   }
 
   // Get the currently selected node from active* state
   function getSelectedNode() {
-    return activeContributor || activeFile || activeMinor || activeMajor || null;
+    return activeSymbol || activeContributor || activeFile || activeMinor || activeMajor || null;
   }
 
   // Update Info pane with selected node details
   function updateInfoPane() {
-    const node = getSelectedNode();
+    // When a symbol is active, show file info (with symbol browser) rather than symbol info
+    const node = (activeSymbol && activeFile) ? activeFile : getSelectedNode();
     if (!node) {
       infoPaneEl.innerHTML = '<div class="info-empty">Click a node to see details</div>';
     } else {
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
+      // Wire up symbol browser click handlers
+      infoPaneEl.querySelectorAll('.symbol-item').forEach(el => {
+        el.addEventListener('click', () => {
+          const symId = el.dataset.symbolId;
+          const sym = symbolNodeMap.get(symId);
+          if (!sym) return;
+          if (activeSymbol && activeSymbol.id === symId) {
+            activeSymbol = null;
+          } else {
+            activeSymbol = sym;
+          }
+          rebuildGraph(sym || activeFile);
+          updateInfoPane();
+        });
+      });
     }
   }
 
@@ -1712,6 +2011,7 @@
         activeMinor: _nodeRef(activeMinor),
         activeFile: _nodeRef(activeFile),
         activeContributor: _nodeRef(activeContributor),
+        activeSymbol: _nodeRef(activeSymbol),
       },
       viewport: {
         x: transform.x,
@@ -1765,7 +2065,7 @@
         case 'select_node': {
           const node = nodeMap.get(cmd.node_id);
           if (!node) { console.warn('[Commands] Unknown node_id:', cmd.node_id); return; }
-          activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null;
+          activeMajor = null; activeMinor = null; activeFile = null; activeContributor = null; activeSymbol = null;
           if (mode === 'overview') { setMode('explore'); }
           if (node.type === 'major_concept') {
             activeMajor = node;
@@ -1778,6 +2078,32 @@
               }
             }
             activeMinor = node;
+          } else if (node.type === 'symbol') {
+            // Find parent file via defined_in edges
+            const fileNode = node.fileId ? nodeMap.get(node.fileId) : null;
+            if (fileNode) {
+              // Set up file context (find concept context)
+              for (const l of allLinksRaw) {
+                if (l.type === 'tagged_with' && l.target === fileNode.id) {
+                  const concept = nodeMap.get(l.source);
+                  if (concept && concept.type === 'major_concept') {
+                    activeMajor = concept;
+                    break;
+                  } else if (concept && concept.type === 'minor_concept') {
+                    activeMinor = concept;
+                    for (const l2 of allLinksRaw) {
+                      if (l2.type === 'has_minor' && l2.target === concept.id) {
+                        activeMajor = nodeMap.get(l2.source) || null;
+                        break;
+                      }
+                    }
+                    break;
+                  }
+                }
+              }
+              activeFile = fileNode;
+            }
+            activeSymbol = node;
           } else if (node.type === 'file') {
             // Find concept context: walk tagged_with to find a concept, then its major
             for (const l of allLinksRaw) {
@@ -1833,7 +2159,8 @@
         }
         case 'go_back': {
           if (mode === 'overview') break;
-          if (activeContributor) { activeContributor = null; }
+          if (activeSymbol) { activeSymbol = null; }
+          else if (activeContributor) { activeContributor = null; }
           else if (activeFile) { activeFile = null; }
           else if (activeMinor) { activeMinor = null; }
           else if (activeMajor) { activeMajor = null; }
@@ -1922,10 +2249,12 @@
 
       ctx.strokeStyle = `rgba(${rgb}, ${alpha})`;
       ctx.lineWidth = lw;
+      if (link.type === 'defined_in') ctx.setLineDash([4 * zk, 3 * zk]);
       ctx.beginPath();
       ctx.moveTo(s.x, s.y);
       ctx.lineTo(t.x, t.y);
       ctx.stroke();
+      if (link.type === 'defined_in') ctx.setLineDash([]);
 
       // Arrowhead for directed edges (depends_on)
       if (link.type === 'depends_on') {
@@ -1967,51 +2296,79 @@
       const r = node.radius * scale * zk;
 
       ctx.globalAlpha = alpha;
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
 
-      if (node.type === 'root') {
-        ctx.fillStyle = ROOT_COLOR;
-      } else if (node.type === 'contributor') {
-        ctx.fillStyle = CONTRIBUTOR_COLOR;
-      } else if (node.type === 'crate') {
-        ctx.fillStyle = CRATE_COLOR;
-      } else if (node.type === 'major_concept') {
-        ctx.fillStyle = MAJOR_CONCEPT_COLOR;
-      } else if (node.type === 'minor_concept') {
-        ctx.fillStyle = MINOR_CONCEPT_COLOR;
-      } else if (node.deleted) {
-        ctx.fillStyle = DELETED_FILE_COLOR;
+      if (node.type === 'symbol') {
+        // Diamond shape for symbols
+        ctx.beginPath();
+        ctx.moveTo(node.x, node.y - r);       // top
+        ctx.lineTo(node.x + r, node.y);       // right
+        ctx.lineTo(node.x, node.y + r);       // bottom
+        ctx.lineTo(node.x - r, node.y);       // left
+        ctx.closePath();
+        ctx.fillStyle = SYMBOL_COLORS[node.kind] || DEFAULT_SYMBOL_COLOR;
+        ctx.fill();
+
+        // Active symbol ring (diamond shaped)
+        if (activeSymbol && activeSymbol.id === node.id) {
+          const rr = r + 3 * zk;
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = Math.max(2 * zk, 1);
+          ctx.beginPath();
+          ctx.moveTo(node.x, node.y - rr);
+          ctx.lineTo(node.x + rr, node.y);
+          ctx.lineTo(node.x, node.y + rr);
+          ctx.lineTo(node.x - rr, node.y);
+          ctx.closePath();
+          ctx.stroke();
+        }
       } else {
-        ctx.fillStyle = FILE_COLOR;
-      }
-      ctx.fill();
-
-      // Active file ring
-      if (activeFile && node.id === activeFile.id) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = Math.max(2 * zk, 1);
+        // Circle shape for all other nodes
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
+        ctx.arc(node.x, node.y, r, 0, 2 * Math.PI);
 
-      // Active contributor ring
-      if (activeContributor && node.id === activeContributor.id) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = Math.max(2 * zk, 1);
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
-        ctx.stroke();
-      }
+        if (node.type === 'root') {
+          ctx.fillStyle = ROOT_COLOR;
+        } else if (node.type === 'contributor') {
+          ctx.fillStyle = CONTRIBUTOR_COLOR;
+        } else if (node.type === 'crate') {
+          ctx.fillStyle = CRATE_COLOR;
+        } else if (node.type === 'major_concept') {
+          ctx.fillStyle = MAJOR_CONCEPT_COLOR;
+        } else if (node.type === 'minor_concept') {
+          ctx.fillStyle = MINOR_CONCEPT_COLOR;
+        } else if (node.deleted) {
+          ctx.fillStyle = DELETED_FILE_COLOR;
+        } else {
+          ctx.fillStyle = FILE_COLOR;
+        }
+        ctx.fill();
 
-      // Selection ring
-      if (selectedNodes.has(node.id)) {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = Math.max(1.5 * zk, 1);
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, r + 2 * zk, 0, 2 * Math.PI);
-        ctx.stroke();
+        // Active file ring
+        if (activeFile && node.id === activeFile.id) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = Math.max(2 * zk, 1);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+
+        // Active contributor ring
+        if (activeContributor && node.id === activeContributor.id) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = Math.max(2 * zk, 1);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 3 * zk, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+
+        // Selection ring
+        if (selectedNodes.has(node.id)) {
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = Math.max(1.5 * zk, 1);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 2 * zk, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
       }
     }
     ctx.globalAlpha = 1;
@@ -2020,10 +2377,11 @@
     const fontSize = fixedSize ? 12 * zk : Math.max(4, 12);
     const labelPad = fixedSize ? 4 * zk : 4;
 
-    // Always-visible labels for concepts, root, and contributors when file is selected
+    // Always-visible labels for concepts, root, contributors, and symbols
     for (const node of nodes) {
       if (!nodeDrawn(node)) continue;
       const showLabel = node.type === 'root' || node.type === 'major_concept' || node.type === 'minor_concept'
+        || node.type === 'symbol'
         || (node.type === 'contributor' && activeFile);
       if (!showLabel) continue;
       if (hoveredNode && node.id === hoveredNode.id) continue; // drawn below with hover styling
@@ -2147,7 +2505,8 @@
 
         if (event.subject.id === ROOT_ID) {
           if (!wasDragged && mode === 'explore') {
-            if (activeContributor) { activeContributor = null; }
+            if (activeSymbol) { activeSymbol = null; }
+            else if (activeContributor) { activeContributor = null; }
             else if (activeFile) { activeFile = null; }
             else if (activeMinor) { activeMinor = null; }
             else if (activeMajor) { activeMajor = null; }
@@ -2161,20 +2520,23 @@
         const node = event.subject;
 
         if (!wasDragged && mode === 'explore') {
-          if (node.type === 'major_concept') {
-            activeContributor = null; activeFile = null; activeMinor = null;
+          if (node.type === 'symbol') {
+            activeSymbol = (activeSymbol && activeSymbol.id === node.id) ? null : node;
+            rebuildGraph(node);
+          } else if (node.type === 'major_concept') {
+            activeContributor = null; activeFile = null; activeMinor = null; activeSymbol = null;
             activeMajor = (activeMajor && activeMajor.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'minor_concept') {
-            activeFile = null;
+            activeFile = null; activeSymbol = null;
             activeMinor = (activeMinor && activeMinor.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'file') {
-            activeContributor = null;
+            activeContributor = null; activeSymbol = null;
             activeFile = (activeFile && activeFile.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'contributor') {
-            activeMajor = null; activeMinor = null; activeFile = null;
+            activeMajor = null; activeMinor = null; activeFile = null; activeSymbol = null;
             activeContributor = (activeContributor && activeContributor.id === node.id) ? null : node;
             rebuildGraph(node);
           }
@@ -2189,7 +2551,8 @@
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (mode === 'overview') return;
-      if (activeContributor) { activeContributor = null; }
+      if (activeSymbol) { activeSymbol = null; }
+      else if (activeContributor) { activeContributor = null; }
       else if (activeFile) { activeFile = null; }
       else if (activeMinor) { activeMinor = null; }
       else if (activeMajor) { activeMajor = null; }
