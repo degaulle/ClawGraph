@@ -11,7 +11,8 @@ Output file: `output/knowledge_graph.json`
     "contributors": [...],
     "crates": [...],
     "major_concepts": [...],
-    "minor_concepts": [...]
+    "minor_concepts": [...],
+    "symbols": [...]
   },
   "edges": [...],
   "commits": { "<hash>": {...}, ... }
@@ -132,9 +133,39 @@ Output file: `output/knowledge_graph.json`
 | `evidence` | `string[]` | File paths that exemplify this concept |
 | `major_concept` | `"major_concept_N"` | ID of the parent major concept |
 
+### Symbol
+
+```json
+{
+  "id": "symbol_1",
+  "name": "expand_tabs",
+  "kind": "Function",
+  "file": "codex-rs/ansi-escape/src/lib.rs",
+  "start_line": 6,
+  "end_line": 21,
+  "line_count": 16,
+  "detail": "fn(s: &str) -> Cow<'_, str>",
+  "signature": null,
+  "parent_symbol": null
+}
+```
+
+| Field | Type | Notes |
+|---|---|---|
+| `id` | `"symbol_N"` | Deterministic — sorted by (file, start_line, name) |
+| `name` | `string` | Symbol name (function, struct, field, etc.) |
+| `kind` | `string` | Symbol kind (e.g. `"Function"`, `"Struct"`, `"Field"`, `"Module"`) |
+| `file` | `string` | File path relative to repo root |
+| `start_line` | `int` | First line of the symbol (1-indexed) |
+| `end_line` | `int` | Last line of the symbol (1-indexed) |
+| `line_count` | `int` | Number of lines the symbol spans |
+| `detail` | `string \| null` | Type signature or detail string from LSP; `null` if unavailable |
+| `signature` | `string \| null` | Full function/method signature from hover; `null` for non-function kinds |
+| `parent_symbol` | `"symbol_N" \| null` | ID of containing symbol (e.g. a Field's parent Struct); `null` for top-level |
+
 ## Edge types
 
-All edges have a `type` field. Six types exist:
+All edges have a `type` field. Seven types exist:
 
 ### `authored` — contributor wrote/modified a file
 
@@ -217,6 +248,19 @@ One edge per minor concept, linking it to its parent major concept.
 Derived from AI-generated tags. Both major and minor concepts can tag files.
 One edge per (concept, file) pair. Deduplicated.
 
+### `defined_in` — symbol is defined in a file
+
+```json
+{
+  "source": "symbol_42",
+  "target": "file_239",
+  "type": "defined_in"
+}
+```
+
+One edge per symbol, linking it to the file where it is defined.
+Symbols whose file path doesn't match any file node are silently skipped.
+
 ## Commits
 
 ```json
@@ -241,6 +285,7 @@ Keyed by full SHA. `author` references a contributor ID.
 | Crates | 66 |
 | Major concepts | 9 |
 | Minor concepts | 88 |
+| Symbols | ~25,470 |
 | Commits | 3,632 |
 | `authored` edges | 10,674 |
 | `depends_on` edges | 205 |
@@ -248,4 +293,5 @@ Keyed by full SHA. `author` references a contributor ID.
 | `contributed_to` edges | 958 |
 | `has_minor` edges | 88 |
 | `tagged_with` edges | 2,167 |
-| Total edges | 16,965 |
+| `defined_in` edges | ~25,470 |
+| Total edges | ~42,435 |

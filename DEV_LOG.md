@@ -19,7 +19,8 @@ and **AI-generated summaries/tags**, output as a single
     "contributors":   [{ "id", "name", "emails", "first_commit_at", "total_commits" }],
     "crates":         [{ "id", "name", "root_dir", "manifest_path", "edition", "has_lib", "has_bin", "created_at" }],
     "major_concepts": [{ "id", "name", "definition", "evidence" }],
-    "minor_concepts": [{ "id", "name", "definition", "evidence", "major_concept" }]
+    "minor_concepts": [{ "id", "name", "definition", "evidence", "major_concept" }],
+    "symbols":        [{ "id", "name", "kind", "file", "start_line", "end_line", "line_count", "detail", "signature", "parent_symbol" }]
   },
   "edges": [
     { "source (contributor)",    "target (file)",          "type": "authored",        "commits" },
@@ -27,7 +28,8 @@ and **AI-generated summaries/tags**, output as a single
     { "source (crate)",          "target (file)",          "type": "contains" },
     { "source (contributor)",    "target (crate)",         "type": "contributed_to",  "total_commits", "first_contribution_at" },
     { "source (major_concept)",  "target (minor_concept)", "type": "has_minor" },
-    { "source (concept)",        "target (file)",          "type": "tagged_with" }
+    { "source (concept)",        "target (file)",          "type": "tagged_with" },
+    { "source (symbol)",         "target (file)",          "type": "defined_in" }
   ],
   "commits": { "<hash>": { "message", "author", "timestamp" } }
 }
@@ -60,10 +62,14 @@ knowledge-graph/
 │   └── output/               # Generated summaries and tags
 ├── rust-graph/
 │   ├── crate_extractor.py    # Extracts crate nodes and edges from Cargo workspaces
+│   ├── symbol_extractor.py   # Extracts symbol trees from Rust files via rust-analyzer LSP
+│   ├── symbol_graph.py       # Flattens symbol trees into graph nodes and defined_in edges
 │   ├── lsp_client.py         # Language server protocol client for rust-analyzer
 │   └── tests/
 │       ├── conftest.py
-│       └── test_crate_extractor.py  (10 tests)
+│       ├── test_crate_extractor.py   (10 tests)
+│       ├── test_symbol_extractor.py  (16 tests)
+│       └── test_symbol_graph.py      (9 tests)
 ├── tests/
 │   ├── conftest.py
 │   ├── test_git_log_parser.py      (6 tests)
@@ -143,20 +149,36 @@ AI-generated JSON files:
 - `enrich_file_summaries`: mutates file nodes in place, adding a `summary`
   field from the summary JSON (matched by `source_path` to file `name`)
 
-### Step 7 — `build_graph.py`
+### Step 7 — `rust-graph/symbol_graph.py`
+
+Flattens the hierarchical symbol trees produced by `symbol_extractor.py` (JSONL)
+into individual graph nodes and `defined_in` edges:
+
+- `extract_symbols`: reads JSONL, DFS-flattens each file's `root.children`
+  (skipping the File root), prepends `path_prefix` to file paths, sorts by
+  `(file, start_line, name)` for deterministic IDs, and resolves `parent_symbol`
+  references so nested symbols (e.g. fields inside structs) point to their
+  containing symbol's ID
+- `build_defined_in_edges`: builds `file["name"] -> file["id"]` lookup, emits
+  one `defined_in` edge per symbol with a matching file node
+
+### Step 8 — `build_graph.py`
 
 Entry point: runs `git log` subprocess against `../codex`, pipes through the
 parser and builder. Accepts optional CLI arguments `--concept-yaml`,
-`--summary-json`, and `--tag-json` for concept and summary enrichment.
-Discovers Cargo workspaces (repo root + one level of subdirectories), runs
-crate extraction for each, prefixes paths so crate `root_dir` values are
-relative to the repo root. Writes output to `output/knowledge_graph.json`.
+`--summary-json`, `--tag-json`, `--symbol-jsonl`, and `--symbol-prefix` for
+concept, summary, and symbol enrichment. Discovers Cargo workspaces (repo root
++ one level of subdirectories), runs crate extraction for each, prefixes paths
+so crate `root_dir` values are relative to the repo root. Writes output to
+`output/knowledge_graph.json`.
 
-### Step 8 — Tests
+### Step 9 — Tests
 
-- **Unit tests** (40): git log parsing, rename tracking, graph building, file
-  metadata, crate extraction, concept extraction (fixture-based, no external
-  tools needed)
+- **Unit tests** (49): git log parsing, rename tracking, graph building, file
+  metadata, crate extraction, concept extraction, symbol graph flattening
+  (fixture-based, no external tools needed)
+- **Symbol extractor tests** (16): symbol conversion, hover/signature, file
+  tree building
 - **Summary-graph tests** (30): prompt building, file discovery, API mocking,
   rate-limit retry, resume logic
 - **Integration tests** (2): temp git repo with 5 scripted commits; temp Cargo
@@ -180,16 +202,17 @@ cargo metadata --no-deps --format-version 1
 Git log is a single invocation parsed in Python. Cargo metadata is run per
 workspace — `--no-deps` skips external dependencies.
 
-### Full pipeline with concepts and summaries
+### Full pipeline with concepts, summaries, and symbols
 
 ```
 python build_graph.py \
   --concept-yaml concept-graph/CODEX_CONCEPT_MAP.yaml \
   --summary-json summary-graph/output/summarize_file_20260214_222035.json \
-  --tag-json summary-graph/output/tag_file_20260215_000309.json
+  --tag-json summary-graph/output/tag_file_20260215_000309.json \
+  --symbol-jsonl rust-graph/output/symbols_2026-02-16.jsonl
 ```
 
-All three flags are optional — the pipeline works without them for
+All flags are optional — the pipeline works without them for
 backward-compatible output.
 
 ---
@@ -197,10 +220,11 @@ backward-compatible output.
 ## Test results
 
 ```
-79 passed in 1.08s
+74 passed in 0.37s
 ```
 
-All 79 tests green (49 unit/integration + 30 summary-graph).
+All 74 tests green (58 unit/integration + 16 symbol extractor).
+Summary-graph tests (30) require the `anthropic` module and run separately.
 
 ---
 
@@ -219,13 +243,15 @@ All 79 tests green (49 unit/integration + 30 summary-graph).
 | Crates | 66 |
 | Major concepts | 9 |
 | Minor concepts | 88 |
+| Symbols | ~25,470 |
 | Authored edges | 10,674 |
 | depends_on edges | 205 |
 | contains edges | 2,873 |
 | contributed_to edges | 958 |
 | has_minor edges | 88 |
 | tagged_with edges | 2,167 |
-| Total edges | 16,965 |
+| defined_in edges | ~25,470 |
+| Total edges | ~42,435 |
 
 ---
 

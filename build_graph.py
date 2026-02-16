@@ -19,6 +19,7 @@ from concept_extractor import (
 # Allow importing from rust-graph/
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "rust-graph"))
 from crate_extractor import extract_crates, build_crate_dependency_edges, map_files_to_crates, enrich_crate_created_at, build_contributor_crate_edges
+from symbol_graph import extract_symbols, build_defined_in_edges
 
 
 def _find_cargo_workspaces(repo_path: str) -> list[str]:
@@ -56,6 +57,9 @@ def main():
     parser.add_argument("--concept-yaml", help="Path to concept map YAML file")
     parser.add_argument("--summary-json", help="Path to file summary JSON")
     parser.add_argument("--tag-json", help="Path to file tag JSON")
+    parser.add_argument("--symbol-jsonl", help="Path to symbol JSONL file")
+    parser.add_argument("--symbol-prefix", default="codex-rs/",
+                        help="Prefix prepended to symbol file paths (default: codex-rs/)")
     args = parser.parse_args()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -164,6 +168,15 @@ def main():
         print(f"  depends_on edges: {len(all_dep_edges)}")
         print(f"  contains edges: {len(all_contains_edges)}")
         print(f"  contributed_to edges: {len(contributed_to_edges)}")
+
+    # Add symbol layer
+    if args.symbol_jsonl:
+        symbol_nodes = extract_symbols(args.symbol_jsonl, path_prefix=args.symbol_prefix)
+        defined_in_edges = build_defined_in_edges(symbol_nodes, graph["nodes"]["files"])
+        graph["nodes"]["symbols"] = symbol_nodes
+        graph["edges"].extend(defined_in_edges)
+        print(f"  Symbols: {len(symbol_nodes)}")
+        print(f"  defined_in edges: {len(defined_in_edges)}")
 
     # Write output
     output_dir = os.path.join(script_dir, "output")
