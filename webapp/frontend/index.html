@@ -309,6 +309,17 @@
     transition: background 0.1s;
   }
   .timeline-handle:hover, .timeline-handle.active { background: rgba(200, 200, 200, 0.9); }
+  .tl-btn {
+    background: none;
+    border: none;
+    padding: 0 2px;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+  .tl-btn:hover { opacity: 1; }
   /* Mode switch */
   .mode-switch {
     display: flex;
@@ -407,6 +418,8 @@
     <div class="timeline-handle" id="handle-start"></div>
     <div class="timeline-handle" id="handle-end"></div>
   </div>
+  <button class="tl-btn" id="tl-play" title="Play / Pause">▶️</button>
+  <button class="tl-btn" id="tl-reset" title="Reset timeline">🔄</button>
   <span id="timeline-label-end"></span>
 </div>
 <div id="loading">Loading knowledge graph...</div>
@@ -746,6 +759,74 @@
     rebuildGraph();
   });
 
+  // --- Playhead animation ---
+  let tlPlaying = false;
+  let tlAnimId = null;
+  const tlPlayDuration = 10000; // full range plays over 10 seconds
+  const tlPlaySpeed = timeSpan / tlPlayDuration; // ms-of-data per ms-of-wall-clock
+  const TL_REBUILD_INTERVAL = 66; // throttle rebuildGraph to ~15 fps
+  const tlPlayBtn = document.getElementById('tl-play');
+  const tlResetBtn = document.getElementById('tl-reset');
+
+  function tlPlay() {
+    if (tlPlaying) return;
+    // If end is already at max, reset end to start position
+    if (tlEnd >= timeMax - timeSpan * 0.005) {
+      tlEnd = tlStart + timeSpan * 0.002;
+      updateTimeline();
+      rebuildGraph();
+    }
+    tlPlaying = true;
+    tlPlayBtn.textContent = '⏸️';
+    tlPlayBtn.classList.add('playing');
+    let lastTime = performance.now();
+    let lastRebuild = 0;
+    function tick(now) {
+      if (!tlPlaying) return;
+      const dt = now - lastTime;
+      lastTime = now;
+      tlEnd += tlPlaySpeed * dt;
+      if (tlEnd >= timeMax) {
+        tlEnd = timeMax;
+        updateTimeline();
+        rebuildGraph();
+        tlPause();
+        return;
+      }
+      updateTimeline();
+      if (now - lastRebuild >= TL_REBUILD_INTERVAL) {
+        lastRebuild = now;
+        rebuildGraph();
+      }
+      tlAnimId = requestAnimationFrame(tick);
+    }
+    tlAnimId = requestAnimationFrame(tick);
+  }
+
+  function tlPause() {
+    tlPlaying = false;
+    if (tlAnimId) { cancelAnimationFrame(tlAnimId); tlAnimId = null; }
+    tlPlayBtn.textContent = '▶️';
+    tlPlayBtn.classList.remove('playing');
+  }
+
+  function tlReset() {
+    tlPause();
+    tlStart = timeMin;
+    tlEnd = timeMax;
+    updateTimeline();
+    rebuildGraph();
+  }
+
+  tlPlayBtn.addEventListener('click', () => {
+    if (tlPlaying) tlPause(); else tlPlay();
+  });
+  tlResetBtn.addEventListener('click', tlReset);
+
+  // Pause playback if user manually drags a handle
+  handleStart.addEventListener('mousedown', () => { if (tlPlaying) tlPause(); });
+  handleEnd.addEventListener('mousedown', () => { if (tlPlaying) tlPause(); });
+
   // --- Active simulation data (rebuilt when "off" toggles change) ---
   let nodes = [];
   let links = [];
@@ -873,6 +954,34 @@
       // Overview: show all nodes (respecting visibility 'off' and timeline)
       for (const n of allNodes) {
         if (nodeTypeState(n) !== 'off' && nodeInTimeRange(n)) allowedIds.add(n.id);
+      }
+      // Remove minor concepts whose tagged files are all filtered out
+      for (const n of allNodes) {
+        if (n.type === 'minor_concept' && allowedIds.has(n.id)) {
+          const taggedFiles = conceptToFiles.get(n.id) || new Set();
+          let hasChild = false;
+          for (const fid of taggedFiles) {
+            if (allowedIds.has(fid)) { hasChild = true; break; }
+          }
+          if (!hasChild) allowedIds.delete(n.id);
+        }
+      }
+      // Remove major concepts whose minors and direct files are all filtered out
+      for (const n of allNodes) {
+        if (n.type === 'major_concept' && allowedIds.has(n.id)) {
+          const minorIds = majorToMinors.get(n.id) || new Set();
+          let hasChild = false;
+          for (const mid of minorIds) {
+            if (allowedIds.has(mid)) { hasChild = true; break; }
+          }
+          if (!hasChild) {
+            const directFiles = conceptToFiles.get(n.id) || new Set();
+            for (const fid of directFiles) {
+              if (allowedIds.has(fid)) { hasChild = true; break; }
+            }
+          }
+          if (!hasChild) allowedIds.delete(n.id);
+        }
       }
       edgeFilter = l => linkTypeState(l) !== 'off' && linkInTimeRange(l);
     } else if (activeContributor) {
