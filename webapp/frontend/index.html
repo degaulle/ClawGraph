@@ -1620,7 +1620,17 @@
     updateInfoPane();
   }
   exploreBtn.addEventListener('click', () => setMode('explore'));
-  overviewBtn.addEventListener('click', () => setMode('overview'));
+  overviewBtn.addEventListener('click', () => {
+    setMode('overview');
+    const rn = nodeMap.get(ROOT_ID);
+    if (rn && rn.x != null) {
+      const k = transform.k;
+      const tx = width / 2 - rn.x * k;
+      const ty = height / 2 - rn.y * k;
+      const t = d3.zoomIdentity.translate(tx, ty).scale(k);
+      d3.select(canvas).call(zoom.transform, t);
+    }
+  });
   modeBtns.appendChild(exploreBtn);
   modeBtns.appendChild(overviewBtn);
   modeRow.appendChild(modeBtns);
