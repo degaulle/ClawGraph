@@ -1,4 +1,4 @@
-# ClawGraph &nbsp; [![CLICK TO SEE LIVE DEMO](https://img.shields.io/badge/%F0%9F%94%B4_CLICK_TO_SEE_LIVE_DEMO-%23FF0000?style=for-the-badge)](https://bit.ly/clawgraphlivedemo)
+# ClawGraph &nbsp; [CLICK TO SEE LIVE DEMO](https://bit.ly/clawgraphlivedemo)
 
 **An interactive visual interface for human-agent co-coding, built on knowledge graphs.**
 
