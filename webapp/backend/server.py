@@ -150,6 +150,8 @@ RELOAD_SCRIPT = b"""<script>
 # ── HTTP handler ──────────────────────────────────────────────────────
 
 class Handler(http.server.BaseHTTPRequestHandler):
+    public_mode: bool = False
+
     def do_GET(self):
         path = self.path.split("?")[0]
 
@@ -199,6 +201,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = self.path.split("?")[0]
+
+        if self.public_mode and path in ("/state", "/command", "/open-in-cursor", "/cursor-running"):
+            self.send_error(403, "Endpoint disabled in public mode")
+            return
 
         if path == "/state":
             length = int(self.headers.get("Content-Length", 0))
@@ -405,13 +411,18 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 def main():
     parser = argparse.ArgumentParser(description="Live-reload dev server")
     parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument(
+        "--public", action="store_true",
+        help="Disable control endpoints (/command, POST /state, /open-in-cursor, /cursor-running) for safe public exposure",
+    )
     args = parser.parse_args()
+    Handler.public_mode = args.public
 
     # Start file watcher thread
     t = threading.Thread(target=_watcher, daemon=True)
     t.start()
 
-    server = ThreadedServer(("127.0.0.1", args.port), Handler)
+    server = ThreadedServer(("0.0.0.0", args.port), Handler)
     log.info("Dev server running at http://localhost:%d", args.port)
     log.info("Serving frontend from %s", FRONTEND)
     log.info("Live reload active (polling every %ss)", POLL_INTERVAL)
