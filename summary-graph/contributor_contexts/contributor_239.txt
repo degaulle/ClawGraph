@@ -1,0 +1,97 @@
+Name: Beehive Innovations
+Total commits: 1
+First contribution: 2025-11-19T22:50:07+00:00
+Emails: guidedways@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 3 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-11-19)
+
+Major product areas touched:
+  - Conversation (3 files)
+  - Agent Actions (3 files)
+  - Session Lifecycle (3 files)
+  - Autonomy & Approval (2 files)
+  - Surfaces (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+  - Safety & Containment (1 files)
+
+Specific features touched (19 total, top 15):
+  - Interactive TUI (3 files)
+  - User Prompt (1 files)
+  - Slash Command (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Collaboration Mode (1 files)
+  - Inline Diff Display (1 files)
+  - External Editor (1 files)
+  - Prompt History (1 files)
+  - Suggest Mode (1 files)
+  - Auto-Edit Mode (1 files)
+  - Full-Auto Mode (1 files)
+  - Approval Request Flow (1 files)
+  - File Read (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+
+Sample commit messages:
+  - fix(context left after review): review footer context after `/review` (#5610)

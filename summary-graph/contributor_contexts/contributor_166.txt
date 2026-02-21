@@ -1,0 +1,14 @@
+Name: Andrew Tan
+Total commits: 1
+First contribution: 2025-09-09T22:02:02+00:00
+Emails: 9657842+andrewtlw@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-09-09)
+
+Sample commit messages:
+  - Include apply_patch tool for oss models from gpt-oss providers with different naming convention (e.g. `openai/gpt-oss-*`) (#2811)

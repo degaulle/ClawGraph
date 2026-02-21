@@ -1,0 +1,12 @@
+Name: kshern
+Total commits: 1
+First contribution: 2025-04-23T05:45:56+00:00
+Emails: kshern@yeah.net
+Files authored: 4
+
+File type distribution:
+  - .tsx: 3 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - feat: add support for custom provider configuration in the user config (#537)

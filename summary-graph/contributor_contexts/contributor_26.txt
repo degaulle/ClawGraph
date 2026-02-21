@@ -1,0 +1,11 @@
+Name: rohanoai
+Total commits: 1
+First contribution: 2025-04-16T23:24:52+00:00
+Emails: 107282918+rohanoai@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Adds link to prompting guide in README (#141)

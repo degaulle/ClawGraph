@@ -1,0 +1,11 @@
+Name: Kaden Gruizenga
+Total commits: 1
+First contribution: 2025-12-01T18:46:53+00:00
+Emails: kjgruiz@pm.me
+Files authored: 3
+
+File type distribution:
+  - .md: 3 files
+
+Sample commit messages:
+  - docs: clarify codex max defaults and xhigh availability (#7449)

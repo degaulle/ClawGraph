@@ -1,0 +1,11 @@
+Name: Alejandro Peña
+Total commits: 1
+First contribution: 2025-11-18T17:38:45+00:00
+Emails: adpena@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Update faq.md section on supported models (#6832)

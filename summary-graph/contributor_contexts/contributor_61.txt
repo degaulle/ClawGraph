@@ -1,0 +1,12 @@
+Name: salama-openai
+Total commits: 1
+First contribution: 2025-04-19T05:15:01+00:00
+Emails: salama@openai.com
+Files authored: 7
+
+File type distribution:
+  - .tsx: 4 files
+  - .ts: 3 files
+
+Sample commit messages:
+  - feat: add flex mode option for cost savings (#372)

@@ -1,0 +1,11 @@
+Name: Mahesh Rijal
+Total commits: 1
+First contribution: 2025-04-17T14:12:14+00:00
+Emails: 62394512+maheshrijal@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .unknown: 1 files
+
+Sample commit messages:
+  - chore: reduce docker image size (#194)

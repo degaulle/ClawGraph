@@ -1,0 +1,32 @@
+Name: Wang
+Total commits: 2
+First contribution: 2025-08-26T22:16:43+00:00
+Emails: m4n5terrr@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-core: 2 commits (since 2025-08-26)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+  - Model & Reasoning (1 files)
+  - Safety & Containment (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+
+Specific features touched (4 total, top 15):
+  - Thread Creation (1 files)
+  - Thread Resume (1 files)
+  - Thread Fork (1 files)
+  - Rollout Persistence (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/thread_manager.rs: This file manages the lifecycle of conversation threads in Codex. It creates new threads, loads previous threads from saved history, allows users to fork threads at specific points in a conversation, and keeps track of all active threads in memory. It also handles setup tasks like monitoring for skill updates and managing authentication and AI model availability for each thread.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+
+Sample commit messages:
+  - feat(core): re-export InitialHistory from conversation_manager (#3270)
+  - feat(core): Add `remove_conversation` to `ConversationManager` for ma… (#2613)

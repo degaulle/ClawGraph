@@ -1,0 +1,13 @@
+Name: theg1239
+Total commits: 2
+First contribution: 2025-04-24T11:33:13+00:00
+Emails: thegreatestdropper@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .json: 1 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - chore: update lint-staged config to use pnpm --filter (#582)
+  - feat: add specific instructions for creating API keys in error msg (#581)

@@ -1,0 +1,11 @@
+Name: Yonatan Lavy
+Total commits: 1
+First contribution: 2025-04-16T23:14:57+00:00
+Emails: 123459744+yonatanlavy@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - refactor: improve performance of renderFilesToXml using Array.join (#127)

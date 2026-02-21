@@ -1,0 +1,11 @@
+Name: Demircan Celebi
+Total commits: 1
+First contribution: 2025-04-17T04:01:24+00:00
+Emails: demircancelebi@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .tsx: 2 files
+
+Sample commit messages:
+  - fix: correct typos in thinking texts (transcendent & parroting) (#108)

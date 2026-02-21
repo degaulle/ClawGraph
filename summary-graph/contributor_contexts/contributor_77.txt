@@ -1,0 +1,11 @@
+Name: Daniil Davydov
+Total commits: 1
+First contribution: 2025-04-22T19:05:48+00:00
+Emails: 46081038+dan0102dan@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: support [provider]_BASE_URL (#542)

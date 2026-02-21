@@ -1,0 +1,14 @@
+Name: Hans Knöchel
+Total commits: 1
+First contribution: 2025-08-19T17:27:26+00:00
+Emails: hansemannn@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-08-19)
+
+Sample commit messages:
+  - fix: fix missing spacing in review decision response (#2457)

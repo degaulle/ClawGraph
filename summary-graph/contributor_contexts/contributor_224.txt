@@ -1,0 +1,14 @@
+Name: Oliver Mannion
+Total commits: 1
+First contribution: 2025-11-09T16:53:36+00:00
+Emails: 125105+tekumara@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .sbpl: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-09)
+
+Sample commit messages:
+  - fix(seatbelt): Allow reading hw.physicalcpu (#6421)

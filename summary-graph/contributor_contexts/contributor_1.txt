@@ -1,0 +1,23 @@
+Name: Ilan Bigio
+Total commits: 4
+First contribution: 2025-04-16T16:56:08+00:00
+Emails: ilan@openai.com
+Files authored: 165
+
+File type distribution:
+  - .ts: 66 files
+  - .tsx: 37 files
+  - .js: 11 files
+  - .unknown: 10 files
+  - .md: 8 files
+  - .sh: 7 files
+  - .json: 5 files
+  - .yaml: 4 files
+  - .png: 4 files
+  - .yml: 3 files
+
+Sample commit messages:
+  - Set up CLA process and remove DCO (#129)
+  - Initial commit
+  - Change bash to shell in README (#132)
+  - Initial commit

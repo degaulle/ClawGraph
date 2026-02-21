@@ -1,0 +1,11 @@
+Name: Ashwin Ramaswami
+Total commits: 1
+First contribution: 2025-04-17T00:01:45+00:00
+Emails: aramaswamis@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fix markdown table in README (#144)

@@ -1,0 +1,77 @@
+Name: Max Johnson
+Total commits: 9
+First contribution: 2026-02-03T19:31:12+00:00
+Emails: 162359438+maxj-oai@users.noreply.github.com
+Files authored: 34
+
+File type distribution:
+  - .rs: 29 files
+  - .toml: 2 files
+  - .md: 2 files
+  - .lock: 1 files
+
+Packages contributed to (7 total):
+  - codex-app-server: 7 commits (since 2026-02-03)
+  - codex-cli: 4 commits (since 2026-02-03)
+  - codex-core: 3 commits (since 2026-02-03)
+  - codex-app-server-test-client: 2 commits (since 2026-02-13)
+  - app_test_support: 1 commits (since 2026-02-11)
+  - codex-linux-sandbox: 1 commits (since 2026-02-03)
+  - codex-rmcp-client: 1 commits (since 2026-02-13)
+
+Major product areas touched:
+  - Session Lifecycle (8 files)
+  - Agent Actions (6 files)
+  - Safety & Containment (5 files)
+  - Autonomy & Approval (3 files)
+  - Surfaces (1 files)
+  - Conversation (1 files)
+  - Extensibility (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+
+Specific features touched (18 total, top 15):
+  - App Server Protocol (15 files)
+  - Authentication & Identity (6 files)
+  - Configuration File (6 files)
+  - Turn Management (6 files)
+  - Shell Execution (5 files)
+  - Feature Flags (2 files)
+  - MCP Client (2 files)
+  - Review Mode (2 files)
+  - IDE Extension (2 files)
+  - MCP Tool Call (2 files)
+  - Thread Resume (2 files)
+  - Linux Sandbox (2 files)
+  - Rollout Persistence (1 files)
+  - Telemetry & Metrics (1 files)
+  - Network Restriction (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/cli/src/debug_sandbox.rs: This file is the command-line interface for testing Codex in different security sandbox environments (macOS Seatbelt, Linux Landlock, and Windows sandboxes). It loads configuration, sets up the appropriate sandbox, runs a user-supplied command inside it, and optionally logs any security policy violations that occurred.
+  - codex-rs/core/src/exec_env.rs: This file controls which environment variables (like PATH, API keys, etc.) are passed to code that Codex executes, based on a configurable security policy. It filters out sensitive variables by default (those containing "KEY", "SECRET", or "TOKEN"), allows customization through allowlists and blocklists, and automatically injects a thread identifier so executed code can identify which Codex session it belongs to.
+  - codex-rs/core/src/tasks/user_shell.rs: This file handles the execution of shell commands that users run directly within the Codex environment. It takes a command string, runs it in the user's default shell (supporting features like pipes and redirects), captures the output, and reports back the results—including success/failure status, exit codes, and stdout/stderr—to the session so the user sees what happened.
+  - codex-rs/core/src/tools/handlers/shell.rs: This file handles the execution of shell commands when Codex needs to run terminal operations. It receives command requests from the AI model, validates them for safety and permission requirements, and then executes them in a sandboxed environment while tracking the results. It also prevents certain dangerous operations from running if security policies don't permit them.
+  - codex-rs/core/src/unified_exec/process_manager.rs: This file manages the lifecycle of running shell commands and processes in Codex. It handles starting new command sessions, collecting their output within time limits, routing input back to running processes, and cleaning up old sessions when resource limits are reached. It also enforces environment defaults (like disabling colored output) and implements a strategy to prune the oldest or already-exited processes when too many accumulate.
+  - codex-rs/linux-sandbox/tests/suite/landlock.rs: This file contains automated security tests that verify the Linux sandbox properly restricts what code can do—such as blocking network access, preventing writes to system directories, and protecting sensitive configuration files from being overwritten. It ensures that when Codex executes user code in a sandboxed environment, malicious or accidental operations are safely blocked.
+  - codex-rs/app-server/src/bespoke_event_handling.rs: # Summary
+
+This file handles special event processing for the Codex conversation system, translating internal system events into user-facing notifications and handling user approvals for sensitive operations. It acts as the bridge between the AI engine's internal events and what gets communicated to clients, managing things like approval requests for code changes and command execution, progress updates on various tasks, and conversation state transitions.
+  - codex-rs/app-server/src/lib.rs: This file is the main entry point and orchestrator for Codex's application server, responsible for starting up the system, loading configuration, setting up communication channels, and coordinating message routing between clients and the core processing logic. It handles incoming connections (via stdio or WebSocket), parses configuration with warnings, initializes logging and analytics, and manages two main async tasks—one that processes incoming requests and one that routes outgoing responses to connected clients.
+  - codex-rs/app-server/src/main.rs: This file is the entry point that starts the Codex app server and configures how it listens for incoming requests. It parses command-line options (like which network endpoint to use), loads configuration settings, and launches the core server logic with the specified transport method (either standard input/output or a network socket).
+
+Sample commit messages:
+  - rmcp-client: fix auth crash (#11692)
+  - Revert "Add app-server transport layer with websocket support (#10693)" (#11323)
+  - Inject CODEX_THREAD_ID into the terminal environment (#10096)
+  - Reapply "Add app-server transport layer with websocket support" (#11370)
+  - Add app-server transport layer with websocket support (#10693)
+  - refactor: codex app-server ThreadState (#11419)
+  - app-server: thread resume subscriptions (#11474)
+  - app-server-test-client websocket client and thread tools (#11755)
+  - codex-rs: fix thread resume rejoin semantics (#11756)

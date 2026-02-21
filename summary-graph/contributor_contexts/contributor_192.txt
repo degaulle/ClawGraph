@@ -1,0 +1,152 @@
+Name: zhao-oai
+Total commits: 37
+First contribution: 2025-10-24T15:46:31+00:00
+Emails: zhao@openai.com
+Files authored: 157
+
+File type distribution:
+  - .rs: 124 files
+  - .snap: 12 files
+  - .md: 10 files
+  - .toml: 8 files
+  - .lock: 1 files
+  - .codexpolicy: 1 files
+  - .policy: 1 files
+
+Packages contributed to (18 total):
+  - codex-core: 18 commits (since 2025-10-28)
+  - codex-tui: 14 commits (since 2025-10-24)
+  - codex-execpolicy: 6 commits (since 2025-11-17)
+  - codex-protocol: 6 commits (since 2025-10-28)
+  - codex-app-server: 6 commits (since 2025-11-19)
+  - codex-exec-server: 3 commits (since 2025-11-20)
+  - codex-app-server-protocol: 3 commits (since 2025-11-19)
+  - codex-backend-client: 2 commits (since 2025-11-19)
+  - codex-backend-openapi-models: 2 commits (since 2025-11-19)
+  - codex-cli: 2 commits (since 2025-11-20)
+  - codex-mcp-server: 2 commits (since 2025-12-04)
+  - codex-execpolicy-legacy: 1 commits (since 2025-11-20)
+  - codex-api: 1 commits (since 2025-12-05)
+  - codex-linux-sandbox: 1 commits (since 2025-12-10)
+  - codex-otel: 1 commits (since 2025-12-04)
+
+Major product areas touched:
+  - Safety & Containment (30 files)
+  - Agent Actions (29 files)
+  - Session Lifecycle (24 files)
+  - Autonomy & Approval (21 files)
+  - Conversation (13 files)
+  - Model & Reasoning (12 files)
+  - Project Context (10 files)
+  - Extensibility (7 files)
+  - Surfaces (4 files)
+
+Specific features touched (88 total, top 15):
+  - Execution Policy (47 files)
+  - Shell Execution (30 files)
+  - Interactive TUI (18 files)
+  - Approval Request Flow (14 files)
+  - Turn Management (14 files)
+  - Authentication & Identity (11 files)
+  - App Server Protocol (10 files)
+  - Telemetry & Metrics (7 files)
+  - Policy Amendment (6 files)
+  - File Patch (6 files)
+  - Configuration File (5 files)
+  - Per-Command Approval Cache (5 files)
+  - Multimodal Input (4 files)
+  - User Input Request (4 files)
+  - Inline Diff Display (4 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/status/card.rs: This file generates the visual status display that appears when users run the `/status` command in Codex. It formats and displays information about the current session, including the active AI model, working directory, permission settings, account details, token usage, rate limits, and context window capacity—organizing all this information into an organized, readable card layout on the terminal screen.
+  - codex-rs/tui/src/status/rate_limits.rs: This file formats rate-limit and credit information for display in the status interface. It takes raw rate-limit data from the API and converts it into human-readable rows that show usage percentages, reset times, and account credit balances—then marks that data as stale if it's older than 15 minutes so users know when information may be outdated.
+  - codex-rs/tui/src/status/tests.rs: This file contains automated tests that verify the status display panel—the visual summary shown to users about their current session, token usage, rate limits, and account credits. It tests various scenarios like when reasoning details should appear, how permissions are displayed, whether credits show as unlimited or a specific balance, and how the display adapts to narrow terminal windows.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/paste_burst.rs: # paste_burst.rs
+
+This file detects when users paste text into the chat composer on platforms (like Windows) that don't have native paste detection. It distinguishes between someone rapidly typing characters versus pasting a block of text, then handles each case appropriately—preventing accidental command triggers (like toggling settings with `?`), treating Enter as a newline within pasted content rather than submitting the message, and avoiding visual flicker when text appears.
+  - codex-rs/core/tests/suite/view_image.rs: This file tests how the Codex product handles images — specifically, whether images can be successfully attached and sent to the AI model in different scenarios. It verifies that local images are properly resized, encoded, and included in requests; that the "view image" tool works correctly; and that errors are handled gracefully (missing files, unsupported file types, text-only models, etc.).
+  - codex-rs/protocol/src/models.rs: This file defines the data structures that represent messages, tool calls, and responses flowing between the AI model and the user during a coding session. It handles how developer instructions and permissions (like sandbox settings and approval policies) are communicated to the model, manages structured content like text and images in conversations, and provides formatting for shell commands, web searches, and function call outputs. The file essentially serves as the "language" for how Codex describes what the AI should do and what it has produced.
+  - codex-rs/core/src/error.rs: This file defines how Codex handles and communicates errors to users. It establishes a comprehensive error system that categorizes different failure modes—like network issues, rate limits, sandbox execution failures, and authentication problems—then formats them into user-friendly messages appropriate for each situation, such as upgrade prompts for free-tier users who hit usage limits or specific recovery instructions for expired credentials.
+  - codex-rs/core/src/event_mapping.rs: This file translates conversation data from the model's internal format into the structured format used throughout the Codex product. It takes raw message responses and converts them into standardized turn items that represent user messages, assistant replies, reasoning steps, and web search actions—filtering out internal metadata like instructions and image markup tags along the way.
+
+Sample commit messages:
+  - fix more typos in execpolicy.md (#7787)
+  - updating app server types to support execpoilcy amendment (#7747)
+  - execpolicy helpers (#7032)
+  - verify mime type of images (#5888)
+  - Refactor execpolicy fallback evaluation (#7544)
+  - background rate limits fetch (#6789)
+  - Update execpolicy.md (#7595)
+  - update credit status details (#6862)
+  - fix typo (#7626)
+  - fix image drag drop (#5794)
+  - updating codex backend models (#6855)
+  - move execpolicy quickstart (#7127)
+  - persisting credits if new snapshot does not contain credit info (#7490)
+  - execpolicy2 core integration (#6641)
+  - storing credits (#6858)
+  - update execpolicy quickstart readme (#6952)
+  - execpolicy2 extension (#6627)
+  - execpolicy tui flow (#7543)
+  - bypass sandbox for policy approved commands (#7110)
+  - fix advanced.md (#5833)

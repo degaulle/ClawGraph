@@ -1,0 +1,24 @@
+Name: HDCode
+Total commits: 1
+First contribution: 2026-01-20T23:25:27+00:00
+Emails: hdcodedev@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-shell-command: 1 commits (since 2026-01-20)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Specific features touched (2 total, top 15):
+  - Shell Execution (1 files)
+  - Execution Policy (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/shell-command/src/command_safety/windows_dangerous_commands.rs: This file protects Codex from executing dangerous Windows commands that could harm a user's system. It detects and blocks risky operations like opening URLs in browsers through shell commands, force-deleting files, and recursively removing directories—preventing malicious or accidental destructive actions from being executed.
+
+Sample commit messages:
+  - fix(core): require approval for force delete on Windows (#8590)

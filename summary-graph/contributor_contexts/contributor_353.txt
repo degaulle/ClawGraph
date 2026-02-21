@@ -1,0 +1,25 @@
+Name: guinness-oai
+Total commits: 1
+First contribution: 2026-02-10T18:32:11+00:00
+Emails: guinness@openai.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-02-10)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+
+Specific features touched (2 total, top 15):
+  - Rollout Persistence (2 files)
+  - Thread Resume (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/rollout/list.rs: This file manages listing and pagination of recorded conversation threads from disk storage. It scans through directories of session files, extracts metadata like timestamps and git information, and returns paginated results sorted by creation or modification date—allowing the UI to display a browsable history of conversations while handling large numbers of files efficiently.
+  - codex-rs/core/src/rollout/tests.rs: This file contains automated tests for Codex's conversation history management system. Specifically, it verifies that the product correctly lists, retrieves, and filters user conversations (called "threads") that are stored in session files, including proper handling of pagination, sorting, file timestamps, and filtering by conversation source and AI model provider. The tests also ensure that the system can recover gracefully when stored metadata becomes outdated by falling back to re-scanning the file system.
+
+Sample commit messages:
+  - Treat first rollout session_meta as canonical thread identity (#11241)

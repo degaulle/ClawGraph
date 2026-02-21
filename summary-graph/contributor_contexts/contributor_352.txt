@@ -1,0 +1,11 @@
+Name: Philipp Mildenberger
+Total commits: 1
+First contribution: 2026-02-09T23:25:48+00:00
+Emails: philipp@mildenberger.me
+Files authored: 1
+
+File type distribution:
+  - .nix: 1 files
+
+Sample commit messages:
+  - fix: nix build by adding missing dependencies and fix outputHashes (#11185)

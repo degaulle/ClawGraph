@@ -1,0 +1,11 @@
+Name: Yashraj Yadav
+Total commits: 1
+First contribution: 2025-04-16T18:18:41+00:00
+Emails: yyashraj05@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .ts: 2 files
+
+Sample commit messages:
+  - (fix) o3 instead of o3-mini  (#37)

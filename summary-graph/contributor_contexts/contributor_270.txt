@@ -1,0 +1,12 @@
+Name: Tyler Anton
+Total commits: 2
+First contribution: 2025-12-09T17:04:36+00:00
+Emails: tylerdotdev@proton.me, tylerdotdev@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .nix: 1 files
+
+Sample commit messages:
+  - Fix Nix cargo output hashes for rmcp and filedescriptor (#7762)
+  - fix: drop stale filedescriptor output hash for nix (#7865)

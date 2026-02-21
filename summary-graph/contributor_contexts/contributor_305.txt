@@ -1,0 +1,102 @@
+Name: viyatb-oai
+Total commits: 25
+First contribution: 2026-01-09T20:35:54+00:00
+Emails: viyatb@openai.com
+Files authored: 163
+
+File type distribution:
+  - .rs: 79 files
+  - .sh: 11 files
+  - .md: 9 files
+  - .unknown: 9 files
+  - .toml: 7 files
+  - .yml: 6 files
+  - .c: 6 files
+  - .build: 6 files
+  - .h: 5 files
+  - .py: 3 files
+
+Packages contributed to (19 total):
+  - codex-core: 11 commits (since 2026-01-14)
+  - codex-linux-sandbox: 9 commits (since 2026-01-14)
+  - codex-network-proxy: 7 commits (since 2026-01-24)
+  - codex-tui: 3 commits (since 2026-01-16)
+  - codex-cli: 2 commits (since 2026-02-04)
+  - codex-exec: 2 commits (since 2026-02-04)
+  - codex-protocol: 2 commits (since 2026-01-14)
+  - codex-app-server: 2 commits (since 2026-02-04)
+  - codex-shell-command: 2 commits (since 2026-02-02)
+  - codex-arg0: 2 commits (since 2026-01-09)
+  - codex-backend-openapi-models: 1 commits (since 2026-01-16)
+  - codex-cloud-requirements: 1 commits (since 2026-02-07)
+  - codex-config: 1 commits (since 2026-02-07)
+  - codex-exec-server: 1 commits (since 2026-02-04)
+  - codex-secrets: 1 commits (since 2026-02-03)
+
+Major product areas touched:
+  - Safety & Containment (39 files)
+  - Autonomy & Approval (12 files)
+  - Agent Actions (10 files)
+  - Session Lifecycle (9 files)
+  - Project Context (7 files)
+  - Model & Reasoning (6 files)
+  - Extensibility (5 files)
+  - Conversation (3 files)
+  - Surfaces (1 files)
+
+Specific features touched (27 total, top 15):
+  - Network Restriction (22 files)
+  - Shell Execution (20 files)
+  - Configuration File (16 files)
+  - Execution Policy (11 files)
+  - Linux Sandbox (11 files)
+  - macOS Seatbelt (6 files)
+  - MCP Client (6 files)
+  - Authentication & Identity (6 files)
+  - Approval Request Flow (5 files)
+  - App Server Protocol (4 files)
+  - Turn Management (4 files)
+  - Windows Sandbox (3 files)
+  - Workspace-Write Sandbox (3 files)
+  - Read-Only Sandbox (2 files)
+  - Full-Access Mode (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/arg0/src/lib.rs: This file implements a system that allows Codex to deploy as a single executable while appearing as multiple command-line tools. When users invoke Codex through different names (like `apply_patch`), it automatically routes to the correct functionality, and it ensures helper tools are available on the system PATH without requiring separate installation. It also handles loading user configuration from a dotenv file and manages temporary directories that hold these helper tools.
+  - codex-rs/core/src/seatbelt.rs: # seatbelt.rs
+
+This file implements macOS sandbox security policies that restrict what code can do when it runs. It generates detailed security rules that control file access, network connections, and system permissions for executed commands, then enforces those rules using macOS's built-in sandboxing system.
+  - codex-rs/linux-sandbox/src/landlock.rs: This file enforces security sandboxing rules on code execution in Linux environments by blocking dangerous operations like network access and restricting file system writes. It applies these restrictions to child processes so they run in a locked-down mode while the main application remains unrestricted.
+  - codex-rs/linux-sandbox/src/lib.rs: This file is the entry point for Codex's Linux security sandbox, which isolates code execution by restricting what system permissions the code can access and limiting what files it can see. When Codex runs untrusted code on Linux, this component enforces those safety boundaries.
+  - codex-rs/linux-sandbox/tests/suite/landlock.rs: This file contains automated security tests that verify the Linux sandbox properly restricts what code can do—such as blocking network access, preventing writes to system directories, and protecting sensitive configuration files from being overwritten. It ensures that when Codex executes user code in a sandboxed environment, malicious or accidental operations are safely blocked.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/codex-backend-openapi-models/src/models/rate_limit_status_payload.rs: This file defines the data structure for communicating a user's current rate limit and usage status back to the client, including their subscription plan type (such as Free, Pro, or Enterprise), how many requests they can make, their credit balance, and any additional limits that apply to their account.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/core/src/shell.rs: This file detects and configures the user's command-line shell (like Bash, Zsh, or PowerShell) so Codex can execute commands in the appropriate environment. It identifies which shell is installed, locates its file path, and provides the correct syntax for running commands across different operating systems and shell types.
+  - codex-rs/core/src/tools/handlers/read_file.rs: This file enables Codex to read and extract portions of source code files intelligently. It supports two reading modes: a simple line-range mode for fetching specific sections of a file, and a smarter indentation-aware mode that understands code structure to return complete logical blocks (like functions or conditionals) along with their parent contexts. Users can specify start line, number of lines, indentation depth limits, and whether to include sibling blocks or header comments—allowing the AI to retrieve meaningful code context rather than arbitrary line ranges.
+
+Sample commit messages:
+  - chore(arg0): advisory-lock janitor for codex tmp paths (#10039)
+  - Enable SOCKS defaults for common local network proxy use cases (#11362)
+  - Revert "Load untrusted rules" (#10536)
+  - fix: fallback to Landlock-only when user namespaces unavailable and set PR_SET_NO_NEW_PRIVS early (#9250)
+  - feat(network-proxy): structured policy signaling and attempt correlation to core (#11662)
+  - feat(sandbox): enforce proxy-aware network routing in sandbox (#11113)
+  - revert: remove pre-Landlock bind mounts apply (#9300)
+  - fix(core): canonicalize wrapper approvals and support heredoc prefix … (#10941)
+  - feat(core): add network constraints schema to requirements.toml (#10958)
+  - feat: introducing a network sandbox proxy (#8442)
+  - feat(core): promote Linux bubblewrap sandbox to Experimental (#11381)
+  - feat(network-proxy): add a SOCKS5 proxy with policy enforcement (#9803)
+  - fix(linux-sandbox): block io_uring syscalls in no-network seccomp policy (#10814)
+  - refactor(network-proxy): flatten network config under [network] (#10965)
+  - build(linux-sandbox): always compile vendored bubblewrap on Linux; remove CODEX_BWRAP_ENABLE_FFI (#11498)
+  - feat(secrets): add codex-secrets crate (#10142)
+  - feat(linux-sandbox): add bwrap support (#9938)
+  - fix: harden arg0 helper PATH handling (#8766)
+  - chore: remove network-proxy-cli crate (#11158)
+  - feat(network-proxy): add structured policy decision to blocked errors (#10420)

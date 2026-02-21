@@ -1,0 +1,30 @@
+Name: Dominik Kundel
+Total commits: 1
+First contribution: 2025-09-03T02:49:03+00:00
+Emails: dkundel@openai.com
+Files authored: 5
+
+File type distribution:
+  - .rs: 5 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-09-03)
+
+Major product areas touched:
+  - Model & Reasoning (2 files)
+  - Agent Actions (1 files)
+  - Session Lifecycle (1 files)
+  - Safety & Containment (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+
+Specific features touched (2 total, top 15):
+  - Agent Response Stream (1 files)
+  - Structured Output (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+
+Sample commit messages:
+  - Improve gpt-oss compatibility (#2461)

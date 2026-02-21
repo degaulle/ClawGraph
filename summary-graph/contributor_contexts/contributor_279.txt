@@ -1,0 +1,11 @@
+Name: Mikhail Beliakov
+Total commits: 1
+First contribution: 2025-12-15T14:12:52+00:00
+Emails: kvokka@yahoo.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Update config.md (#8066)

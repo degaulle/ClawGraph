@@ -1,0 +1,12 @@
+Name: Asa
+Total commits: 1
+First contribution: 2025-04-24T18:08:19+00:00
+Emails: soocto@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .md: 1 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - feat: update README and config to support custom providers with API k… (#577)

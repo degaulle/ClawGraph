@@ -1,0 +1,14 @@
+Name: RosarioYui
+Total commits: 1
+First contribution: 2025-12-25T00:12:04+00:00
+Emails: runjiliu.dev@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .toml: 1 files
+
+Packages contributed to (1 total):
+  - codex-windows-sandbox: 1 commits (since 2025-12-25)
+
+Sample commit messages:
+  - fix: restrict windows-sys to Windows target (#8522)

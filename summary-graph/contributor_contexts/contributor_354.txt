@@ -1,0 +1,15 @@
+Name: zuxin-oai
+Total commits: 2
+First contribution: 2026-02-12T09:16:42+00:00
+Emails: zuxin@openai.com
+Files authored: 4
+
+File type distribution:
+  - .md: 4 files
+
+Packages contributed to (1 total):
+  - codex-core: 2 commits (since 2026-02-12)
+
+Sample commit messages:
+  - fix: update memory writing prompt (#11546)
+  - Update read_path prompt (#11763)

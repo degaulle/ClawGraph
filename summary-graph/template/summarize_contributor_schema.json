@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "1-sentence description of the contributor's likely role/focus area"
+    },
+    "contributions": {
+      "type": "string",
+      "description": "2-3 sentence summary of features and areas they contributed to"
+    }
+  },
+  "required": ["role", "contributions"],
+  "additionalProperties": false
+}

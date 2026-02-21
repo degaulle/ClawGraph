@@ -1,0 +1,100 @@
+Name: Dylan Hurd
+Total commits: 99
+First contribution: 2025-10-30T17:40:48+00:00
+Emails: dylan.hurd@openai.com
+Files authored: 272
+
+File type distribution:
+  - .rs: 139 files
+  - .txt: 73 files
+  - .md: 17 files
+  - .snap: 15 files
+  - .json: 14 files
+  - .yml: 6 files
+  - .toml: 4 files
+  - .unknown: 2 files
+  - .lock: 1 files
+  - .bazel: 1 files
+
+Packages contributed to (16 total):
+  - codex-core: 65 commits (since 2025-10-30)
+  - codex-app-server: 20 commits (since 2025-11-19)
+  - codex-tui: 19 commits (since 2025-11-18)
+  - codex-protocol: 13 commits (since 2025-12-05)
+  - codex-apply-patch: 8 commits (since 2025-11-24)
+  - core_test_support: 6 commits (since 2025-10-30)
+  - app_test_support: 4 commits (since 2026-01-18)
+  - codex-app-server-protocol: 4 commits (since 2025-11-19)
+  - codex-exec: 3 commits (since 2026-01-22)
+  - codex-shell-command: 3 commits (since 2025-11-18)
+  - codex-execpolicy: 2 commits (since 2026-01-28)
+  - codex-api: 2 commits (since 2026-01-22)
+  - codex-debug-client: 1 commits (since 2026-02-12)
+  - codex-utils-approval-presets: 1 commits (since 2026-01-22)
+  - codex-utils-cli: 1 commits (since 2026-02-12)
+
+Major product areas touched:
+  - Session Lifecycle (46 files)
+  - Agent Actions (34 files)
+  - Safety & Containment (27 files)
+  - Model & Reasoning (24 files)
+  - Conversation (20 files)
+  - Autonomy & Approval (19 files)
+  - Project Context (12 files)
+  - Extensibility (9 files)
+  - Surfaces (4 files)
+
+Specific features touched (88 total, top 15):
+  - Turn Management (25 files)
+  - Shell Execution (23 files)
+  - Interactive TUI (19 files)
+  - Configuration File (17 files)
+  - Execution Policy (14 files)
+  - Model Catalog (14 files)
+  - Rollout Persistence (12 files)
+  - App Server Protocol (10 files)
+  - Thread Resume (10 files)
+  - File Patch (8 files)
+  - Approval Request Flow (8 files)
+  - Authentication & Identity (7 files)
+  - Tool Output Truncation (7 files)
+  - Personality Style (7 files)
+  - Context Compaction (7 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/tests/common/test_codex.rs: This file provides testing infrastructure for Codex, allowing engineers to create and control realistic test environments where the AI assistant can be exercised and verified. It offers builders that spin up temporary workspaces, configure mock API servers, submit prompts to the assistant, and inspect what requests were sent to those servers—enabling tests to verify that Codex behaves correctly end-to-end.
+  - codex-rs/core/tests/suite/mod.rs: This file serves as a central hub that organizes and runs all of Codex's integration tests—which verify that different features work correctly end-to-end. It also sets up a temporary test environment so that tests can safely simulate how Codex behaves without affecting the developer's actual system files.
+  - codex-rs/core/tests/suite/shell_serialization.rs: This file tests how Codex formats the output from shell commands and file-patching operations under different scenarios. It verifies that shell output is presented correctly—either as raw structured data (exit code, timing, and output) or as plain text with headers—depending on which tools are enabled, and ensures that file patches are properly applied and reported back to the user.
+  - codex-rs/core/tests/common/responses.rs: This file provides testing infrastructure for mocking and validating API responses in the Codex product. It creates fake servers and request recorders that let developers test how the code handles different response scenarios—including streaming responses, WebSocket connections, function calls, and tool outputs—without hitting real APIs. The file also validates that requests follow expected patterns, catching bugs early by ensuring things like function call outputs always match their corresponding function calls.
+  - codex-rs/core/tests/suite/apply_patch_cli.rs: This file is a comprehensive test suite that verifies the "apply patch" feature—a tool that lets Codex automatically modify files in a user's workspace by applying structured code changes. The tests cover success cases (creating, modifying, moving, and deleting files), error handling (invalid patches, missing files, path traversal attacks), edge cases (multiple changes in one patch, renaming without content changes), and integration scenarios (patches delivered via shell commands, multiple sequential patches, and diff reporting to the user).
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/src/tools/parallel.rs: This file manages the execution of tool calls (like running code or executing commands) within a conversation session. It handles running multiple tools in parallel when allowed, serializing them when necessary, and gracefully stopping them if the user cancels the request.
+  - codex-rs/core/src/tools/spec.rs: # Summary
+
+This file defines and configures the set of tools available to AI agents in Codex. It translates feature flags and model configurations into a concrete list of capabilities—like running shell commands, reading files, searching the web, spawning sub-agents, and integrating with external services via MCP—and ensures each tool has the right parameters and descriptions for the AI to use them correctly.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/shell-command/src/parse_command.rs: # Summary
+
+This file parses shell commands into structured summaries that describe what they do—such as searching files, reading a file, or listing directory contents—so the product can show users human-readable descriptions of executed commands. It handles complex command sequences from Bash, Zsh, and PowerShell, breaks them into individual operations, and extracts metadata like search queries and file paths for display purposes.
+
+Sample commit messages:
+  - fix(tui) Support image paste from clipboard on native Windows (#7514)
+  - feat(tui) /personality (#9718)
+  - feat(tui) /permissions flow (#9561)
+  - chore(apply-patch) scenarios for e2e testing (#7567)
+  - fix(personality) prompt patch (#10375)
+  - fix(scripts) next_minor_version should reset patch number (#7050)
+  - fix: windows can now paste non-ascii multiline text (#8774)
+  - feat(core,tui,app-server) personality migration (#10307)
+  - chore(features) Personality => Stable (#10310)
+  - fix(core) Support changing /approvals before conversation (#6836)
+  - Adjust shell command timeouts for Windows (#11247)
+  - feat(tui): default reasoning selection to medium (#7040)
+  - fix(windows) support apply_patch parsing in powershell (#7221)
+  - fix(app-server) move windows world writable warning (#6916)
+  - chore(feature) Experimental: Smart Approvals (#10211)
+  - chore(core) move model_instructions_template config (#9871)
+  - chore(prompt) Update base prompt (#7943)
+  - fix(windows) shell_command on windows, minor parsing (#6811)
+  - chore(features) remove Experimental tag from UTF8 (#10296)
+  - chore(config) enable shell_command (#6843)

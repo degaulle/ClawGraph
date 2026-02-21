@@ -1,0 +1,11 @@
+Name: Shuto Otaki
+Total commits: 1
+First contribution: 2025-04-19T05:42:19+00:00
+Emails: 105141999+shutootaki@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: enable shell option for child process execution (#391)

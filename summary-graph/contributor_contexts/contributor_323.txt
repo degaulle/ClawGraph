@@ -1,0 +1,37 @@
+Name: Jeff Mickey
+Total commits: 1
+First contribution: 2026-01-21T00:17:38+00:00
+Emails: jmickey@openai.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 3 files
+
+Packages contributed to (3 total):
+  - codex-cli: 1 commits (since 2026-01-21)
+  - codex-core: 1 commits (since 2026-01-21)
+  - codex-tui: 1 commits (since 2026-01-21)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+  - Conversation (1 files)
+  - Autonomy & Approval (1 files)
+  - Agent Actions (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (5 total, top 15):
+  - Interactive TUI (2 files)
+  - Telemetry & Metrics (1 files)
+  - Configuration File (1 files)
+  - Feature Flags (1 files)
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/core/src/terminal.rs: This file detects what terminal application the user is running Codex in and generates a standardized identifier for it. The system checks environment variables in a prioritized order to identify the specific terminal (like iTerm, VS Code, kitty, etc.), its version, and whether a terminal multiplexer like tmux is active. This information is then packaged into a user-friendly label for logging and analytics, and used to configure the interface appropriately for that terminal's capabilities.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+
+Sample commit messages:
+  - [codex-tui] exit when terminal is dumb (#9293)

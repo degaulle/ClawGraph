@@ -1,0 +1,27 @@
+Name: Marcus Griep
+Total commits: 1
+First contribution: 2025-10-02T17:05:51+00:00
+Emails: marcus@griep.us
+Files authored: 4
+
+File type distribution:
+  - .rs: 4 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-10-02)
+
+Major product areas touched:
+  - Agent Actions (2 files)
+
+Specific features touched (4 total, top 15):
+  - File Patch (1 files)
+  - Approval Request Flow (1 files)
+  - Planning Tool (1 files)
+  - Collaboration Mode (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/tools/handlers/plan.rs: This file implements the "update plan" tool that allows the AI to document and communicate its work plan to users. When the AI wants to record progress on a task—such as listing steps, marking them as pending, in progress, or completed—this file handles that communication and ensures the plan information is formatted and sent to clients for display.
+  - codex-rs/core/src/tools/handlers/apply_patch.rs: This file handles the "apply_patch" tool, which lets the AI modify files in a codebase. It validates patch requests from the AI, executes the file changes, tracks what was modified, and optionally requires user approval before applying patches—essentially acting as a gatekeeper to safely apply the AI's proposed edits to your code.
+
+Sample commit messages:
+  - fix: handle JSON Schema in additionalProperties for MCP tools (#4454)

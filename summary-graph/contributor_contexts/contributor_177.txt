@@ -1,0 +1,11 @@
+Name: pranavdesh
+Total commits: 1
+First contribution: 2025-10-05T21:43:34+00:00
+Emails: pranavdeshpande88@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Expand TypeScript SDK README (#4779)

@@ -1,0 +1,120 @@
+Name: pakrym-oai
+Total commits: 277
+First contribution: 2025-07-17T18:35:38+00:00
+Emails: pakrym@openai.com
+Files authored: 426
+
+File type distribution:
+  - .rs: 305 files
+  - .toml: 37 files
+  - .ts: 21 files
+  - .md: 15 files
+  - .json: 13 files
+  - .yml: 8 files
+  - .snap: 8 files
+  - .unknown: 7 files
+  - .py: 3 files
+  - .txt: 3 files
+
+Packages contributed to (34 total):
+  - codex-core: 166 commits (since 2025-07-17)
+  - codex-tui: 52 commits (since 2025-07-17)
+  - codex-exec: 38 commits (since 2025-07-22)
+  - core_test_support: 30 commits (since 2025-07-22)
+  - codex-protocol: 24 commits (since 2025-07-22)
+  - codex-app-server: 21 commits (since 2025-09-03)
+  - codex-api: 18 commits (since 2025-12-12)
+  - codex-login: 17 commits (since 2025-07-30)
+  - codex-mcp-server: 16 commits (since 2025-07-22)
+  - codex-cli: 13 commits (since 2025-07-30)
+  - codex-shell-command: 8 commits (since 2025-11-08)
+  - codex-chatgpt: 7 commits (since 2025-07-30)
+  - codex-client: 4 commits (since 2025-12-02)
+  - codex-app-server-protocol: 4 commits (since 2025-09-05)
+  - codex-cloud-tasks: 3 commits (since 2025-10-02)
+
+Major product areas touched:
+  - Session Lifecycle (71 files)
+  - Agent Actions (67 files)
+  - Safety & Containment (42 files)
+  - Model & Reasoning (32 files)
+  - Autonomy & Approval (25 files)
+  - Conversation (17 files)
+  - Project Context (13 files)
+  - Extensibility (11 files)
+  - Surfaces (6 files)
+
+Specific features touched (88 total, top 15):
+  - Turn Management (50 files)
+  - Shell Execution (37 files)
+  - Authentication & Identity (31 files)
+  - Rollout Persistence (29 files)
+  - App Server Protocol (28 files)
+  - Configuration File (26 files)
+  - Telemetry & Metrics (26 files)
+  - Interactive TUI (23 files)
+  - Agent Response Stream (23 files)
+  - Thread Resume (20 files)
+  - Headless Exec Mode (18 files)
+  - Approval Request Flow (17 files)
+  - Model Catalog (14 files)
+  - Context Compaction (14 files)
+  - Execution Policy (13 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/mcp_connection_manager.rs: # MCP Connection Manager
+
+This file manages connections to external Model Context Protocol (MCP) servers and makes their tools available to the AI model. It handles server startup, tool discovery, tool filtering, caching, and execution—essentially acting as a hub that aggregates capabilities from multiple MCP servers into a unified interface the model can use.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/tests/suite/client.rs: This file is a comprehensive test suite that verifies how the Codex client sends requests to AI model APIs and processes responses. It tests critical product features like authentication, conversation history management, user instructions, model configuration options (reasoning effort, verbosity), rate limiting, error handling, and resuming saved conversations—essentially ensuring that user inputs are properly formatted and transmitted to the backend with all necessary context and settings.
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/project_doc.rs: This file enables Codex to automatically discover and load project-level documentation to guide the AI model's behavior. It searches for `AGENTS.md` files starting from the current directory and walking up to the Git repository root, then combines them with any configured system instructions, JavaScript runtime guidance, and available skills into a single instruction set that shapes how the AI operates within that project.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/core/tests/common/lib.rs: This file provides testing utilities and helpers for the Codex test suite. It sets up isolated test environments, loads test data, waits for application events during testing, and offers convenience functions for developers to write tests that work across different operating systems and network conditions—essentially a shared toolkit so tests can be written consistently and reliably.
+
+Sample commit messages:
+  - Ignore unified_exec_respects_workdir_override (#6693)
+  - Stop using AuthManager as the source of codex_home (#8846)
+  - Move token usage/context information to session level (#3221)
+  - Remove unused type (#5003)
+  - Move CodexAuth and AuthManager to the core crate (#3074)
+  - Do not append items on override turn context (#10354)
+  - Migrate prompt caching tests to test_codex (#6605)
+  - Add CodexHttpClient wrapper with request logging (#5564)
+  - Compare full request for websockets incrementality (#11343)
+  - Use wait_for_event helpers in tests (#4753)
+  - Update default yield time (#6610)
+  - Try to stop small helper methods (#11203)
+  - Send account id when available (#1767)
+  - Trace RAW sse events (#2056)
+  - Include output truncation message in tool call results (#2183)
+  - Session-level model client (#10664)
+  - Update tests to stop using sse_completed fixture (#10638)
+  - Use anyhow::Result in tests for error propagation (#4105)
+  - Hide /approvals from the slash-command list (#10265)
+  - Better implementation of interrupt on Esc (#2111)

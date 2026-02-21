@@ -1,0 +1,63 @@
+Name: Devon Rifkin
+Total commits: 1
+First contribution: 2026-01-13T17:51:41+00:00
+Emails: devonrifkin@gmail.com
+Files authored: 19
+
+File type distribution:
+  - .rs: 16 files
+  - .toml: 2 files
+  - .lock: 1 files
+
+Packages contributed to (5 total):
+  - codex-core: 1 commits (since 2026-01-13)
+  - codex-exec: 1 commits (since 2026-01-13)
+  - codex-ollama: 1 commits (since 2026-01-13)
+  - codex-tui: 1 commits (since 2026-01-13)
+  - codex-utils-oss: 1 commits (since 2026-01-13)
+
+Major product areas touched:
+  - Session Lifecycle (4 files)
+  - Safety & Containment (3 files)
+  - Autonomy & Approval (3 files)
+  - Project Context (2 files)
+  - Model & Reasoning (2 files)
+  - Conversation (2 files)
+  - Agent Actions (1 files)
+  - Extensibility (1 files)
+
+Specific features touched (17 total, top 15):
+  - Custom Provider (6 files)
+  - Interactive TUI (5 files)
+  - Configuration File (5 files)
+  - Model Catalog (4 files)
+  - Headless Exec Mode (2 files)
+  - User Prompt (2 files)
+  - Model Switching (2 files)
+  - Review Mode (2 files)
+  - Onboarding Flow (2 files)
+  - Thread Resume (1 files)
+  - Structured Output (1 files)
+  - Custom AI Provider (1 files)
+  - Authentication & Identity (1 files)
+  - Directory Trust (1 files)
+  - Multimodal Input (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/utils/oss/src/lib.rs: This file provides shared utilities for working with open-source AI model providers (like LM Studio and Ollama), allowing the product to look up default models and verify that a provider is properly set up and ready to use.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/model_provider_info.rs: This file manages the configuration for different AI model providers that Codex can connect to—like OpenAI, Azure, Ollama, and LM Studio. It defines what information is needed to set up each provider (such as the API endpoint, authentication credentials, and connection settings), allows users to customize providers in their config file, and provides sensible defaults so the product works out-of-the-box without configuration.
+  - codex-rs/exec/src/cli.rs: This file defines the command-line interface for Codex, specifying all the options and arguments users can pass when running the tool from the terminal. It handles everything from basic settings like which AI model to use, to safety controls like sandboxing modes, to advanced features like resuming past sessions and running code reviews. It also parses and validates user input to ensure flags are used correctly together.
+  - codex-rs/exec/src/lib.rs: This file is the entry point for Codex's command-line execution engine. It initializes the application, loads configuration and authentication settings, handles user input (prompts, images, or code review requests), and orchestrates communication between the user and the AI system—managing approvals, sandbox policies, and displaying results either as human-readable text or machine-readable JSON.
+  - codex-rs/ollama/src/client.rs: This file enables Codex to connect to and communicate with a local Ollama server (an open-source AI model platform). It handles checking whether Ollama is running, fetching the list of available models, retrieving the server version, and downloading new models with real-time progress updates.
+  - codex-rs/ollama/src/lib.rs: This file manages the setup and validation needed to use Ollama, an open-source language model service. It ensures that when a user selects the open-source model option, a local Ollama server is running and has the required model downloaded, and it verifies that the server version is recent enough to work with Codex.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/cli.rs: This file defines the command-line interface for Codex, capturing all the flags and options users can pass when starting the tool from the terminal. It specifies what inputs users can provide—like initial prompts, images, which AI model to use, security settings for command execution, and workspace configuration—so the application knows how to initialize and what behaviors to enable based on user preferences.
+
+Sample commit messages:
+  - ollama: default to Responses API for built-ins (#8798)

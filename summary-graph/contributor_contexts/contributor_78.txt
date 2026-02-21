@@ -1,0 +1,11 @@
+Name: Nick Carchedi
+Total commits: 1
+First contribution: 2025-04-22T21:15:28+00:00
+Emails: ncarchedi@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix typo in prompt (#558)

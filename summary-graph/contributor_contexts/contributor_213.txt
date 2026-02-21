@@ -1,0 +1,22 @@
+Name: Soroush Yousefpour
+Total commits: 1
+First contribution: 2025-11-05T01:44:02+00:00
+Emails: 46920873+gabrimatic@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 1 files
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-05)
+
+Specific features touched (2 total, top 15):
+  - Slash Command (1 files)
+  - Skills System (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/custom_prompts.rs: This file manages custom prompts that users can create and use in Codex. It discovers prompt files (stored as Markdown documents) from a designated directory, reads their metadata like descriptions and usage hints, and makes them available for the product to display and execute. It also handles parsing optional metadata headers from prompt files so the UI can show helpful information about each prompt.
+
+Sample commit messages:
+  - fix(core): load custom prompts from symlinked Markdown files (#3643)

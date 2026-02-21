@@ -1,0 +1,11 @@
+Name: Samin Amanat
+Total commits: 1
+First contribution: 2025-04-16T18:42:46+00:00
+Emails: amanat361@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Update README.md (#46)

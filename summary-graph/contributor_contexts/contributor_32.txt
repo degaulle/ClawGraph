@@ -1,0 +1,11 @@
+Name: Mert Erbak
+Total commits: 1
+First contribution: 2025-04-17T01:34:55+00:00
+Emails: 71733533+merterbak@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - document Codex open source fund (#162)

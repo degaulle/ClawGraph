@@ -1,0 +1,86 @@
+Name: alexsong-oai
+Total commits: 11
+First contribution: 2026-01-21T03:05:37+00:00
+Emails: alexsong@openai.com
+Files authored: 26
+
+File type distribution:
+  - .rs: 24 files
+  - .md: 1 files
+  - .json: 1 files
+
+Packages contributed to (3 total):
+  - codex-core: 9 commits (since 2026-01-21)
+  - codex-otel: 3 commits (since 2026-01-23)
+  - codex-tui: 2 commits (since 2026-02-06)
+
+Major product areas touched:
+  - Model & Reasoning (6 files)
+  - Agent Actions (6 files)
+  - Session Lifecycle (6 files)
+  - Project Context (5 files)
+  - Safety & Containment (5 files)
+  - Autonomy & Approval (5 files)
+  - Conversation (5 files)
+  - Extensibility (3 files)
+  - Surfaces (2 files)
+
+Specific features touched (29 total, top 15):
+  - Telemetry & Metrics (9 files)
+  - Skills System (7 files)
+  - Interactive TUI (4 files)
+  - User Input Request (3 files)
+  - File Mention (3 files)
+  - Configuration File (3 files)
+  - Turn Management (3 files)
+  - MCP Tool Call (2 files)
+  - Approval Request Flow (2 files)
+  - Agent Response Stream (2 files)
+  - Skill Metadata (2 files)
+  - MCP Client (2 files)
+  - Authentication & Identity (1 files)
+  - Git Awareness (1 files)
+  - Custom Provider (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/skills/injection.rs: This file handles the injection of Skills—reusable tools or extensions—into the system based on what users explicitly mention in their requests. It reads skill files from disk, parses user input to find skill references (like `$skill-name` or linked paths), and deduplicates them while respecting user intent and system constraints like disabled skills. It also tracks analytics on which skills were successfully loaded and which failed.
+  - codex-rs/otel/src/lib.rs: This file provides the central interface for collecting performance and usage metrics throughout the Codex application. It defines a manager object that tracks contextual information (like which model is being used, who the user is, and how they're authenticating) and uses that to automatically tag all metrics, making it easy for engineers to measure how features are performing and understand user behavior without repeatedly passing context around.
+  - codex-rs/otel/src/traces/otel_manager.rs: This file tracks and records telemetry data for Codex conversations, capturing detailed metrics about API calls, real-time data streams, tool usage, and user interactions. It logs performance timing information (like response latency, token counts, and processing stages) and event details to help the product team monitor system behavior, diagnose issues, and understand how users are interacting with the AI assistant.
+  - codex-rs/otel/tests/suite/manager_metrics.rs: This file contains automated tests that verify the metrics tracking system correctly attaches and removes metadata tags (like app version, authentication mode, and model name) when recording usage events. It ensures that the product can flexibly control whether this contextual information is included with telemetry data sent back to OpenAI.
+  - codex-rs/core/src/skills/loader.rs: # Skill Loader
+
+This file discovers and loads "skills" — reusable modules or extensions — from various locations on a user's system (project repositories, home directory, system folders) and reads their metadata. It parses skill definition files, validates their content against size limits, and organizes them by scope (repo-level, user-level, system, or admin) so the product can make skills available to users in the right context.
+  - codex-rs/core/src/analytics_client.rs: This file handles analytics and usage tracking for Codex. It collects and sends events whenever users invoke skills (custom code extensions) or mention/use external apps, while respecting user privacy settings and deduplicating repeated events to avoid spam.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/state/service.rs: This file defines the core collection of services and managers that run during a user session in Codex, bundling together everything needed to execute code, manage models, handle authentication, track analytics, and coordinate with external tools and extensions.
+  - codex-rs/core/tests/responses_headers.rs: This file tests that Codex correctly attaches the right metadata headers to outgoing requests when communicating with AI models. It verifies that features like sub-agent identification, reasoning summaries, and workspace information (Git repository details) are properly included in request headers, ensuring the backend receives complete context about where requests come from and what environment they're operating in.
+
+Sample commit messages:
+  - feat: add session source as otel metadata tag (#9720)
+  - Remove load from SKILL.toml fallback (#10007)
+  - Add originator to otel metadata tags (#11232)
+  - feat: add SkillPolicy to skill metadata and support allow_implicit_invocation (#11244)
+  - feat: support configurable metric_exporter (#10940)
+  - feat: load interface metadata from SKILL.json (#9953)
+  - feat: fire tracking events for skill invocation (#10120)
+  - load from yaml (#10194)
+  - add originator to otel (#10826)
+  - support app usage analytics (#11687)
+  - feat: add skill injected counter metric (#9575)

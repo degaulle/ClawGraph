@@ -1,0 +1,28 @@
+Name: muyuanjin
+Total commits: 3
+First contribution: 2025-12-03T21:43:17+00:00
+Emails: muyuanjin@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-tui: 3 commits (since 2025-12-03)
+
+Major product areas touched:
+  - Agent Actions (1 files)
+
+Specific features touched (3 total, top 15):
+  - Interactive TUI (2 files)
+  - Inline Diff Display (1 files)
+  - Prompt History (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/exec_cell/render.rs: This file handles the visual display of executed commands and their results in the terminal interface. It formats command output, syntax-highlights code, wraps text to fit the screen width, and intelligently truncates long outputs to keep the interface readable—for example, showing only the first few and last few lines of verbose command output with a note about omitted content in between.
+  - codex-rs/tui/src/pager_overlay.rs: This file implements the pop-up overlay windows that appear on top of the main Codex interface—specifically the transcript history viewer (opened with Ctrl+T) and generic information dialogs. These overlays provide scrollable, paged views of content like conversation history and help text, with keyboard navigation controls (arrow keys, page up/down, etc.) and smart scroll pinning that keeps users at the bottom when new content arrives.
+
+Sample commit messages:
+  - fix(tui): limit user shell output by screen lines (#7448)
+  - fix: wrap long exec lines in transcript overlay (#7481)
+  - Fix transcript pager page continuity (#7363)

@@ -1,0 +1,28 @@
+Name: Gene Oden
+Total commits: 1
+First contribution: 2026-01-26T18:07:25+00:00
+Emails: eugeneoden@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 2 files
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-01-26)
+
+Major product areas touched:
+  - Agent Actions (2 files)
+  - Conversation (1 files)
+  - Session Lifecycle (1 files)
+  - Model & Reasoning (1 files)
+  - Extensibility (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/tools/handlers/collab.rs: This file manages a set of collaboration tools that allow AI agents to spawn, communicate with, and control other agents. It handles five operations: spawning new agents with initial instructions, sending input to running agents, resuming previously closed agents, waiting for agents to reach completion, and shutting down agents. The handler also enforces safety limits like maximum nesting depth and prevents inefficient polling by enforcing minimum wait timeouts.
+  - codex-rs/core/src/tools/spec.rs: # Summary
+
+This file defines and configures the set of tools available to AI agents in Codex. It translates feature flags and model configurations into a concrete list of capabilities—like running shell commands, reading files, searching the web, spawning sub-agents, and integrating with external services via MCP—and ensures each tool has the right parameters and descriptions for the AI to use them correctly.
+
+Sample commit messages:
+  - fix: attempt to reduce high cpu usage when using collab (#9776)

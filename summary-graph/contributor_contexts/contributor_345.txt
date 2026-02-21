@@ -1,0 +1,11 @@
+Name: cryptonerdcn
+Total commits: 1
+First contribution: 2026-02-05T05:19:56+00:00
+Emails: cryptonerdcn@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .ts: 2 files
+
+Sample commit messages:
+  - fix: ensure resume args precede image args (#10709)

@@ -1,0 +1,20 @@
+Name: Thomas Klausner
+Total commits: 1
+First contribution: 2025-11-24T19:46:43+00:00
+Emails: wiz@gatalith.at
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-process-hardening: 1 commits (since 2025-11-24)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/process-hardening/src/lib.rs: This file hardens the Codex application against security attacks by locking down the process before it starts running. It disables core dumps (which could leak sensitive data), blocks debuggers from attaching to the process, and removes dangerous environment variables that could be exploited to inject malicious code—doing all this on Linux, macOS, BSD, and Windows platforms.
+
+Sample commit messages:
+  - fix: Fix build process-hardening build on NetBSD (#7238)

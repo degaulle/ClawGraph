@@ -1,0 +1,36 @@
+Name: Wendy Jiao
+Total commits: 3
+First contribution: 2026-02-12T17:43:38+00:00
+Emails: wendyjiao@openai.com
+Files authored: 9
+
+File type distribution:
+  - .rs: 7 files
+  - .md: 2 files
+
+Packages contributed to (2 total):
+  - codex-core: 3 commits (since 2026-02-12)
+  - codex-state: 1 commits (since 2026-02-12)
+
+Major product areas touched:
+  - Session Lifecycle (4 files)
+
+Specific features touched (3 total, top 15):
+  - Rollout Persistence (5 files)
+  - Context Compaction (2 files)
+  - Thread Resume (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/rollout/policy.rs: This file defines which conversation events and responses should be saved to disk when Codex runs. It categorizes different types of events into two persistence levels—Limited (core events needed to resume sessions) and Extended (additional diagnostic events)—allowing the system to record conversations at different levels of detail depending on what's needed.
+  - codex-rs/core/src/memories/storage.rs: This file manages how Codex stores and organizes its memory files on disk. It takes memory data from the system's database and writes it out as readable documentation files, keeping old summaries cleaned up and synced with current state.
+  - codex-rs/core/src/memories/tests.rs: This file contains automated tests for the memory system that stores and manages conversation summaries and raw data. It verifies that memories are properly organized on disk, old memories are cleaned up when newer ones arrive, filename rules are enforced correctly, and the consolidation process that periodically rebuilds memory artifacts works as expected across various scenarios including error conditions.
+  - codex-rs/state/src/model/memories.rs: This file defines the data structures for managing Codex's memory extraction pipeline, specifically how the system stores and tracks intermediate results from analyzing code threads and coordinates work between multiple processing workers to avoid duplicate effort.
+  - codex-rs/state/src/runtime.rs: # Summary
+
+This file implements the core database interface for Codex's state management system, handling persistent storage and retrieval of conversation threads, execution logs, and background job tracking. It manages the SQLite database lifecycle, provides methods to query and update thread metadata, stores dynamic tools definitions, tracks multi-stage processing jobs (memory analysis and global consolidation), and maintains backfill progress for metadata synchronization.
+  - codex-rs/state/src/runtime/memories.rs: This file manages the lifecycle of Codex's memory system, which extracts and consolidates information from conversation threads over time. It handles two main work pipelines: first, individual threads are scanned to extract memory snapshots (stage 1), and then those snapshots are consolidated into a global summary (phase 2). The code tracks which threads need processing, claims work units for background workers, stores extraction results, monitors job retries and failures, and orchestrates the flow between the two pipeline stages.
+
+Sample commit messages:
+  - exclude developer messages from phase-1 memory input (#11608)
+  - Add cwd to memory files (#11591)
+  - Remove absolute path in rollout_summary (#11622)

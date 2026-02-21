@@ -1,0 +1,11 @@
+Name: Erick
+Total commits: 1
+First contribution: 2025-04-23T05:12:18+00:00
+Emails: ericktorresdeveloper@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: added provider to run quiet mode function (#571)

@@ -1,0 +1,98 @@
+Name: Shijie Rao
+Total commits: 35
+First contribution: 2025-10-03T01:19:13+00:00
+Emails: shijie.rao@openai.com
+Files authored: 98
+
+File type distribution:
+  - .rs: 73 files
+  - .md: 11 files
+  - .yml: 8 files
+  - .json: 2 files
+  - .toml: 1 files
+  - .js: 1 files
+  - .lock: 1 files
+  - .ts: 1 files
+
+Packages contributed to (13 total):
+  - codex-app-server: 16 commits (since 2025-10-03)
+  - codex-app-server-protocol: 12 commits (since 2025-10-03)
+  - codex-core: 11 commits (since 2025-12-03)
+  - codex-protocol: 5 commits (since 2026-01-12)
+  - codex-tui: 5 commits (since 2025-11-10)
+  - app_test_support: 3 commits (since 2026-01-19)
+  - codex-cli: 2 commits (since 2025-11-10)
+  - codex-mcp-server: 2 commits (since 2026-01-19)
+  - codex-config: 1 commits (since 2026-01-07)
+  - codex-exec: 1 commits (since 2026-01-19)
+  - codex-rmcp-client: 1 commits (since 2025-12-10)
+  - codex-app-server-test-client: 1 commits (since 2026-01-22)
+  - mcp_test_support: 1 commits (since 2026-01-19)
+
+Major product areas touched:
+  - Agent Actions (23 files)
+  - Session Lifecycle (20 files)
+  - Autonomy & Approval (14 files)
+  - Model & Reasoning (11 files)
+  - Safety & Containment (11 files)
+  - Conversation (10 files)
+  - Project Context (8 files)
+  - Extensibility (6 files)
+  - Surfaces (3 files)
+
+Specific features touched (48 total, top 15):
+  - App Server Protocol (18 files)
+  - Configuration File (13 files)
+  - Turn Management (11 files)
+  - Approval Request Flow (9 files)
+  - Interactive TUI (9 files)
+  - User Input Request (9 files)
+  - Authentication & Identity (7 files)
+  - Shell Execution (6 files)
+  - File Patch (5 files)
+  - MCP Client (5 files)
+  - MCP Tool Call (5 files)
+  - Feature Flags (4 files)
+  - Model Catalog (4 files)
+  - MCP Server (3 files)
+  - Tool Output Truncation (3 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/fuzzy_file_search.rs: This file powers Codex's fuzzy file search feature, which lets users quickly find files by typing partial names or patterns. It supports two modes: a one-time search that returns all matching files at once, and a persistent search session that continuously updates results as the user refines their query, sending live notifications back to the editor.
+  - codex-rs/app-server/tests/suite/fuzzy_file_search.rs: This file contains automated tests for the fuzzy file search feature, which lets users search for files by typing partial filenames. The tests verify that the search correctly ranks and returns matching files, handles multiple concurrent search sessions independently, streams live results as the user types, and properly cleans up when searches are canceled or stopped.
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/history_cell.rs: # Summary
+
+This file defines the rendering system for conversation history entries in Codex's terminal interface. It provides a framework (`HistoryCell` trait) for converting different types of events—user messages, agent responses, command execution results, MCP tool calls, web searches, and more—into formatted text lines that display in a scrollable chat history. Each cell type handles its own formatting, wrapping, and styling to present rich, interactive information in the TUI.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/update_action.rs: This file determines how to update Codex when the user runs an update check, by detecting which package manager installed the tool (npm, Bun, or Homebrew) and generating the appropriate update command for that manager.
+  - codex-rs/tui/src/update_prompt.rs: This file manages the update notification dialog that appears when a newer version of Codex is available. It displays the current and latest version numbers, provides release notes, and lets users choose to update immediately, skip the update, or dismiss future reminders about this version.
+  - codex-rs/tui/src/updates.rs: This file manages software update notifications for Codex. It checks whether a newer version is available (by querying GitHub releases or Homebrew), caches that information to avoid repeated network requests, and provides the UI with version details to display an upgrade banner—while respecting users who have dismissed the notification for a particular version.
+  - codex-rs/app-server-protocol/src/protocol/common.rs: This file defines the communication protocol between the Codex server and its clients (like the VS Code extension). It establishes all the requests, responses, and notifications that can flow in both directions—for example, when a client asks the server to start a thread or execute a command, or when the server asks the client to approve a file change. The file also generates TypeScript definitions and JSON schemas so that clients and the server can understand each other's messages in a consistent format.
+
+Sample commit messages:
+  - Add instruction for upgrading codex with brew (#5640)
+  - Revert "feat: windows codesign with Azure trusted signing" (#7753)
+  - feat: use latest disk value for mcp servers status (#7907)
+  - fixes #5011: update mcp server doc (#5014)
+  - feat: linux codesign with sigstore (#7674)
+  - chore: update listMcpServerStatus to be non-blocking (#8151)
+  - Feat: add isOther to question returned by request user input tool (#9890)
+  - feat: hot reload mcp servers (#8957)
+  - Chore: update plan mode output in prompt (#9592)
+  - Revert "Revert "feat: windows codesign with Azure trusted signing"" (#7757)
+  - feat: support list mcp servers in app server (#7505)
+  - Feat: request user input tool (#9472)
+  - chore: update listMcpServers to listMcpServerStatus (#8114)
+  - fix: brew upgrade link (#6045)
+  - Update Homebrew install instructions to use cask (#5377)
+  - Feat: add upgrade to app server modelList (#10556)
+  - fix: update brew auto update version check (#6238)
+  - Shijie/codesign binary (#4899)
+  - feat: add file name to fuzzy search response (#4619)
+  - feat: support mcp in-session login (#7751)

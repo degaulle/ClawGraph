@@ -1,0 +1,14 @@
+Name: Jack
+Total commits: 1
+First contribution: 2025-10-31T00:39:21+00:00
+Emails: 8264841+AlanMelody@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-10-31)
+
+Sample commit messages:
+  - docs: Fix markdown list item spacing in codex-rs/core/review_prompt.md (#4144)

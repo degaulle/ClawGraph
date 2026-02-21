@@ -1,0 +1,11 @@
+Name: Adam Montgomery
+Total commits: 1
+First contribution: 2025-04-16T18:23:42+00:00
+Emails: 1934358+montasaurus@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - (feat) add request error details (#31)

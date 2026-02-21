@@ -1,0 +1,12 @@
+Name: nvp159
+Total commits: 1
+First contribution: 2025-04-25T00:00:14+00:00
+Emails: nvp159@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .tsx: 2 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - feat(bug-report): print bug report URL in terminal instead of opening browser (#510) (#528)

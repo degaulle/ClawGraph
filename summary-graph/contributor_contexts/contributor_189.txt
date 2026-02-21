@@ -1,0 +1,20 @@
+Name: Naoya Yasuda
+Total commits: 1
+First contribution: 2025-10-22T02:10:30+00:00
+Emails: 43776161+yanskun@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-10-22)
+
+Specific features touched (1 total, top 15):
+  - Model Upgrade Path (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/updates.rs: This file manages software update notifications for Codex. It checks whether a newer version is available (by querying GitHub releases or Homebrew), caches that information to avoid repeated network requests, and provides the UI with version details to display an upgrade banner—while respecting users who have dismissed the notification for a particular version.
+
+Sample commit messages:
+  - docs: Add `--cask` option to brew command to suggest (#5432)

@@ -1,0 +1,20 @@
+Name: MomentDerek
+Total commits: 1
+First contribution: 2025-10-18T02:03:36+00:00
+Emails: 40252940+MomentDerek@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-10-18)
+
+Specific features touched (1 total, top 15):
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/custom_terminal.rs: This file manages the core rendering system for the terminal user interface — it handles how content gets drawn to the screen efficiently. It provides a `Terminal` object that applications use in a rendering loop to display UI frames, along with a `Frame` object that lets developers paint widgets and position the cursor. The file also includes smart logic to compare what was on screen before versus now, and only send the terminal the minimal changes needed (for example, clearing entire rows at once rather than character-by-character) to keep the display responsive and reduce unnecessary output.
+
+Sample commit messages:
+  - fix: diff_buffers clear-to-end when deleting wide graphemes (#4921)

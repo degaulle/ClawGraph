@@ -1,0 +1,14 @@
+Name: iudi
+Total commits: 1
+First contribution: 2026-01-22T22:07:14+00:00
+Emails: iudizm@pm.me
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-01-22)
+
+Sample commit messages:
+  - Fix typo in experimental_prompt.md (#9716)

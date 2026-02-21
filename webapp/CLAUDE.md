@@ -1,4 +1,4 @@
-# Webapp — Knowledge Graph Visualization
+# Webapp — ClawGraph Visualization
 
 ## Architecture
 

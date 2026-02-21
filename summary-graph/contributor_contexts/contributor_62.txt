@@ -1,0 +1,12 @@
+Name: autotaker
+Total commits: 1
+First contribution: 2025-04-19T05:35:32+00:00
+Emails: autotaker@gmail.com
+Files authored: 4
+
+File type distribution:
+  - .ts: 3 files
+  - .md: 1 files
+
+Sample commit messages:
+  - feat: add user-defined safe commands configuration and approval logic #380 (#386)

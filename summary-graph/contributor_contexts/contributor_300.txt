@@ -1,0 +1,14 @@
+Name: darlingm
+Total commits: 1
+First contribution: 2026-01-07T21:24:02+00:00
+Emails: darlingm@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-01-07)
+
+Sample commit messages:
+  - Clarify YAML frontmatter formatting in skill-creator (#8610)

@@ -1,0 +1,11 @@
+Name: Isaac
+Total commits: 1
+First contribution: 2025-04-16T20:21:40+00:00
+Emails: 147355120+IsaacGemal@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: add FAQ clarifying relation to OpenAI Codex (2021) (#91)

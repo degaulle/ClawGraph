@@ -1,0 +1,92 @@
+Name: jcoens-openai
+Total commits: 6
+First contribution: 2025-05-07T15:37:48+00:00
+Emails: 153659877+jcoens-openai@users.noreply.github.com
+Files authored: 72
+
+File type distribution:
+  - .rs: 57 files
+  - .toml: 13 files
+  - .lock: 1 files
+  - .bzl: 1 files
+
+Packages contributed to (11 total):
+  - codex-core: 4 commits (since 2025-05-07)
+  - codex-mcp-server: 4 commits (since 2025-05-07)
+  - codex-tui: 4 commits (since 2025-05-07)
+  - codex-apply-patch: 4 commits (since 2025-05-07)
+  - codex-cli: 3 commits (since 2025-05-07)
+  - codex-execpolicy: 3 commits (since 2025-05-07)
+  - codex-execpolicy-legacy: 3 commits (since 2025-05-07)
+  - codex-ansi-escape: 2 commits (since 2025-05-07)
+  - codex-exec: 2 commits (since 2025-05-07)
+  - codex-protocol: 1 commits (since 2025-05-07)
+  - codex-shell-command: 1 commits (since 2025-05-12)
+
+Major product areas touched:
+  - Agent Actions (10 files)
+  - Session Lifecycle (9 files)
+  - Model & Reasoning (7 files)
+  - Safety & Containment (6 files)
+  - Autonomy & Approval (6 files)
+  - Project Context (5 files)
+  - Conversation (5 files)
+  - Extensibility (3 files)
+  - Surfaces (2 files)
+
+Specific features touched (28 total, top 15):
+  - Execution Policy (19 files)
+  - Interactive TUI (7 files)
+  - Configuration File (7 files)
+  - Turn Management (5 files)
+  - Authentication & Identity (4 files)
+  - Shell Execution (4 files)
+  - Headless Exec Mode (3 files)
+  - MCP Client (2 files)
+  - MCP Server (2 files)
+  - File Patch (2 files)
+  - Telemetry & Metrics (1 files)
+  - Agent Response Stream (1 files)
+  - Session Interrupt (1 files)
+  - Rollout Persistence (1 files)
+  - Thread Resume (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/apply-patch/src/lib.rs: This file implements a patch application system that parses and applies code changes to files on disk. It reads patch instructions (which specify files to add, delete, or modify), validates them against the actual file contents, applies the changes to the filesystem, and reports which files were affected. The system is designed to work with AI-generated patches, particularly from GPT-4, and ensures changes are applied accurately before execution.
+  - codex-rs/apply-patch/src/parser.rs: This file parses patch instructions that tell Codex how to modify files. It reads a specially-formatted patch text (marked with `*** Begin Patch` and `*** End Patch`), breaks it into individual operations like "add this file," "delete that file," or "change these specific lines," and validates that the instructions are well-formed so they can be applied to the codebase.
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/landlock.rs: This file manages running user commands in a restricted Linux sandbox environment. It translates Codex's internal security policies into command-line options for a Linux sandbox helper tool, which then uses system-level isolation techniques to safely execute code while controlling what files and network resources the code can access.
+  - codex-rs/core/src/mcp_connection_manager.rs: # MCP Connection Manager
+
+This file manages connections to external Model Context Protocol (MCP) servers and makes their tools available to the AI model. It handles server startup, tool discovery, tool filtering, caching, and execution—essentially acting as a hub that aggregates capabilities from multiple MCP servers into a unified interface the model can use.
+  - codex-rs/protocol/src/models.rs: This file defines the data structures that represent messages, tool calls, and responses flowing between the AI model and the user during a coding session. It handles how developer instructions and permissions (like sandbox settings and approval policies) are communicated to the model, manages structured content like text and images in conversations, and provides formatting for shell commands, web searches, and function call outputs. The file essentially serves as the "language" for how Codex describes what the AI should do and what it has produced.
+  - codex-rs/core/tests/suite/live_cli.rs: This file contains optional tests that verify the Codex command-line tool works correctly when connected to the real OpenAI API. These tests are skipped by default in automated builds (to keep things fast and free) but developers can run them locally with a valid API key to confirm the tool can successfully execute user requests like creating files or running shell commands.
+
+Sample commit messages:
+  - feat: Allow pasting newlines (#866)
+  - Workspace lints and disallow unwrap (#855)
+  - Update cargo to 2024 edition (#842)
+  - Update submodules version to come from the workspace (#850)
+  - Remove stale TODO comment from defs.bzl (#9787)
+  - Disallow expect via lints (#865)

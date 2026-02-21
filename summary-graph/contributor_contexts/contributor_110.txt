@@ -1,0 +1,172 @@
+Name: Gabriel Peal
+Total commits: 84
+First contribution: 2025-06-26T18:40:42+00:00
+Emails: gpeal@users.noreply.github.com
+Files authored: 197
+
+File type distribution:
+  - .rs: 158 files
+  - .toml: 11 files
+  - .md: 11 files
+  - .snap: 10 files
+  - .yml: 2 files
+  - .unknown: 2 files
+  - .lock: 1 files
+  - .json: 1 files
+  - .py: 1 files
+
+Packages contributed to (18 total):
+  - codex-core: 42 commits (since 2025-06-26)
+  - codex-tui: 32 commits (since 2025-06-27)
+  - codex-cli: 20 commits (since 2025-07-11)
+  - codex-mcp-server: 16 commits (since 2025-07-20)
+  - codex-rmcp-client: 15 commits (since 2025-09-26)
+  - codex-protocol: 14 commits (since 2025-07-23)
+  - codex-app-server: 10 commits (since 2025-07-29)
+  - codex-app-server-protocol: 9 commits (since 2025-08-14)
+  - codex-exec: 7 commits (since 2025-07-29)
+  - codex-login: 5 commits (since 2025-07-11)
+  - mcp_test_support: 4 commits (since 2025-07-22)
+  - codex-chatgpt: 3 commits (since 2025-07-11)
+  - codex-shell-command: 2 commits (since 2025-08-11)
+  - codex-utils-cli: 2 commits (since 2025-10-17)
+  - codex-exec-server: 1 commits (since 2026-02-12)
+
+Major product areas touched:
+  - Agent Actions (34 files)
+  - Session Lifecycle (27 files)
+  - Safety & Containment (20 files)
+  - Model & Reasoning (16 files)
+  - Autonomy & Approval (14 files)
+  - Conversation (12 files)
+  - Extensibility (12 files)
+  - Project Context (9 files)
+  - Surfaces (4 files)
+
+Specific features touched (88 total, top 15):
+  - Authentication & Identity (29 files)
+  - MCP Tool Call (22 files)
+  - MCP Client (22 files)
+  - Interactive TUI (17 files)
+  - Configuration File (17 files)
+  - Shell Execution (14 files)
+  - Turn Management (14 files)
+  - App Server Protocol (13 files)
+  - MCP Server (10 files)
+  - Telemetry & Metrics (8 files)
+  - Rollout Persistence (8 files)
+  - Approval Request Flow (8 files)
+  - File Patch (8 files)
+  - Thread Resume (8 files)
+  - Execution Policy (7 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/chatgpt/src/apply_command.rs: This file implements the "apply" command that takes code changes generated by a Codex agent and patches them into a user's local codebase. It retrieves the latest diff from a completed task and uses Git to apply those changes to the user's files, reporting success or any conflicts that occurred.
+  - codex-rs/chatgpt/src/chatgpt_client.rs: This file handles communication with OpenAI's ChatGPT backend by making authenticated requests on behalf of the user—it retrieves the user's login credentials, constructs properly formatted API calls, and returns the results so other parts of the product can access ChatGPT data.
+  - codex-rs/chatgpt/src/chatgpt_token.rs: This file manages the ChatGPT authentication token used by the application. It provides functions to store and retrieve the user's token in memory, and includes logic to load the token from the system's authentication configuration file when the application starts up.
+
+Sample commit messages:
+  - [MCP] Prefix MCP tools names with `mcp__` (#5309)
+  - Add call_id to patch approvals and elicitations (#1660)
+  - [TUI] Remove bottom padding (#4854)
+  - [App Server] Add more session metadata to listConversations (#6337)
+  - [MCP] Add support for MCP Oauth credentials (#4517)
+  - [App Server] Allow fetching or resuming a conversation summary from the conversation id (#5890)
+  - Add a TurnDiffTracker to create a unified diff for an entire turn (#1770)
+  - First pass at a TUI onboarding (#1876)
+  - Handle Ctrl+C quit when idle (#1402)
+  - Update MCP docs to reference experimental RMCP client (#4422)
+  - Treat `zsh -lc` like `bash -lc` (#5411)
+  - [MCP] Add support for specifying scopes for MCP oauth (#5487)
+  - fix: update the gpt-5-codex prompt to be more explicit that it should always used fenced code blocks info tags (#4569)
+  - Allow enterprises to skip upgrade checks and messages (#7213)
+  - [MCP] Add experimental support for streamable HTTP MCP servers (#4317)
+  - [MCP] Add auth status to MCP servers (#4918)
+  - [MCP] Add support for resources (#5239)
+  - [MCP] When MCP auth expires, prompt the user to log in again. (#5300)
+  - Re-add prettier log-level=warn to generate-ts (#6528)
+  - [MCP] Bump rmcp to 0.8.2 (#5423)

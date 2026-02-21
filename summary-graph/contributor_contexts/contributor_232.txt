@@ -1,0 +1,14 @@
+Name: dulikaifazr
+Total commits: 1
+First contribution: 2025-11-17T03:50:36+00:00
+Emails: dulikaifazr@outlook.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-17)
+
+Sample commit messages:
+  - Fix: Claude models return incomplete responses due to empty finish_reason handling (#6728)

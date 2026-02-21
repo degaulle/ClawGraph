@@ -1,0 +1,18 @@
+Name: Tomas Cupr
+Total commits: 6
+First contribution: 2025-04-16T23:34:44+00:00
+Emails: work@tomcupr.com
+Files authored: 13
+
+File type distribution:
+  - .tsx: 6 files
+  - .ts: 6 files
+  - .md: 1 files
+
+Sample commit messages:
+  - feat: add command history persistence (#152)
+  - feat: add shell completion subcommand (#138)
+  - perf: optimize token streaming with balanced approach (#635)
+  - fix: `full-auto` support in quiet mode (#374)
+  - feat: user config api key (#569)
+  - fix: retry on OpenAI server_error even without status code (#814)

@@ -1,0 +1,29 @@
+Name: Yusuf Eren
+Total commits: 1
+First contribution: 2025-07-08T19:05:22+00:00
+Emails: erenyusuf170@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-07-08)
+
+Major product areas touched:
+  - Model & Reasoning (2 files)
+  - Autonomy & Approval (2 files)
+  - Safety & Containment (2 files)
+  - Project Context (1 files)
+
+Specific features touched (1 total, top 15):
+  - Configuration File (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/profile.rs: This file defines the structure for user configuration profiles that can be saved in the product's config file. It specifies all the settings a user might want to customize as a group—like which AI model to use, how verbose the responses should be, what tools are enabled, and various safety and behavior options—so they can easily switch between different configurations or save their preferences.
+
+Sample commit messages:
+  - feat: add reasoning fields to profile settings (#1484)

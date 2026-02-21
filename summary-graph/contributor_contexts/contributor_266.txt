@@ -1,0 +1,11 @@
+Name: Victor
+Total commits: 1
+First contribution: 2025-12-07T02:57:08+00:00
+Emails: voctory@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .md: 2 files
+
+Sample commit messages:
+  - docs: point dev checks to just (#7673)

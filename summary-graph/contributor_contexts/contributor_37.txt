@@ -1,0 +1,11 @@
+Name: Akshey D
+Total commits: 1
+First contribution: 2025-04-17T14:09:23+00:00
+Emails: 131929364+aksheyd@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: add ZDR org limitation to README (#234)

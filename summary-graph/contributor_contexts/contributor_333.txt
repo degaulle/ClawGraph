@@ -1,0 +1,14 @@
+Name: Matt Ridley
+Total commits: 1
+First contribution: 2026-01-26T23:55:44+00:00
+Emails: matt.c.ridley@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .txt: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2026-01-26)
+
+Sample commit messages:
+  - fix: remove cli tooltip references to custom prompts (#9901)

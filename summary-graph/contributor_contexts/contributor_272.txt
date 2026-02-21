@@ -1,0 +1,131 @@
+Name: Gav Verma
+Total commits: 13
+First contribution: 2025-12-10T05:17:57+00:00
+Emails: gverma@openai.com
+Files authored: 46
+
+File type distribution:
+  - .rs: 18 files
+  - .py: 12 files
+  - .md: 5 files
+  - .txt: 2 files
+  - .yaml: 2 files
+  - .svg: 2 files
+  - .png: 2 files
+  - .unknown: 1 files
+  - .toml: 1 files
+  - .lock: 1 files
+
+Packages contributed to (3 total):
+  - codex-core: 10 commits (since 2025-12-18)
+  - codex-tui: 2 commits (since 2025-12-10)
+  - codex-app-server: 1 commits (since 2026-01-21)
+
+Major product areas touched:
+  - Project Context (5 files)
+  - Session Lifecycle (5 files)
+  - Conversation (3 files)
+  - Agent Actions (3 files)
+  - Autonomy & Approval (2 files)
+  - Model & Reasoning (1 files)
+  - Extensibility (1 files)
+  - Safety & Containment (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (13 total, top 15):
+  - Skills System (7 files)
+  - Interactive TUI (5 files)
+  - Configuration File (2 files)
+  - Directory Trust (2 files)
+  - Progressive Skill Loading (2 files)
+  - Skill Metadata (1 files)
+  - Global AGENTS.md (1 files)
+  - Project AGENTS.md (1 files)
+  - Folder AGENTS.md (1 files)
+  - Instruction Precedence (1 files)
+  - Onboarding Flow (1 files)
+  - Authentication & Identity (1 files)
+  - Skill References (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+  - codex-rs/core/tests/suite/skills.rs: This file tests how the product handles "skills"—reusable code templates or instructions that users can reference and the AI can use when responding. It verifies that skills are properly loaded, included in AI requests, validated for errors, and that built-in system skills are available when needed.
+  - codex-rs/core/src/project_doc.rs: This file enables Codex to automatically discover and load project-level documentation to guide the AI model's behavior. It searches for `AGENTS.md` files starting from the current directory and walking up to the Git repository root, then combines them with any configured system instructions, JavaScript runtime guidance, and available skills into a single instruction set that shapes how the AI operates within that project.
+  - codex-rs/core/src/skills/render.rs: This file generates the documentation that teaches the AI assistant how to discover and use "skills"—reusable instruction sets stored as files in the codebase. It formats a readable guide that lists available skills, explains when to use them, and provides step-by-step rules for safely accessing and executing skill instructions without overloading the system with unnecessary file reads.
+  - codex-rs/core/src/config_loader/mod.rs: This file loads and assembles Codex's configuration settings from multiple sources, stacking them in the correct priority order to determine what features and policies are active.
+
+The file reads configuration files from various locations—system defaults, user home directory, current project folders, and runtime overrides from the command line—and merges them together. It also enforces security by checking whether projects are trusted before loading their local configuration, and it supports both current and legacy configuration formats. The end result is a complete configuration stack that reflects the user's settings while respecting admin-enforced rules and project trust levels.
+  - codex-rs/core/src/skills/loader.rs: # Skill Loader
+
+This file discovers and loads "skills" — reusable modules or extensions — from various locations on a user's system (project repositories, home directory, system folders) and reads their metadata. It parses skill definition files, validates their content against size limits, and organizes them by scope (repo-level, user-level, system, or admin) so the product can make skills available to users in the right context.
+
+Sample commit messages:
+  - Update system skills bundled with codex-rs (#8253)
+  - Update skills/list protocol readme (#9623)
+  - Update system skills from OSS repo (#8328)
+  - feat: Support loading skills from .agents/skills (#10317)
+  - Make loading malformed skills fail-open (#8243)
+  - chore: improve skills render section (#8459)
+  - fix: System skills marker includes nested folders recursively (#10350)
+  - Express rate limit warning as % remaining (#7795)
+  - Sync system skills from public repo (#10320)
+  - feat: Read personal skills from .agents/skills (#10437)
+  - Sync system skills from public repo for openai yaml changes (#10322)
+  - Add short descriptions to system skills (#8301)
+  - Remove plan from system skills (#8374)

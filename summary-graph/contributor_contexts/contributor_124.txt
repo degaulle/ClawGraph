@@ -1,0 +1,30 @@
+Name: David Z Hao
+Total commits: 2
+First contribution: 2025-08-03T13:59:26+00:00
+Emails: david.hao@openai.com
+Files authored: 3
+
+File type distribution:
+  - .ts: 1 files
+  - .sbpl: 1 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 2 commits (since 2025-08-03)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Specific features touched (3 total, top 15):
+  - macOS Seatbelt (1 files)
+  - Network Restriction (1 files)
+  - Execution Policy (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/seatbelt.rs: # seatbelt.rs
+
+This file implements macOS sandbox security policies that restrict what code can do when it runs. It generates detailed security rules that control file access, network connections, and system permissions for executed commands, then enforces those rules using macOS's built-in sandboxing system.
+
+Sample commit messages:
+  - Fix MacOS multiprocessing by relaxing sandbox (#1808)
+  - test(core): add seatbelt sem lock tests (#1823)

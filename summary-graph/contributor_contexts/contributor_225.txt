@@ -1,0 +1,33 @@
+Name: kinopeee
+Total commits: 1
+First contribution: 2025-11-10T00:35:08+00:00
+Emails: 119112484+kinopeee@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-cloud-tasks: 1 commits (since 2025-11-10)
+
+Major product areas touched:
+  - Surfaces (1 files)
+  - Session Lifecycle (1 files)
+  - Agent Actions (1 files)
+
+Specific features touched (4 total, top 15):
+  - Cloud Tasks (2 files)
+  - Authentication & Identity (1 files)
+  - Custom Provider (1 files)
+  - Headless Exec Mode (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/cloud-tasks/src/lib.rs: # lib.rs – Cloud Tasks Command-Line Interface and Interactive UI
+
+This file is the main entry point for Codex's cloud task management system. It provides both command-line commands (exec, status, list, apply, diff) and an interactive terminal UI where users can browse, create, and apply code suggestions from the cloud backend.
+
+The file handles authentication, task listing and filtering by environment, viewing task details (prompts and diffs), previewing changes before applying them, and managing multiple attempt variants. It also includes a real-time text composer for submitting new tasks, environment detection to automatically select workspaces, and error handling with user-friendly messages throughout the workflow.
+  - codex-rs/cloud-tasks/src/util.rs: This file provides utility functions that support the cloud tasks feature by handling authentication, URL formatting, and display of information to users. It manages login credentials for ChatGPT requests, constructs properly formatted links to tasks, extracts account information from authentication tokens, and formats timestamps in a human-readable way for the interface.
+
+Sample commit messages:
+  - fix(cloud-tasks): respect cli_auth_credentials_store config (#5856)

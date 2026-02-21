@@ -1,0 +1,25 @@
+Name: Bernard Niset
+Total commits: 1
+First contribution: 2025-10-30T21:25:04+00:00
+Emails: bn3t@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .sbpl: 1 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-10-30)
+
+Specific features touched (5 total, top 15):
+  - macOS Seatbelt (1 files)
+  - Workspace-Write Sandbox (1 files)
+  - Read-Only Sandbox (1 files)
+  - Full-Access Mode (1 files)
+  - Shell Execution (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/tests/suite/seatbelt.rs: This file tests macOS security sandboxing features to ensure that file access restrictions are properly enforced when running code. It verifies that different security policies (read-only mode, restricted workspace access, and unrestricted access) correctly allow or block writes to files in different locations, including protecting Git repository metadata from accidental modification.
+
+Sample commit messages:
+  - fix: Update seatbelt policy for java on macOS (#3987)

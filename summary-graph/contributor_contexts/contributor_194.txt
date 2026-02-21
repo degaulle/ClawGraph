@@ -1,0 +1,21 @@
+Name: Curt
+Total commits: 1
+First contribution: 2025-10-29T04:06:39+00:00
+Emails: 38527447+cpjet64@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-rmcp-client: 1 commits (since 2025-10-29)
+
+Specific features touched (2 total, top 15):
+  - MCP Client (1 files)
+  - Custom Provider (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/rmcp-client/src/utils.rs: This file provides utility functions that help the Codex client connect to external services safely and reliably. It handles three main tasks: setting operation timeouts with clear error messages, preparing the right environment variables for launching external processes, and configuring HTTP headers (both hardcoded and from environment variables) for network requests. The file also maintains platform-specific lists of safe environment variables to pass through on Unix and Windows systems.
+
+Sample commit messages:
+  - fix(windows-path): preserve PATH order; include core env vars (#5579)

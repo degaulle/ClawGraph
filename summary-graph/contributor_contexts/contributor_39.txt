@@ -1,0 +1,15 @@
+Name: Jatan Loya
+Total commits: 1
+First contribution: 2025-04-17T14:12:39+00:00
+Emails: jatanloya@gmail.com
+Files authored: 5
+
+File type distribution:
+  - .yaml: 1 files
+  - .ipynb: 1 files
+  - .csv: 1 files
+  - .tsx: 1 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: typos in prompts and comments  (#195)

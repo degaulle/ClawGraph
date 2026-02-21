@@ -1,0 +1,188 @@
+Name: xl-openai
+Total commits: 33
+First contribution: 2025-12-03T23:12:46+00:00
+Emails: xl@openai.com
+Files authored: 143
+
+File type distribution:
+  - .rs: 95 files
+  - .ts: 17 files
+  - .json: 15 files
+  - .py: 7 files
+  - .md: 4 files
+  - .toml: 2 files
+  - .lock: 1 files
+  - .txt: 1 files
+  - .snap: 1 files
+
+Packages contributed to (12 total):
+  - codex-core: 27 commits (since 2025-12-03)
+  - codex-tui: 16 commits (since 2025-12-03)
+  - codex-app-server: 13 commits (since 2025-12-14)
+  - codex-app-server-protocol: 12 commits (since 2025-12-14)
+  - codex-protocol: 11 commits (since 2025-12-10)
+  - codex-exec: 4 commits (since 2025-12-10)
+  - codex-mcp-server: 4 commits (since 2025-12-10)
+  - core_test_support: 2 commits (since 2025-12-10)
+  - app_test_support: 1 commits (since 2026-02-09)
+  - codex-backend-client: 1 commits (since 2026-02-11)
+  - codex-backend-openapi-models: 1 commits (since 2026-02-11)
+  - codex-api: 1 commits (since 2026-02-11)
+
+Major product areas touched:
+  - Session Lifecycle (28 files)
+  - Agent Actions (16 files)
+  - Safety & Containment (15 files)
+  - Conversation (14 files)
+  - Autonomy & Approval (14 files)
+  - Project Context (13 files)
+  - Model & Reasoning (13 files)
+  - Extensibility (9 files)
+  - Surfaces (4 files)
+
+Specific features touched (88 total, top 15):
+  - Interactive TUI (21 files)
+  - Skills System (19 files)
+  - App Server Protocol (16 files)
+  - Turn Management (12 files)
+  - Configuration File (11 files)
+  - Authentication & Identity (10 files)
+  - Telemetry & Metrics (9 files)
+  - User Input Request (8 files)
+  - File Mention (6 files)
+  - Multimodal Input (5 files)
+  - MCP Client (5 files)
+  - Rollout Persistence (5 files)
+  - Agent Response Stream (4 files)
+  - User Prompt (4 files)
+  - Inline Approval Prompt (4 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/project_doc.rs: This file enables Codex to automatically discover and load project-level documentation to guide the AI model's behavior. It searches for `AGENTS.md` files starting from the current directory and walking up to the Git repository root, then combines them with any configured system instructions, JavaScript runtime guidance, and available skills into a single instruction set that shapes how the AI operates within that project.
+  - codex-rs/core/src/skills/render.rs: This file generates the documentation that teaches the AI assistant how to discover and use "skills"—reusable instruction sets stored as files in the codebase. It formats a readable guide that lists available skills, explains when to use them, and provides step-by-step rules for safely accessing and executing skill instructions without overloading the system with unnecessary file reads.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/app_backtrack.rs: # app_backtrack.rs
+
+This file implements Codex's "backtrack" feature, which lets users rewind conversations to an earlier point and try a different direction. When users press Esc, they can browse through past messages in an overlay, select one with arrow keys, and press Enter to roll back to that point—the agent then regenerates responses from there, and the UI updates to reflect the new state.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/command_popup.rs: This file powers the command discovery popup that appears when users type "/" in the message composer. It maintains a searchable list of both built-in slash commands (like `/init`, `/model`, `/clear`) and user-created custom prompts, filters them as the user types, handles keyboard navigation through the results, and renders the popup display with descriptions and visual highlighting.
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/bottom_pane/skill_popup.rs: This file implements a popup menu that appears when users type in Codex to autocomplete or insert skills and mentions (like commands, functions, or code snippets). It handles filtering the available options based on what the user has typed, lets users navigate up and down through the matches, and displays the selected item with a helpful hint about which keys to press to insert or close the menu.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+
+Sample commit messages:
+  - Reload cloud requirements after user login (#10725)
+  - Fix admin skills. (#8305)
+  - Support skills shortDescription. (#8278)
+  - Support SKILL.toml file. (#9125)
+  - Sync app-server requirements API with refreshed cloud loader (#10815)
+  - Add public skills + improve repo skill discovery and error UX (#8098)
+  - suppress popups while browsing input history (#8772)
+  - Add UI for skill enable/disable. (#9627)
+  - Use ConfigLayerStack for skills discovery. (#8497)
+  - Reintroduce feature flags for skills. (#8244)
+  - Reimplement skills loading using SkillsManager + skills/list op. (#7914)
+  - Support symlink for skills discovery. (#8801)
+  - fix: stop inheriting rate-limit limit_name (#11557)
+  - Keep skills feature flag default OFF for windows. (#8308)
+  - Support UserInput::Skill in V2 API. (#8864)
+  - Support admin scope skills. (#8296)
+  - Allow close skill popup with esc. (#9165)
+  - Also load skills from repo root. (#7645)
+  - feat: Support listing and selecting skills via $ or /skills (#7506)
+  - feat: extend skills/list to support additional roots. (#10835)

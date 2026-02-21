@@ -1,0 +1,42 @@
+Name: prateek-oai
+Total commits: 1
+First contribution: 2026-01-19T20:52:04+00:00
+Emails: prateek@openai.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2026-01-19)
+
+Major product areas touched:
+  - Conversation (1 files)
+  - Autonomy & Approval (1 files)
+  - Agent Actions (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (19 total, top 15):
+  - Interactive TUI (1 files)
+  - User Prompt (1 files)
+  - Slash Command (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Collaboration Mode (1 files)
+  - Inline Diff Display (1 files)
+  - External Editor (1 files)
+  - Prompt History (1 files)
+  - Suggest Mode (1 files)
+  - Auto-Edit Mode (1 files)
+  - Full-Auto Mode (1 files)
+  - Approval Request Flow (1 files)
+  - File Read (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+
+Sample commit messages:
+  - tui: avoid Esc interrupt when skill popup active (#9451)

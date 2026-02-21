@@ -1,0 +1,13 @@
+Name: Trevor Creech
+Total commits: 2
+First contribution: 2025-04-16T17:44:19+00:00
+Emails: tcreech@openai.com
+Files authored: 2
+
+File type distribution:
+  - .ts: 1 files
+  - .yml: 1 files
+
+Sample commit messages:
+  - update summary to auto (#1)
+  - Fix CLA link in workflow (#964)

@@ -1,0 +1,14 @@
+Name: John Gardner
+Total commits: 1
+First contribution: 2025-04-19T14:25:25+00:00
+Emails: john@ardea.io
+Files authored: 5
+
+File type distribution:
+  - .tsx: 2 files
+  - .unknown: 1 files
+  - .md: 1 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - feat: read approvalMode from config file (#298)

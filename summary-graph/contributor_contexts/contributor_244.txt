@@ -1,0 +1,35 @@
+Name: Yorling
+Total commits: 1
+First contribution: 2025-11-21T06:46:34+00:00
+Emails: shallowcloud@yeah.net
+Files authored: 3
+
+File type distribution:
+  - .rs: 3 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-21)
+
+Major product areas touched:
+  - Agent Actions (2 files)
+  - Model & Reasoning (2 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (9 total, top 15):
+  - Context Compaction (1 files)
+  - Thread Resume (1 files)
+  - Thread Fork (1 files)
+  - Rollout Persistence (1 files)
+  - Turn Management (1 files)
+  - Agent Response Stream (1 files)
+  - Structured Output (1 files)
+  - Telemetry & Metrics (1 files)
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/tests/suite/compact_resume_fork.rs: This file tests that conversation history is correctly maintained when users compact, resume, and fork AI conversations. It simulates real scenarios—like condensing a long chat, picking up where you left off, or branching a conversation at an earlier point—and verifies that what the AI model sees matches what's expected at each step.
+
+Sample commit messages:
+  - fix: read `max_output_tokens` param from config (#4139)

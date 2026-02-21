@@ -1,0 +1,24 @@
+Name: Andrew Dirksen
+Total commits: 1
+First contribution: 2025-11-05T01:54:46+00:00
+Emails: andrew@dirksen.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-05)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Specific features touched (2 total, top 15):
+  - Shell Execution (1 files)
+  - Network Restriction (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/spawn.rs: This file handles launching subprocesses that Codex spawns when executing user commands, with controls for security sandboxing and network access. It sets up environment variables and process isolation rules to ensure spawned processes respect the configured security policies—for example, blocking network access or disconnecting from the terminal depending on the task requirements.
+
+Sample commit messages:
+  - allow codex to be run from pid 1 (#4200)

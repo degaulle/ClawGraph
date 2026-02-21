@@ -1,4 +1,4 @@
-# Knowledge Graph — Data Model
+# ClawGraph — Data Model
 
 Output file: `output/knowledge_graph.json`
 

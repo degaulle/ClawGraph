@@ -1,0 +1,11 @@
+Name: Michael
+Total commits: 1
+First contribution: 2025-04-18T00:00:30+00:00
+Emails: 50274907+saleweaver@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .ts: 2 files
+
+Sample commit messages:
+  - chore: consolidate patch prefix constants in apply‑patch.ts (#274)

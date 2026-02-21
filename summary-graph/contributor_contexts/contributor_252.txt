@@ -1,0 +1,11 @@
+Name: Albert O'Shea
+Total commits: 1
+First contribution: 2025-12-01T18:45:31+00:00
+Emails: albertoshea2@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .nix: 1 files
+
+Sample commit messages:
+  - fix: nix build missing rmcp output hash (#7436)

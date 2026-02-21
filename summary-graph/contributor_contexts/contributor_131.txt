@@ -1,0 +1,26 @@
+Name: amjith
+Total commits: 1
+First contribution: 2025-08-13T17:37:39+00:00
+Emails: amjith@openai.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-08-13)
+
+Specific features touched (5 total, top 15):
+  - User Prompt (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/textarea.rs: # TextArea Summary
+
+This file implements a multi-line text editor component that powers user input fields in the product. It handles typing, editing (cut/copy/paste), cursor movement, text wrapping, and display — with special support for "atomic elements" (like command placeholders) that users can't partially edit or delete.
+
+Sample commit messages:
+  - feat(tui): add ctrl-b and ctrl-f shortcuts (#2260)

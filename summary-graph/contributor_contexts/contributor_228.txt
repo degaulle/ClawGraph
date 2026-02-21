@@ -1,0 +1,46 @@
+Name: Vinicius da Motta
+Total commits: 1
+First contribution: 2025-11-14T23:23:35+00:00
+Emails: viniciusmotta8@gmail.com
+Files authored: 5
+
+File type distribution:
+  - .rs: 5 files
+
+Packages contributed to (3 total):
+  - codex-core: 1 commits (since 2025-11-14)
+  - codex-protocol: 1 commits (since 2025-11-14)
+  - codex-tui: 1 commits (since 2025-11-14)
+
+Major product areas touched:
+  - Safety & Containment (2 files)
+  - Model & Reasoning (2 files)
+  - Project Context (1 files)
+  - Autonomy & Approval (1 files)
+  - Extensibility (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (9 total, top 15):
+  - Configuration File (4 files)
+  - Directory Trust (2 files)
+  - Onboarding Flow (2 files)
+  - MCP Client (1 files)
+  - Interactive TUI (1 files)
+  - Authentication & Identity (1 files)
+  - Collaboration Mode (1 files)
+  - Personality Style (1 files)
+  - Reasoning Effort (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/config/edit.rs: This file handles saving configuration changes to Codex's settings file. It provides a system for batching multiple configuration updates—like changing the AI model, updating server settings, or acknowledging user warnings—and writing them to disk atomically while preserving comments and formatting. The file offers both synchronous and asynchronous APIs, supports profile-scoped settings, and intelligently merges changes to avoid overwriting unrelated configuration data.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/protocol/src/config_types.rs: This file defines the configuration options and settings that users can customize when working with Codex, including choices like which AI model to use, how detailed the AI's reasoning should be, what level of access sandbox environments have, and which collaboration mode (Plan or Default) to start in. It essentially provides all the knobs and switches that control how Codex behaves.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/onboarding/trust_directory.rs: This file implements the first-time setup screen that asks users whether they trust the directory they're working in. When users select "Yes," it records that directory (or its Git repository root) as trusted; if they select "No," the application exits. The screen handles keyboard navigation and displays any errors that occur when saving the trust decision.
+
+Sample commit messages:
+  - Handle "Don't Trust" directory selection in onboarding (#4941)

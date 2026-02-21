@@ -1,0 +1,13 @@
+Name: kchro3
+Total commits: 1
+First contribution: 2025-04-17T23:19:26+00:00
+Emails: 62481661+kchro3@users.noreply.github.com
+Files authored: 11
+
+File type distribution:
+  - .ts: 7 files
+  - .tsx: 3 files
+  - .md: 1 files
+
+Sample commit messages:
+  - feat: add notifications for MacOS using Applescript (#160)

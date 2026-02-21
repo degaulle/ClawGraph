@@ -1,0 +1,34 @@
+Name: LIHUA
+Total commits: 1
+First contribution: 2025-11-20T19:04:11+00:00
+Emails: 1017343802@qq.com
+Files authored: 8
+
+File type distribution:
+  - .rs: 5 files
+  - .toml: 2 files
+  - .lock: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-20)
+
+Major product areas touched:
+  - Safety & Containment (2 files)
+  - Session Lifecycle (2 files)
+  - Agent Actions (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+
+Specific features touched (1 total, top 15):
+  - Shell Execution (3 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/exec.rs: This file handles executing shell commands safely within sandboxed environments. It manages running user-provided commands (like when a code assistant executes code), capturing their output, enforcing timeouts, and detecting when the sandbox has blocked the command from doing something. The file also intelligently truncates large output streams and can stream live command output back to clients as it's generated.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/text_encoding.rs: This file handles converting text output from shell commands into readable text, even when that output uses legacy character encodings from older operating systems. When developers run commands through VS Code on Windows, they often get output encoded in formats like Windows-1251 (Cyrillic) or CP866 (Russian DOS), which can appear as garbled characters; this file automatically detects the correct encoding and converts it to standard Unicode text so users see the right characters instead of gibberish. It includes special logic to handle cases where similar byte values represent different characters in different encodings (like smart quotes in Windows-1252 versus Cyrillic letters in CP866), choosing the most likely interpretation based on context.
+  - codex-rs/core/tests/suite/mod.rs: This file serves as a central hub that organizes and runs all of Codex's integration tests—which verify that different features work correctly end-to-end. It also sets up a temporary test environment so that tests can safely simulate how Codex behaves without affecting the developer's actual system files.
+  - codex-rs/core/tests/suite/text_encoding_fix.rs: This file tests Codex's ability to correctly interpret text output from shell commands on Windows, which often arrives in legacy character encodings (like Cyrillic or Latin-1) rather than modern UTF-8. It verifies that the system can automatically detect and convert these older encodings into readable text, so users see properly formatted output instead of garbled characters or question marks.
+
+Sample commit messages:
+  - Fix: Improve text encoding for shell output in VSCode preview (#6178) (#6182)

@@ -1,0 +1,101 @@
+Name: Kazuhiro Sera
+Total commits: 5
+First contribution: 2025-08-14T03:08:35+00:00
+Emails: seratch@openai.com
+Files authored: 6
+
+File type distribution:
+  - .rs: 4 files
+  - .yml: 1 files
+  - .md: 1 files
+
+Packages contributed to (2 total):
+  - codex-tui: 2 commits (since 2025-08-18)
+  - codex-core: 1 commits (since 2025-08-15)
+
+Major product areas touched:
+  - Agent Actions (2 files)
+  - Model & Reasoning (2 files)
+  - Safety & Containment (2 files)
+  - Conversation (1 files)
+  - Autonomy & Approval (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+  - Surfaces (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (88 total, top 15):
+  - Structured Output (2 files)
+  - User Prompt (2 files)
+  - Multimodal Input (2 files)
+  - File Mention (2 files)
+  - Inline Approval Prompt (2 files)
+  - Interactive TUI (2 files)
+  - MCP Tool Call (2 files)
+  - Custom Provider (2 files)
+  - MCP Client (2 files)
+  - Configuration File (2 files)
+  - Agent Response Stream (1 files)
+  - Slash Command (1 files)
+  - Collaboration Mode (1 files)
+  - Personality Style (1 files)
+  - Inline Diff Display (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/tui/src/bottom_pane/textarea.rs: # TextArea Summary
+
+This file implements a multi-line text editor component that powers user input fields in the product. It handles typing, editing (cut/copy/paste), cursor movement, text wrapping, and display — with special support for "atomic elements" (like command placeholders) that users can't partially edit or delete.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+
+Sample commit messages:
+  - Fix #2429 Tweak the cursor position after tab completion (#2442)
+  - Use enhancement tag for feature requests (#2282)
+  - Remove a broken link to prompting_guide.md in docs/getting-started.md (#2858)
+  - Fix #2391 Add Ctrl+H as backspace keyboard shortcut (#2412)
+  - Fix #2296 Add "minimal" reasoning effort for GPT 5 models (#2326)

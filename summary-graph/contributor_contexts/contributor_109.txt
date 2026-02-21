@@ -1,0 +1,12 @@
+Name: Eric Wright
+Total commits: 1
+First contribution: 2025-06-23T01:01:13+00:00
+Emails: Eric.Wright@microsoft.com
+Files authored: 4
+
+File type distribution:
+  - .ts: 3 files
+  - .md: 1 files
+
+Sample commit messages:
+  - add: responses api support for azure (#1321)

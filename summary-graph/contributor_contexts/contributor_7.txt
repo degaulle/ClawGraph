@@ -1,0 +1,24 @@
+Name: Jon Church
+Total commits: 9
+First contribution: 2025-04-16T18:09:05+00:00
+Emails: me@jonchurch.com
+Files authored: 8
+
+File type distribution:
+  - .json: 2 files
+  - .ts: 2 files
+  - .tsx: 1 files
+  - .md: 1 files
+  - .yaml: 1 files
+  - .mjs: 1 files
+
+Sample commit messages:
+  - fix: silence deprecation warnings without NODE_OPTIONS (#80)
+  - fix: canonicalize the writeable paths used in seatbelt policy (#275)
+  - chore(build): cleanup dist before build (#477)
+  - fix: update regex to better match the retry error messages (#266)
+  - chore: drop src from publish (#474)
+  - Revert "fix: canonicalize the writeable paths used in seatbelt policy… (#370)
+  - (cleanup) remove unused express dep (#20)
+  - chore: update lockfile (#379)
+  - fix: npm run format:fix in root (#268)

@@ -1,0 +1,20 @@
+Name: Axojhf
+Total commits: 1
+First contribution: 2025-10-29T04:29:16+00:00
+Emails: 20625305+axojhf@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-10-29)
+
+Specific features touched (1 total, top 15):
+  - Shell Execution (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/shell.rs: This file detects and configures the user's command-line shell (like Bash, Zsh, or PowerShell) so Codex can execute commands in the appropriate environment. It identifies which shell is installed, locates its file path, and provides the correct syntax for running commands across different operating systems and shell types.
+
+Sample commit messages:
+  - Fix bash detection failure in VS Code Codex extension on Windows under certain conditions (#3421)

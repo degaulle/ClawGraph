@@ -1,0 +1,23 @@
+Name: Tiffany Citra
+Total commits: 2
+First contribution: 2026-01-20T18:55:01+00:00
+Emails: tiffanycitra95@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .lock: 1 files
+  - .toml: 1 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-utils-absolute-path: 2 commits (since 2026-01-20)
+
+Specific features touched (1 total, top 15):
+  - Working Directory Awareness (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/utils/absolute-path/src/lib.rs: This file provides a utility for handling file paths in a consistent, normalized way throughout the application. It ensures that paths are always converted to absolute paths (from the root of the filesystem) and handles user-friendly shortcuts like `~` for home directories, so the rest of the codebase can work with paths reliably without worrying about whether they're relative or absolute.
+
+Sample commit messages:
+  - fix: `writable_roots` doesn't recognize home directory symbol in non-windows OS (#9193)
+  - fix: Fix tilde expansion to avoid absolute-path escape (#9621)

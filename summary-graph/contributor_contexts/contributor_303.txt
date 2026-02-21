@@ -1,0 +1,24 @@
+Name: Felipe Petroski Such
+Total commits: 1
+First contribution: 2026-01-08T19:31:20+00:00
+Emails: felipe@openai.com
+Files authored: 6
+
+File type distribution:
+  - .snap: 4 files
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2026-01-08)
+
+Specific features touched (2 total, top 15):
+  - Interactive TUI (1 files)
+  - Collaboration Mode (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/footer.rs: This file renders the footer bar at the bottom of the chat interface, displaying helpful hints, keyboard shortcuts, and context information to guide users on what they can do next.
+
+The footer adapts its content based on the current state (whether the user is composing a message, a task is running, etc.) and intelligently collapses hints to fit narrower terminal widths—prioritizing the most important information like queue notifications over less critical hints like "press ? for shortcuts." It also shows transient reminders like "press Ctrl+C again to quit" and handles special modes like collaboration mode labels, context window usage, and custom status lines.
+
+Sample commit messages:
+  - add tooltip hint for shell commands (!) (#8926)

@@ -1,0 +1,22 @@
+Name: Enrique Moreno Tent
+Total commits: 1
+First contribution: 2025-09-05T22:06:36+00:00
+Emails: enriquemorenotent@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-09-05)
+
+Specific features touched (3 total, top 15):
+  - Interactive TUI (1 files)
+  - Session Interrupt (1 files)
+  - Turn Management (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/status_indicator_widget.rs: This file displays a live progress indicator that appears above the composer when the AI agent is working on a task. It shows an animated spinner, elapsed time, an option to interrupt the task (via Esc key), and optional contextual details like what process is running in the background — all kept on a single line to avoid visual layout shifts in the interface.
+
+Sample commit messages:
+  - feat(tui): show minutes/hours in thinking timer (#3220)

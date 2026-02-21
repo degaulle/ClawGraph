@@ -1,0 +1,26 @@
+Name: Thomas Stokes
+Total commits: 1
+First contribution: 2025-11-01T16:33:13+00:00
+Emails: git@tombl.dev
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-11-01)
+
+Major product areas touched:
+  - Model & Reasoning (1 files)
+  - Session Lifecycle (1 files)
+  - Agent Actions (1 files)
+
+Specific features touched (2 total, top 15):
+  - Telemetry & Metrics (1 files)
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+
+Sample commit messages:
+  - Parse the Azure OpenAI rate limit message (#5956)

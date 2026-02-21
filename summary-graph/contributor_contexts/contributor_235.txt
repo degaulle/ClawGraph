@@ -1,0 +1,26 @@
+Name: cassirer-openai
+Total commits: 2
+First contribution: 2025-11-18T01:16:11+00:00
+Emails: cassirer@openai.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (2 total):
+  - codex-core: 1 commits (since 2025-12-09)
+  - codex-protocol: 1 commits (since 2025-11-18)
+
+Major product areas touched:
+  - Agent Actions (1 files)
+  - Conversation (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+  - Safety & Containment (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/protocol/src/models.rs: This file defines the data structures that represent messages, tool calls, and responses flowing between the AI model and the user during a coding session. It handles how developer instructions and permissions (like sandbox settings and approval policies) are communicated to the model, manages structured content like text and images in conversations, and provides formatting for shell commands, web searches, and function call outputs. The file essentially serves as the "language" for how Codex describes what the AI should do and what it has produced.
+
+Sample commit messages:
+  - Use codex-max prompt/tools for experimental models. (#7765)
+  - Demote function call payload log to debug to avoid noisy error-level stderr (#6808)

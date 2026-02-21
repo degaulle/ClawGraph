@@ -1,0 +1,11 @@
+Name: wizard
+Total commits: 1
+First contribution: 2025-11-05T22:52:51+00:00
+Emails: 112275929+famouswizard@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .py: 1 files
+
+Sample commit messages:
+  - fix: ToC so it doesn’t include itself or duplicate the end marker (#4388)

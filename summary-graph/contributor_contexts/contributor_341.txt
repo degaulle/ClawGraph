@@ -1,0 +1,12 @@
+Name: douglaz
+Total commits: 1
+First contribution: 2026-01-31T19:34:53+00:00
+Emails: allandouglas@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .nix: 2 files
+  - .lock: 1 files
+
+Sample commit messages:
+  - fix(nix): update flake for newer Rust toolchain requirements (#10302)

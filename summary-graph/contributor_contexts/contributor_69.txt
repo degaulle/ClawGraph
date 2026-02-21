@@ -1,0 +1,13 @@
+Name: Aiden Cline
+Total commits: 1
+First contribution: 2025-04-21T05:34:27+00:00
+Emails: 63023139+rekram1-node@users.noreply.github.com
+Files authored: 8
+
+File type distribution:
+  - .tsx: 5 files
+  - .ts: 2 files
+  - .unknown: 1 files
+
+Sample commit messages:
+  - feat: tab completions for file paths (#279)

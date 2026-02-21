@@ -1,0 +1,13 @@
+Name: Kevin Alwell
+Total commits: 2
+First contribution: 2025-04-29T17:10:16+00:00
+Emails: alwell-kevin@github.com
+Files authored: 5
+
+File type distribution:
+  - .ts: 4 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - Fixes issue #726 by adding config to configToSave object (#728)
+  - fix: insufficient quota message (#758)

@@ -1,0 +1,13 @@
+Name: Sergio
+Total commits: 2
+First contribution: 2025-04-17T23:34:35+00:00
+Emails: 60497216+sergioxro@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .tsx: 1 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: raw-exec-process-group.test improve reliability and error handling (#280)
+  - fix: duplicated message on model change (#276)

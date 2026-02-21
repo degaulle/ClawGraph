@@ -1,0 +1,15 @@
+Name: Mehmet Vecdi Gönül
+Total commits: 3
+First contribution: 2025-04-17T00:07:44+00:00
+Emails: 131407117+mvecdigonul@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .md: 1 files
+  - .ts: 1 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: handle invalid commands (#304)
+  - bugfix: additional error handling logic for model errors that occur in stream (#203)
+  - minor change in description of Build from source in README.md (#149)

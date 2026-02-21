@@ -1,0 +1,11 @@
+Name: Tony Dong
+Total commits: 1
+First contribution: 2025-10-31T23:41:05+00:00
+Emails: tonyd3@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fixing small typo in docs (#5659)

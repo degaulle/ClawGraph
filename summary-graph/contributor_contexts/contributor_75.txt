@@ -1,0 +1,11 @@
+Name: Naveen Kumar Battula
+Total commits: 1
+First contribution: 2025-04-22T16:55:08+00:00
+Emails: naveenkb1999@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: show actionable errors when api keys are missing (#523)

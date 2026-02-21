@@ -1,0 +1,22 @@
+Name: Alpha Diop
+Total commits: 5
+First contribution: 2025-04-16T23:25:08+00:00
+Emails: 90140491+alphajoop@users.noreply.github.com
+Files authored: 25
+
+File type distribution:
+  - .ts: 6 files
+  - .unknown: 6 files
+  - .json: 5 files
+  - .md: 3 files
+  - .yaml: 2 files
+  - .sh: 1 files
+  - .yml: 1 files
+  - .mjs: 1 files
+
+Sample commit messages:
+  - fix: improve Windows compatibility for CLI commands and sandbox (#261)
+  - Feat/add husky (#223)
+  - fix(text-buffer): correct word deletion logic for trailing spaces (Ctrl+Backspace)    (#131)
+  - fix: configure husky and lint-staged for pnpm monorepo (#384)
+  - chore: migrate to pnpm for improved monorepo management (#287)

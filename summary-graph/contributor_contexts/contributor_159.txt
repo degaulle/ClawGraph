@@ -1,0 +1,120 @@
+Name: jif-oai
+Total commits: 451
+First contribution: 2025-09-04T00:05:03+00:00
+Emails: jif@openai.com
+Files authored: 664
+
+File type distribution:
+  - .rs: 491 files
+  - .toml: 45 files
+  - .json: 31 files
+  - .md: 30 files
+  - .snap: 23 files
+  - .ts: 14 files
+  - .sql: 11 files
+  - .bazel: 4 files
+  - .yml: 3 files
+  - .unknown: 2 files
+
+Packages contributed to (45 total):
+  - codex-core: 337 commits (since 2025-09-05)
+  - codex-tui: 91 commits (since 2025-09-09)
+  - codex-app-server: 43 commits (since 2025-09-04)
+  - codex-protocol: 42 commits (since 2025-09-09)
+  - codex-state: 41 commits (since 2026-01-28)
+  - codex-exec: 31 commits (since 2025-09-09)
+  - codex-app-server-protocol: 26 commits (since 2025-09-04)
+  - codex-mcp-server: 17 commits (since 2025-09-09)
+  - codex-otel: 15 commits (since 2025-10-03)
+  - codex-api: 14 commits (since 2025-11-25)
+  - core_test_support: 13 commits (since 2025-09-22)
+  - app_test_support: 12 commits (since 2025-10-01)
+  - codex-cli: 12 commits (since 2025-09-22)
+  - codex-git: 12 commits (since 2025-09-23)
+  - codex-utils-pty: 8 commits (since 2025-10-20)
+
+Major product areas touched:
+  - Session Lifecycle (103 files)
+  - Agent Actions (77 files)
+  - Safety & Containment (54 files)
+  - Autonomy & Approval (34 files)
+  - Model & Reasoning (30 files)
+  - Conversation (19 files)
+  - Project Context (16 files)
+  - Extensibility (12 files)
+  - Surfaces (5 files)
+
+Specific features touched (88 total, top 15):
+  - Telemetry & Metrics (60 files)
+  - App Server Protocol (58 files)
+  - Turn Management (56 files)
+  - Shell Execution (54 files)
+  - Rollout Persistence (52 files)
+  - Configuration File (38 files)
+  - Interactive TUI (36 files)
+  - Thread Resume (34 files)
+  - Authentication & Identity (24 files)
+  - Agent Response Stream (22 files)
+  - Context Compaction (21 files)
+  - Approval Request Flow (20 files)
+  - MCP Tool Call (19 files)
+  - File Patch (18 files)
+  - Custom Provider (18 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/core/src/shell.rs: This file detects and configures the user's command-line shell (like Bash, Zsh, or PowerShell) so Codex can execute commands in the appropriate environment. It identifies which shell is installed, locates its file path, and provides the correct syntax for running commands across different operating systems and shell types.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/tests/suite/prompt_caching.rs: # Prompt Caching Test Suite
+
+This file tests how Codex manages conversation history and reusable context when communicating with AI models. It verifies that instructions, environment information, and conversation prefixes are cached correctly across multiple user turns to improve efficiency and consistency, while properly updating when settings change.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/truncate.rs: This file manages text truncation for AI model outputs when they exceed size limits. It intelligently shortens long text by preserving the beginning and end while removing the middle, then inserts a marker showing what was cut. It supports truncation based on either character/byte count or token count (an approximation of how much context the AI model uses), and handles special cases like function outputs that contain mixed text and images.
+  - codex-rs/core/src/unified_exec/errors.rs: This file defines error messages that occur when Codex attempts to run code or commands in a sandboxed execution environment. It covers issues like failing to start a process, losing the input connection, commands being blocked by security policies, and other execution failures—helping the system communicate what went wrong when code execution requests don't succeed.
+  - codex-rs/core/src/unified_exec/mod.rs: This file manages interactive command execution with built-in safeguards—it orchestrates running commands in isolated environments, handles user approvals, buffers output, and lets processes persist across multiple requests so users can maintain stateful shell sessions.
+  - codex-rs/protocol/src/models.rs: This file defines the data structures that represent messages, tool calls, and responses flowing between the AI model and the user during a coding session. It handles how developer instructions and permissions (like sandbox settings and approval policies) are communicated to the model, manages structured content like text and images in conversations, and provides formatting for shell commands, web searches, and function call outputs. The file essentially serves as the "language" for how Codex describes what the AI should do and what it has produced.
+
+Sample commit messages:
+  - feat: indentation mode for read_file (#4887)
+  - chore: align unified_exec (#5442)
+  - feat: codex exec mapping of collab tools (#9817)
+  - nit: fix db with multiple metadata lines (#10237)
+  - feat: unified exec footer (#8067)
+  - feat: mem v2 - PR2 (#11365)
+  - chore: add small debug client (#8894)
+  - Update explorer role default model (#10748)
+  - chore: clean consts (#11590)
+  - test: undo (#6034)
+  - Enable ghost_commit feature by default (#6041)
+  - feat: add `--experimental` to `generate-ts` (#10402)
+  - feat: add agent roles to collab tools (#9275)
+  - feat: deprecation warning (#5825)
+  - description in role type (#9993)
+  - chore: fix beta VS experimental (#9496)
+  - feat: mem v2 - PR1 (#11364)
+  - chore: update interrupt message (#9925)
+  - fix: make sure the shell exists (#10222)
+  - nit: prevent race in event rendering (#8181)

@@ -1,0 +1,11 @@
+Name: Pulipaka Sai Krishna
+Total commits: 1
+First contribution: 2025-04-25T16:38:05+00:00
+Emails: 31779125+skpulipaka26@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: model selection (#643)

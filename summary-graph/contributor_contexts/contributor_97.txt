@@ -1,0 +1,12 @@
+Name: Anil Karaka
+Total commits: 1
+First contribution: 2025-05-05T17:26:55+00:00
+Emails: syllogismos@users.noreply.github.com
+Files authored: 11
+
+File type distribution:
+  - .ts: 10 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: increase output limits for truncating collector (#575)

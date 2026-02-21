@@ -1,0 +1,26 @@
+Name: Abdelkader Boudih
+Total commits: 1
+First contribution: 2026-01-06T15:47:29+00:00
+Emails: terminale@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-mcp-server: 1 commits (since 2026-01-06)
+
+Major product areas touched:
+  - Model & Reasoning (1 files)
+  - Autonomy & Approval (1 files)
+  - Safety & Containment (1 files)
+
+Specific features touched (2 total, top 15):
+  - MCP Tool Call (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/mcp-server/src/codex_tool_config.rs: This file defines the configuration and interface for how external systems can interact with Codex. It specifies what parameters users can pass when starting a new Codex session (like the initial prompt, which AI model to use, approval settings for running commands, and sandbox restrictions) and how they can continue an existing conversation. It also generates the formal specifications that external tools need to understand in order to call Codex correctly.
+
+Sample commit messages:
+  - fix: update model examples to gpt-5.2 (#8566)

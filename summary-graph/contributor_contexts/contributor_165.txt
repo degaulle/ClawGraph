@@ -1,0 +1,11 @@
+Name: Robert
+Total commits: 1
+First contribution: 2025-09-08T22:58:25+00:00
+Emails: 766670+rben01@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Improve explanation of how the shell handles quotes in config.md (#3169)

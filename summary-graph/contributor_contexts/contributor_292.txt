@@ -1,0 +1,25 @@
+Name: RQfreefly
+Total commits: 1
+First contribution: 2025-12-19T20:50:55+00:00
+Emails: 53940557+RQfreefly@users.noreply.github.com
+Files authored: 4
+
+File type distribution:
+  - .rs: 2 files
+  - .lock: 1 files
+  - .toml: 1 files
+
+Packages contributed to (2 total):
+  - codex-file-search: 1 commits (since 2025-12-19)
+  - codex-app-server: 1 commits (since 2025-12-19)
+
+Specific features touched (2 total, top 15):
+  - Codebase Search (2 files)
+  - App Server Protocol (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/fuzzy_file_search.rs: This file powers Codex's fuzzy file search feature, which lets users quickly find files by typing partial names or patterns. It supports two modes: a one-time search that returns all matching files at once, and a persistent search session that continuously updates results as the user refines their query, sending live notifications back to the editor.
+  - codex-rs/file-search/src/lib.rs: This file implements a fast, fuzzy file search engine that scans directories for files matching a search query. It powers quick-open and file-finding features by running queries in the background while continuously scanning the file system, returning ranked results that update in real-time as the user types. The search respects `.gitignore` rules by default, supports excluding specific patterns, and can optionally highlight which characters in filenames matched the query.
+
+Sample commit messages:
+  - feat: move file name derivation into codex-file-search (#8334)

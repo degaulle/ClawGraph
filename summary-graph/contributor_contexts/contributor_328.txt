@@ -1,0 +1,140 @@
+Name: Charley Cunningham
+Total commits: 34
+First contribution: 2026-01-24T13:24:36+00:00
+Emails: ccunningham@openai.com
+Files authored: 171
+
+File type distribution:
+  - .rs: 82 files
+  - .snap: 67 files
+  - .md: 10 files
+  - .json: 9 files
+  - .ts: 2 files
+  - .unknown: 1 files
+
+Packages contributed to (9 total):
+  - codex-tui: 23 commits (since 2026-01-24)
+  - codex-core: 13 commits (since 2026-01-24)
+  - codex-app-server: 6 commits (since 2026-01-26)
+  - codex-protocol: 5 commits (since 2026-01-30)
+  - codex-app-server-protocol: 4 commits (since 2026-01-26)
+  - app_test_support: 2 commits (since 2026-01-26)
+  - codex-exec: 2 commits (since 2026-01-30)
+  - codex-debug-client: 1 commits (since 2026-01-30)
+  - codex-mcp-server: 1 commits (since 2026-01-30)
+
+Major product areas touched:
+  - Session Lifecycle (28 files)
+  - Agent Actions (21 files)
+  - Conversation (17 files)
+  - Model & Reasoning (12 files)
+  - Safety & Containment (11 files)
+  - Autonomy & Approval (10 files)
+  - Project Context (10 files)
+  - Extensibility (7 files)
+  - Surfaces (3 files)
+
+Specific features touched (88 total, top 15):
+  - Turn Management (22 files)
+  - Interactive TUI (22 files)
+  - App Server Protocol (14 files)
+  - Rollout Persistence (14 files)
+  - Collaboration Mode (13 files)
+  - Thread Resume (13 files)
+  - Context Compaction (9 files)
+  - User Input Request (9 files)
+  - Agent Response Stream (7 files)
+  - Planning Tool (6 files)
+  - Thread Creation (6 files)
+  - Configuration File (6 files)
+  - Inline Diff Display (5 files)
+  - Inline Approval Prompt (5 files)
+  - Slash Command (5 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/textarea.rs: # TextArea Summary
+
+This file implements a multi-line text editor component that powers user input fields in the product. It handles typing, editing (cut/copy/paste), cursor movement, text wrapping, and display — with special support for "atomic elements" (like command placeholders) that users can't partially edit or delete.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/cwd_prompt.rs: This file implements a dialog that lets users choose which working directory to use when resuming or forking a coding session. When the user opens a session, they're prompted to pick between the directory where the session was last active or their current system directory, and their choice is captured and returned to the rest of the application.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/app-server-protocol/src/protocol/common.rs: This file defines the communication protocol between the Codex server and its clients (like the VS Code extension). It establishes all the requests, responses, and notifications that can flow in both directions—for example, when a client asks the server to start a thread or execute a command, or when the server asks the client to approve a file change. The file also generates TypeScript definitions and JSON schemas so that clients and the server can understand each other's messages in a consistent format.
+  - codex-rs/app-server-protocol/src/protocol/v2.rs: # Summary
+
+This file defines the API contract for Codex's version 2 protocol, translating between internal data structures and the external API format that clients use. It establishes what information flows between the app and clients (like the VS Code extension), covering everything from user authentication and configuration to thread management, conversation turns, and real-time progress notifications. The file essentially acts as a gatekeeper, ensuring clients see a consistent, well-documented interface while the internal system can evolve independently.
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/app-server/tests/common/mcp_process.rs: This file provides test infrastructure for communicating with Codex's application server during automated testing. It creates and manages a separate server process that tests can send requests to and receive responses from, simulating real client-server interactions. The file handles the low-level messaging protocol—sending commands like "create a conversation" or "log in," reading back responses, and buffering messages that arrive out of order—so tests can focus on validating the server's behavior without worrying about communication plumbing.
+  - codex-rs/app-server/tests/suite/v2/mod.rs: This file organizes and groups the automated tests for version 2 of the API, covering core features like user accounts, conversations (threads), turns, real-time connections, and various configuration settings. It serves as the test suite entry point that ensures the API works correctly across all major product functionality.
+
+Sample commit messages:
+  - core: account for all post-response items in auto-compact token checks (#11132)
+  - Fix plan implementation prompt reappearing after /agent thread switch (#10447)
+  - tui: add feature-gated /plan slash command to switch to Plan mode (#10103)
+  - core: refresh developer instructions after compaction replacement history (#10574)
+  - Ask for cwd choice when resuming session from different cwd (#9731)
+  - Ask user question UI footer improvements (#9949)
+  - Fix deploy (#10251)
+  - tui: preserve remote image attachments across resume/backtrack (#10590)
+  - Prevent backspace from removing a text element when the cursor is at the element’s left edge (#9630)
+  - Tui: hide Code mode footer label (#10063)
+  - Nicer highlighting of slash commands, /plan accepts prompt args and pasted images (#10269)
+  - Improve plan mode interaction rules (#10329)
+  - Sync collaboration mode naming across Default prompt, tools, and TUI (#10666)
+  - Reject request_user_input outside Plan/Pair (#9955)
+  - TUI footer: right-align context and degrade shortcut summary + mode cleanly (#9944)
+  - Add thread/unarchive to restore archived rollouts (#9843)
+  - Make plan highlight use popup grey background (#10253)
+  - tui: queue non-pending rollback trims in app-event order (#11373)
+  - TUI: Render request_user_input results in history and simplify interrupt handling (#10064)
+  - core: add focused diagnostics for remote compaction overflows (#11133)

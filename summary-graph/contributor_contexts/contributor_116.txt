@@ -1,0 +1,150 @@
+Name: aibrahim-oai
+Total commits: 47
+First contribution: 2025-07-12T22:32:00+00:00
+Emails: aibrahim@openai.com
+Files authored: 83
+
+File type distribution:
+  - .rs: 64 files
+  - .snap: 8 files
+  - .toml: 4 files
+  - .md: 3 files
+  - .json: 2 files
+  - .lock: 1 files
+  - .sse: 1 files
+
+Packages contributed to (11 total):
+  - codex-tui: 26 commits (since 2025-07-12)
+  - codex-core: 16 commits (since 2025-07-12)
+  - codex-mcp-server: 14 commits (since 2025-07-16)
+  - codex-protocol: 8 commits (since 2025-07-16)
+  - codex-exec: 5 commits (since 2025-07-16)
+  - mcp_test_support: 5 commits (since 2025-07-22)
+  - codex-app-server: 3 commits (since 2025-07-22)
+  - core_test_support: 2 commits (since 2025-07-12)
+  - codex-linux-sandbox: 1 commits (since 2025-08-01)
+  - codex-login: 1 commits (since 2025-08-09)
+  - codex-utils-cli: 1 commits (since 2025-07-19)
+
+Major product areas touched:
+  - Session Lifecycle (19 files)
+  - Agent Actions (16 files)
+  - Safety & Containment (11 files)
+  - Model & Reasoning (10 files)
+  - Conversation (9 files)
+  - Autonomy & Approval (9 files)
+  - Project Context (6 files)
+  - Extensibility (4 files)
+  - Surfaces (2 files)
+
+Specific features touched (88 total, top 15):
+  - Interactive TUI (12 files)
+  - Turn Management (12 files)
+  - Configuration File (10 files)
+  - MCP Server (7 files)
+  - App Server Protocol (7 files)
+  - Authentication & Identity (6 files)
+  - Agent Response Stream (5 files)
+  - Headless Exec Mode (5 files)
+  - MCP Client (5 files)
+  - Shell Execution (4 files)
+  - Telemetry & Metrics (4 files)
+  - Session Interrupt (4 files)
+  - MCP Tool Call (4 files)
+  - Thread Resume (4 files)
+  - Rollout Persistence (4 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/app_event.rs: This file defines the internal communication system that lets different parts of the terminal interface talk to the main application loop—it's like a message board where UI components post requests (like "open the model picker" or "save this setting") rather than directly manipulating the app. It handles everything from user actions like switching threads or updating preferences, to background operations like file search results and rate limit checks, to special Windows sandbox setup flows, ensuring the UI stays responsive and loosely coupled from the core logic.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/tests/suite/stream_no_completed.rs: This file tests that Codex properly handles interrupted data streams from the AI model provider. When the server stops sending data mid-response (before completing), the system should automatically retry the request and eventually succeed—verifying that incomplete responses don't cause the product to fail or get stuck.
+  - codex-rs/core/tests/common/lib.rs: This file provides testing utilities and helpers for the Codex test suite. It sets up isolated test environments, loads test data, waits for application events during testing, and offers convenience functions for developers to write tests that work across different operating systems and network conditions—essentially a shared toolkit so tests can be written consistently and reliably.
+  - codex-rs/core/tests/suite/cli_stream.rs: This file contains automated tests that verify the command-line interface works correctly when users run Codex commands. It tests key scenarios like streaming responses from AI models, applying custom instructions, saving conversation history to files, tracking git repository information, and resuming previous conversations—ensuring the CLI behaves as expected from a user's perspective.
+  - codex-rs/core/src/client_common.rs: This file defines the core data structures and utilities for communicating with the AI model. It specifies what gets sent to the model in each request (conversation context, available tools, personality settings, and desired output format), handles how tool outputs from shell commands are formatted for the model to understand, and manages the stream of responses coming back from the API.
+
+Sample commit messages:
+  - Adding interrupt Support to MCP (#1646)
+  - Move used tokens next to the hints (#1930)
+  - Allow deadcode in test_support (#1555)
+  - Serializing the `eventmsg` type to snake_case (#1709)
+  - support deltas in core (#1587)
+  - moving input item from MCP Protocol back to core Protocol (#1740)
+  - Remove Turndiff and Apply patch from the render (#1868)
+  - TUI: Show apply patch diff. Stack: [2/2] (#2050)
+  - Add CLI streaming integration tests (#1542)
+  - Mcp protocol (#1715)
+  - Show timing and token counts in status indicator (#1909)
+  - Show ChatGPT login URL during onboarding (#2028)
+  - approval ui (#1933)
+  - Changing method in MCP notifications (#1684)
+  - Add streaming to exec and tui (#1594)
+  - Moving the compact prompt near where it's used (#2031)
+  - Add paste summarization to Codex TUI (#1549)
+  - Fix compact (#1798)
+  - Add session loading support to Codex (#1602)
+  - Chores: Refactor approval Patch UI. Stack: [1/2] (#2049)

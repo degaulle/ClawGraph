@@ -1,0 +1,11 @@
+Name: narenoai
+Total commits: 1
+First contribution: 2025-04-22T16:28:21+00:00
+Emails: naren@openai.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: add CLI –version flag (#492)

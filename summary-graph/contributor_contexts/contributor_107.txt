@@ -1,0 +1,11 @@
+Name: Christoph K
+Total commits: 1
+First contribution: 2025-05-17T02:48:11+00:00
+Emails: 53318155+christophkogler@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - Remove unnecessary console log from test (#970)

@@ -1,0 +1,27 @@
+Name: Lael
+Total commits: 1
+First contribution: 2025-11-18T07:16:58+00:00
+Emails: LaelLuo@qq.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 3 files
+
+Packages contributed to (1 total):
+  - codex-rmcp-client: 1 commits (since 2025-11-18)
+
+Major product areas touched:
+  - Extensibility (1 files)
+
+Specific features touched (3 total, top 15):
+  - Authentication & Identity (3 files)
+  - MCP Tool Call (2 files)
+  - MCP Client (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/rmcp-client/src/oauth.rs: This file manages how Codex stores and retrieves OAuth login credentials for connecting to MCP servers. It provides secure credential storage using the operating system's built-in credential managers (like macOS Keychain or Windows Credential Manager), with an automatic fallback to a local encrypted file if the system keyring isn't available. The file also handles credential refresh timing and ensures that stored credentials stay synchronized with the current authentication state.
+  - codex-rs/rmcp-client/src/perform_oauth_login.rs: This file handles the OAuth login flow for Codex, guiding users through authentication with a server. It sets up a local callback server to receive authorization credentials, displays a login URL to the user (optionally opening it in their browser), and securely stores the resulting authentication tokens for future use.
+  - codex-rs/rmcp-client/src/rmcp_client.rs: This file implements the core MCP client that applications use to connect to and communicate with MCP servers. It handles three types of connections (local processes, HTTP, and HTTP with OAuth authentication), manages the initialization handshake, and provides methods to list and call tools, access resources, and send custom requests to the server—while automatically handling OAuth token refresh and persistence in the background.
+
+Sample commit messages:
+  - :bug: fix(rmcp-client): refresh OAuth tokens using expires_at (#6574)

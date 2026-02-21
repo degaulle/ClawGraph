@@ -1,0 +1,25 @@
+Name: Alex Hornby
+Total commits: 1
+First contribution: 2026-01-17T17:05:53+00:00
+Emails: 14246801+ahornby@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-01-17)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Specific features touched (3 total, top 15):
+  - Shell Execution (1 files)
+  - Approval Request Flow (1 files)
+  - Turn Management (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/unified_exec/mod.rs: This file manages interactive command execution with built-in safeguards—it orchestrates running commands in isolated environments, handles user approvals, buffers output, and lets processes persist across multiple requests so users can maintain stateful shell sessions.
+
+Sample commit messages:
+  - fix unified_exec::tests::unified_exec_timeouts to use a more unique match value (#9414)

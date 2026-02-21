@@ -1,0 +1,11 @@
+Name: Magson Leone dos Santos
+Total commits: 1
+First contribution: 2025-12-18T16:54:50+00:00
+Emails: magsonleone@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: clarify codex resume --all (CWD column & filtering) (#8264)

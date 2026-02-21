@@ -1,0 +1,11 @@
+Name: vladislav doster
+Total commits: 1
+First contribution: 2025-11-06T17:00:28+00:00
+Emails: mvdoster@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: Fix code fence and typo in advanced guide (#6295)

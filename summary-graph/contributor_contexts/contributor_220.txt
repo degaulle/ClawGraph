@@ -1,0 +1,28 @@
+Name: Jakob Malmo
+Total commits: 1
+First contribution: 2025-11-07T22:49:17+00:00
+Emails: jakobmalmo@protonmail.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-cli: 1 commits (since 2025-11-07)
+
+Major product areas touched:
+  - Surfaces (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (4 total, top 15):
+  - Working Directory Awareness (1 files)
+  - Configuration File (1 files)
+  - Feature Flags (1 files)
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/cli/src/wsl_paths.rs: This file handles file path translation for users running Codex on Windows Subsystem for Linux (WSL), automatically converting Windows-style paths (like `C:\folder`) into the format WSL understands (`/mnt/c/folder`). It detects whether the tool is running under WSL and normalizes file paths accordingly so the product works seamlessly across Windows and Linux environments.
+
+Sample commit messages:
+  - fix(wsl): normalize Windows paths during update (#6086) (#6097)

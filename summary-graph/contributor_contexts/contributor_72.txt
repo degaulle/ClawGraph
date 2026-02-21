@@ -1,0 +1,11 @@
+Name: Mitchell Kutchuk
+Total commits: 1
+First contribution: 2025-04-21T19:01:09+00:00
+Emails: mitch528@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: unintended tear down of agent loop (#483)

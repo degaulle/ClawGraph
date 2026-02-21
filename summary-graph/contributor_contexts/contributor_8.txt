@@ -1,0 +1,71 @@
+Name: Rasmus Rygaard
+Total commits: 7
+First contribution: 2025-04-16T18:17:52+00:00
+Emails: rasmus@openai.com
+Files authored: 28
+
+File type distribution:
+  - .rs: 22 files
+  - .toml: 3 files
+  - .tsx: 1 files
+  - .lock: 1 files
+  - .py: 1 files
+
+Packages contributed to (6 total):
+  - codex-core: 3 commits (since 2025-10-29)
+  - codex-api: 2 commits (since 2026-02-04)
+  - codex-protocol: 2 commits (since 2025-10-20)
+  - codex-app-server-protocol: 2 commits (since 2025-10-20)
+  - codex-exec: 1 commits (since 2026-02-03)
+  - codex-app-server: 1 commits (since 2025-10-29)
+
+Major product areas touched:
+  - Agent Actions (5 files)
+  - Model & Reasoning (5 files)
+  - Session Lifecycle (4 files)
+  - Safety & Containment (4 files)
+  - Extensibility (3 files)
+  - Conversation (3 files)
+  - Project Context (3 files)
+  - Autonomy & Approval (2 files)
+  - Surfaces (1 files)
+
+Specific features touched (22 total, top 15):
+  - App Server Protocol (7 files)
+  - Telemetry & Metrics (6 files)
+  - Agent Response Stream (4 files)
+  - Rollout Persistence (3 files)
+  - Headless Exec Mode (2 files)
+  - Turn Management (2 files)
+  - Thread Creation (2 files)
+  - Collaboration Mode (1 files)
+  - Configuration File (1 files)
+  - Personality Style (1 files)
+  - Reasoning Effort (1 files)
+  - Prompt History (1 files)
+  - IDE Extension (1 files)
+  - Slash Command (1 files)
+  - User Prompt (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server-protocol/src/bin/export.rs: This file is a command-line tool that generates TypeScript code and documentation files describing how the Codex app server communicates with other parts of the system, optionally formatting the output to match code style standards.
+  - codex-rs/app-server-protocol/src/export.rs: # export.rs
+
+This file generates type definitions and API documentation in TypeScript and JSON formats that describe the communication protocol between clients and servers. It takes the codebase's internal type definitions and exports them as machine-readable schemas and developer-friendly type files, optionally filtering out experimental/preview features for stable releases.
+  - codex-rs/app-server-protocol/src/jsonrpc_lite.rs: This file defines the message format used for communication between the Codex app server and its clients—it standardizes how requests, responses, notifications, and errors are structured and validated when exchanged over the network.
+  - codex-rs/app-server-protocol/src/lib.rs: This file serves as the main entry point for the app server protocol library, organizing and exposing the core communication standards and tools that allow different parts of the Codex system to talk to each other—including protocol definitions, type generation utilities, and test data helpers.
+  - codex-rs/protocol/src/config_types.rs: This file defines the configuration options and settings that users can customize when working with Codex, including choices like which AI model to use, how detailed the AI's reasoning should be, what level of access sandbox environments have, and which collaboration mode (Plan or Default) to start in. It essentially provides all the knobs and switches that control how Codex behaves.
+  - codex-rs/protocol/src/thread_id.rs: This file defines how thread identifiers are created and handled throughout the system, generating unique IDs for conversation threads and allowing them to be converted to and from text for storage and communication. It ensures every thread gets a distinct identifier that can be reliably parsed, displayed, and transmitted between different parts of the application.
+  - codex-rs/protocol/src/custom_prompts.rs: This file defines the data structure and naming convention for custom prompt templates that users can invoke as slash commands in the editor (like `/prompts:name`). It allows the product to store and organize reusable prompt snippets with metadata like descriptions and usage hints.
+  - codex-rs/protocol/src/message_history.rs: This file defines the structure for storing individual messages in a conversation history, including which conversation they belong to, when they were sent, and what was said. It enables the system to save and retrieve past messages so users can see their interaction history.
+  - codex-rs/protocol/src/models.rs: This file defines the data structures that represent messages, tool calls, and responses flowing between the AI model and the user during a coding session. It handles how developer instructions and permissions (like sandbox settings and approval policies) are communicated to the model, manages structured content like text and images in conversations, and provides formatting for shell commands, web searches, and function call outputs. The file essentially serves as the "language" for how Codex describes what the AI should do and what it has produced.
+  - codex-rs/protocol/src/parse_command.rs: This file defines the different types of commands that Codex can understand and execute, including reading files, listing directory contents, searching for text, and handling unrecognized commands—essentially creating a standardized way to represent user requests internally so the system knows what action to take.
+
+Sample commit messages:
+  - Add a wrapper around raw response items (#5923)
+  - Generate JSON schema for app-server protocol (#5063)
+  - [app-server] Annotate more exported types with a title (#5879)
+  - Translate websocket errors (#10937)
+  - Update model in code to o4-mini (#39)
+  - Add a codex.rate_limits event for websockets (#10324)
+  - Handle exec shutdown on Interrupt (fixes immortal `codex exec` with websockets) (#10519)

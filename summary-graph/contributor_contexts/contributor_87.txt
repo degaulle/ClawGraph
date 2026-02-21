@@ -1,0 +1,11 @@
+Name: sooraj
+Total commits: 1
+First contribution: 2025-04-24T23:56:00+00:00
+Emails: sooraj@plumhq.com
+Files authored: 3
+
+File type distribution:
+  - .tsx: 3 files
+
+Sample commit messages:
+  - feat: display error on selection of invalid model (#594)

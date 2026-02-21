@@ -1,0 +1,12 @@
+Name: Aron Jones
+Total commits: 1
+First contribution: 2025-04-16T22:33:12+00:00
+Emails: aron.jones@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .json: 2 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - dotenv support (#122)
