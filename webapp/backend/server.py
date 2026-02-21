@@ -8,7 +8,8 @@ from the project root, and pushes reload events via SSE when any
 frontend file changes.
 
 Usage:
-    python webapp/backend/server.py [--port PORT]
+    python webapp/backend/server.py --public [--port PORT]
+    python webapp/backend/server.py --password SECRET [--port PORT]
 """
 
 import http.server
@@ -16,12 +17,14 @@ import json
 import logging
 import logging.handlers
 import os
+import secrets
 import socketserver
 import subprocess
 import threading
 import time
 import argparse
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 ROOT = Path(__file__).resolve().parent.parent.parent  # knowledge-graph/
 FRONTEND = ROOT / "webapp" / "frontend"
@@ -51,6 +54,8 @@ _state_lock = threading.Lock()
 
 _command_clients: list = []  # SSE client wfile handles for /commands
 _command_clients_lock = threading.Lock()
+
+_valid_sessions: set = set()  # session tokens for password auth
 
 
 def _push_command(data: dict):
@@ -151,8 +156,46 @@ RELOAD_SCRIPT = b"""<script>
 
 class Handler(http.server.BaseHTTPRequestHandler):
     public_mode: bool = False
+    password_mode: bool = False
+    _expected_password: str | None = None
+
+    def end_headers(self):
+        """Inject any pending Set-Cookie headers before finalising."""
+        for cookie in getattr(self, '_pending_cookies', []):
+            self.send_header('Set-Cookie', cookie)
+        super().end_headers()
+
+    def _check_auth(self) -> bool:
+        """Verify request is authenticated.  Returns True if OK, else sends 403."""
+        self._pending_cookies = []
+        if not self.password_mode:
+            return True
+        # 1) Check session cookie
+        cookie_header = self.headers.get('Cookie', '')
+        for part in cookie_header.split(';'):
+            part = part.strip()
+            if part.startswith('kg_session='):
+                token = part[len('kg_session='):]
+                if token in _valid_sessions:
+                    return True
+        # 2) Check password query param
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        pw = params.get('password', [None])[0]
+        if pw is not None and secrets.compare_digest(pw, self._expected_password):
+            token = secrets.token_hex(32)
+            _valid_sessions.add(token)
+            self._pending_cookies.append(
+                f'kg_session={token}; Path=/; HttpOnly; SameSite=Strict'
+            )
+            return True
+        self.send_error(403, "Authentication required")
+        return False
 
     def do_GET(self):
+        if not self._check_auth():
+            return
+
         path = self.path.split("?")[0]
 
         # SSE endpoint (live-reload)
@@ -200,6 +243,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_error(404)
 
     def do_POST(self):
+        if not self._check_auth():
+            return
+
         path = self.path.split("?")[0]
 
         if self.public_mode and path in ("/state", "/command", "/open-in-cursor", "/cursor-running"):
@@ -411,12 +457,19 @@ class ThreadedServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 def main():
     parser = argparse.ArgumentParser(description="Live-reload dev server")
     parser.add_argument("--port", type=int, default=8080)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
         "--public", action="store_true",
-        help="Disable control endpoints (/command, POST /state, /open-in-cursor, /cursor-running) for safe public exposure",
+        help="Read-only mode: disable control endpoints for safe public exposure",
+    )
+    mode.add_argument(
+        "--password", type=str, metavar="SECRET",
+        help="Full-access mode gated behind a URL password",
     )
     args = parser.parse_args()
     Handler.public_mode = args.public
+    Handler.password_mode = args.password is not None
+    Handler._expected_password = args.password
 
     # Start file watcher thread
     t = threading.Thread(target=_watcher, daemon=True)
@@ -426,6 +479,8 @@ def main():
     log.info("Dev server running at http://localhost:%d", args.port)
     log.info("Serving frontend from %s", FRONTEND)
     log.info("Live reload active (polling every %ss)", POLL_INTERVAL)
+    if args.password:
+        log.info("Password-protected access: http://localhost:%d/?password=%s", args.port, args.password)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

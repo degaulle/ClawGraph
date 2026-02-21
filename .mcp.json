@@ -10,7 +10,10 @@
     },
     "knowledge-graph": {
       "command": "/home/charleswangsy/workstation/knowledge-graph/.venv/bin/python",
-      "args": ["webapp/backend/mcp_server.py"]
+      "args": ["webapp/backend/mcp_server.py"],
+      "env": {
+        "KG_PASSWORD": "i7iS0wZ032g44kinP_XGCAJZIC7h5lV9lipbOhI0ZKk"
+      }
     }
   }
 }

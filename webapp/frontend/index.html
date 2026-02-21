@@ -580,6 +580,10 @@
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
+// Strip password (or any query params) from the URL bar after the page loads
+if (window.location.search) {
+  window.history.replaceState({}, document.title, window.location.pathname);
+}
 (async function() {
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');

@@ -1,18 +1,45 @@
 """
 MCP server exposing knowledge graph UI controls as tools.
 
-Talks to the webapp dev server at localhost:8080 via its /state and /command
-endpoints. Uses stdio transport — Claude Code launches it as a subprocess.
+Talks to the webapp dev server via its /state and /command endpoints.
+Authenticates once at startup using the KG_PASSWORD env var, then reuses
+the session cookie for all subsequent requests.
+
+Uses stdio transport — Claude Code launches it as a subprocess.
 
 Usage:
-    python webapp/backend/mcp_server.py
+    KG_PASSWORD=secret python webapp/backend/mcp_server.py
 """
 
 import json
+import os
 import urllib.request
 from mcp.server.fastmcp import FastMCP
 
-BASE_URL = "http://localhost:8080"
+BASE_URL = "http://localhost:21337"
+
+# Authenticate once at startup — get a session cookie to reuse
+_session_cookie: str | None = None
+_password = os.environ.get("KG_PASSWORD", "")
+if _password:
+    try:
+        req = urllib.request.Request(f"{BASE_URL}/?password={_password}")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            for header in resp.headers.get_all("Set-Cookie") or []:
+                if header.startswith("kg_session="):
+                    _session_cookie = header.split(";")[0]
+                    break
+    except Exception:
+        pass  # server may not be up yet; tools will fail gracefully
+
+
+def _authed_request(url: str, **kwargs) -> urllib.request.Request:
+    """Build a Request with the session cookie attached."""
+    req = urllib.request.Request(url, **kwargs)
+    if _session_cookie:
+        req.add_header("Cookie", _session_cookie)
+    return req
+
 
 mcp = FastMCP("knowledge-graph")
 
@@ -24,7 +51,7 @@ def kg_get_state() -> str:
     Returns JSON with: mode, selection, viewport, visibility settings,
     timeline range, and nodes currently in view.
     """
-    req = urllib.request.Request(f"{BASE_URL}/state")
+    req = _authed_request(f"{BASE_URL}/state")
     with urllib.request.urlopen(req, timeout=5) as resp:
         return resp.read().decode()
 
@@ -52,7 +79,7 @@ def kg_command(action: str, params: str = "{}") -> str:
     extra = json.loads(params) if params else {}
     payload = {"action": action, **extra}
     data = json.dumps(payload).encode()
-    req = urllib.request.Request(
+    req = _authed_request(
         f"{BASE_URL}/command",
         data=data,
         headers={"Content-Type": "application/json"},
@@ -85,7 +112,7 @@ def kg_open_in_cursor(file: str, line: int = 0, column: int = 0) -> str:
     if column:
         payload["column"] = column
     data = json.dumps(payload).encode()
-    req = urllib.request.Request(
+    req = _authed_request(
         f"{BASE_URL}/open-in-cursor",
         data=data,
         headers={"Content-Type": "application/json"},
