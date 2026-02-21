@@ -150,3 +150,40 @@ def enrich_file_summaries(
 
     for node in file_nodes:
         node["summary"] = summary_lookup.get(node["name"])
+
+
+def _parse_json_response(response: str) -> dict | None:
+    """Extract a JSON object from a response that may be wrapped in markdown fences."""
+    text = response.strip()
+    if text.startswith("```"):
+        lines = text.split("\n")
+        # Drop opening fence (```json or ```) and closing fence (```)
+        lines = [l for l in lines[1:] if not l.strip().startswith("```")]
+        text = "\n".join(lines)
+    try:
+        return json.loads(text)
+    except (json.JSONDecodeError, ValueError):
+        return None
+
+
+def enrich_contributor_summaries(
+    contributor_nodes: list[dict],
+    summary_json_path: str,
+) -> None:
+    """Mutate contributor nodes in place, adding 'role' and 'contributions' fields."""
+    with open(summary_json_path, "r") as f:
+        summary_data = json.load(f)
+
+    # source_path is like "contributor_1.txt" → key on "contributor_1"
+    summary_lookup: dict[str, dict] = {}
+    for entry in summary_data.get("files", []):
+        key = entry["source_path"].removesuffix(".txt")
+        parsed = _parse_json_response(entry["response"])
+        if parsed:
+            summary_lookup[key] = parsed
+
+    for node in contributor_nodes:
+        info = summary_lookup.get(node["id"])
+        if info:
+            node["role"] = info.get("role")
+            node["contributions"] = info.get("contributions")

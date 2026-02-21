@@ -14,6 +14,7 @@ from concept_extractor import (
     build_concept_hierarchy_edges,
     build_concept_file_edges,
     enrich_file_summaries,
+    enrich_contributor_summaries,
 )
 
 # Allow importing from rust-graph/
@@ -57,6 +58,7 @@ def main():
     parser.add_argument("--concept-yaml", help="Path to concept map YAML file")
     parser.add_argument("--summary-json", help="Path to file summary JSON")
     parser.add_argument("--tag-json", help="Path to file tag JSON")
+    parser.add_argument("--contributor-summary-json", help="Path to contributor summary JSON")
     parser.add_argument("--symbol-jsonl", help="Path to symbol JSONL file")
     parser.add_argument("--symbol-prefix", default="codex-rs/",
                         help="Prefix prepended to symbol file paths (default: codex-rs/)")
@@ -94,6 +96,12 @@ def main():
         enrich_file_summaries(graph["nodes"]["files"], args.summary_json)
         n_with_summary = sum(1 for f in graph["nodes"]["files"] if f.get("summary"))
         print(f"  File summaries: {n_with_summary}")
+
+    # Enrich contributor nodes with AI summaries
+    if args.contributor_summary_json:
+        enrich_contributor_summaries(graph["nodes"]["contributors"], args.contributor_summary_json)
+        n_with_summary = sum(1 for c in graph["nodes"]["contributors"] if c.get("role"))
+        print(f"  Contributor summaries: {n_with_summary}")
 
     # Add concept layer
     if args.concept_yaml:
