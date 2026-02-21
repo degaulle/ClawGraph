@@ -447,6 +447,56 @@
   .sym-lines.clickable { cursor: pointer; color: #60a5fa; }
   .sym-lines.clickable:hover { color: #93c5fd; text-decoration: underline; }
 
+  /* Bottom sheet (mobile) */
+  .bottom-sheet {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    background: rgba(20, 20, 20, 0.97);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px 16px 0 0;
+    transform: translateY(100%);
+    z-index: 1000;
+    will-change: transform;
+  }
+  .bottom-sheet.transitioning {
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+  }
+  .bottom-sheet-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px 0 8px;
+    cursor: grab;
+    touch-action: none;
+  }
+  .bottom-sheet-pill {
+    width: 36px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+  }
+  .bottom-sheet-content {
+    padding: 0 18px 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: calc(100% - 36px);
+    color: #ccc;
+    font-size: 12px;
+  }
+  .bottom-sheet-content .value { color: #fff; font-weight: 600; font-size: 15px; margin-bottom: 6px; }
+  .bottom-sheet-content .label { color: #aaa; font-size: 12px; margin-bottom: 4px; line-height: 1.4; }
+  .bottom-sheet-content .symbol-browser { margin-top: 8px; }
+
+  /* Mobile: hide all panels, show only the graph canvas */
+  @media (max-width: 768px) {
+    #appearance, #controls, #mode-switch-standalone, #timeline, #stats { display: none !important; }
+    .bottom-sheet { display: block; }
+  }
+
 </style>
 </head>
 <body>
@@ -519,6 +569,12 @@
   <button class="tl-btn" id="tl-play" title="Play / Pause">▶️</button>
   <button class="tl-btn" id="tl-reset" title="Reset timeline">🔄</button>
   <span id="timeline-label-end"></span>
+</div>
+<div id="bottom-sheet" class="bottom-sheet">
+  <div class="bottom-sheet-handle" id="bottom-sheet-handle">
+    <div class="bottom-sheet-pill"></div>
+  </div>
+  <div class="bottom-sheet-content" id="bottom-sheet-content"></div>
 </div>
 <div id="loading">Loading knowledge graph...</div>
 
@@ -1933,6 +1989,151 @@
     return activeSymbol || activeContributor || activeFile || activeMinor || activeMajor || null;
   }
 
+  // Deselect all active nodes
+  function deselectAllNodes() {
+    activeMajor = null;
+    activeMinor = null;
+    activeFile = null;
+    activeContributor = null;
+    activeSymbol = null;
+    rebuildGraph(rootNode);
+    updateInfoPane();
+  }
+
+  // --- Mobile bottom sheet (Google Maps-style) ---
+  const bottomSheetEl = document.getElementById('bottom-sheet');
+  const bottomSheetContentEl = document.getElementById('bottom-sheet-content');
+  const bottomSheetHandleEl = document.getElementById('bottom-sheet-handle');
+
+  const bottomSheet = {
+    state: 'hidden', // 'hidden' | 'peek' | 'full'
+    isMobile() { return window.innerWidth <= 768; },
+    setState(newState, animate) {
+      this.state = newState;
+      if (animate) bottomSheetEl.classList.add('transitioning');
+      else bottomSheetEl.classList.remove('transitioning');
+      const ty = newState === 'hidden' ? 100 : newState === 'peek' ? 75 : 0;
+      bottomSheetEl.style.transform = `translateY(${ty}%)`;
+      // Body scroll lock in full state
+      document.body.style.overflow = newState === 'full' ? 'hidden' : '';
+      if (animate) {
+        const onEnd = () => {
+          bottomSheetEl.classList.remove('transitioning');
+          bottomSheetEl.removeEventListener('transitionend', onEnd);
+        };
+        bottomSheetEl.addEventListener('transitionend', onEnd);
+      }
+    },
+    show(node) {
+      this.updateContent(node);
+      this.setState('peek', true);
+    },
+    hide() {
+      this.setState('hidden', true);
+    },
+    updateContent(node) {
+      bottomSheetContentEl.innerHTML = buildInfoPaneHTML(node);
+      // Wire up symbol browser click handlers
+      bottomSheetContentEl.querySelectorAll('.symbol-item').forEach(el => {
+        el.addEventListener('click', (e) => {
+          if (e.target.classList.contains('sym-lines')) return;
+          const symId = el.dataset.symbolId;
+          const sym = symbolNodeMap.get(symId);
+          if (!sym) return;
+          if (activeSymbol && activeSymbol.id === symId) {
+            activeSymbol = null;
+          } else {
+            activeSymbol = sym;
+          }
+          rebuildGraph(sym || activeFile);
+          updateInfoPane();
+        });
+      });
+      // Wire up "Open in Cursor" button
+      bottomSheetContentEl.querySelectorAll('.cursor-btn').forEach(el => {
+        el.addEventListener('click', () => openInCursor(el.dataset.cursorFile));
+      });
+      // Wire up clickable sym-lines spans
+      bottomSheetContentEl.querySelectorAll('.sym-lines.clickable').forEach(el => {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openInCursor(el.dataset.cursorFile, parseInt(el.dataset.cursorLine, 10));
+        });
+      });
+    }
+  };
+
+  // Touch gesture handling for bottom sheet
+  (function() {
+    let dragging = false;
+    let dragFromHandle = false;
+    let startY = 0;
+    let startTranslateY = 0;
+    let currentY = 0;
+
+    function getTranslateYPercent() {
+      const match = bottomSheetEl.style.transform.match(/translateY\(([^)]+)%\)/);
+      return match ? parseFloat(match[1]) : 100;
+    }
+
+    function onTouchStart(e) {
+      if (!bottomSheet.isMobile() || bottomSheet.state === 'hidden') return;
+      const isHandle = bottomSheetHandleEl.contains(e.target);
+      const isContent = bottomSheetContentEl.contains(e.target);
+      if (!isHandle && !isContent) return;
+      // Content: only drag when scrolled to top and pulling down
+      if (isContent && !isHandle) {
+        if (bottomSheetContentEl.scrollTop > 0) return;
+      }
+      dragging = true;
+      dragFromHandle = isHandle;
+      startY = e.touches[0].clientY;
+      startTranslateY = getTranslateYPercent();
+      currentY = startTranslateY;
+      bottomSheetEl.classList.remove('transitioning');
+    }
+
+    let directionChecked = false;
+    function onTouchMove(e) {
+      if (!dragging) return;
+      const touchY = e.touches[0].clientY;
+      const deltaPixels = touchY - startY;
+      // For content area drags, only allow pulling down (positive delta)
+      if (!dragFromHandle && !directionChecked) {
+        if (deltaPixels < 0) { dragging = false; return; }
+        directionChecked = true;
+      }
+      const deltaPercent = (deltaPixels / window.innerHeight) * 100;
+      currentY = Math.max(0, Math.min(100, startTranslateY + deltaPercent));
+      bottomSheetEl.style.transform = `translateY(${currentY}%)`;
+      e.preventDefault();
+    }
+
+    function onTouchEnd() {
+      if (!dragging) { directionChecked = false; return; }
+      dragging = false;
+      directionChecked = false;
+      // Snap to nearest state
+      if (currentY > 80) {
+        bottomSheet.setState('hidden', true);
+        // Deselect after starting hide animation
+        activeMajor = null; activeMinor = null; activeFile = null;
+        activeContributor = null; activeSymbol = null;
+        rebuildGraph(rootNode);
+        // Update info pane without re-triggering sheet (already hidden)
+        infoPaneEl.innerHTML = '<div class="info-empty">Click a node to see details</div>';
+      } else if (currentY < 35) {
+        bottomSheet.setState('full', true);
+      } else {
+        bottomSheet.setState('peek', true);
+      }
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
+  })();
+
   // Update Info pane with selected node details
   function updateInfoPane() {
     // When a symbol is active, show file info (with symbol browser) rather than symbol info
@@ -1970,7 +2171,24 @@
         });
       });
     }
+    // Mobile bottom sheet sync
+    if (bottomSheet.isMobile()) {
+      if (node) {
+        bottomSheet.updateContent(node);
+        if (bottomSheet.state === 'hidden') bottomSheet.show(node);
+      } else {
+        if (bottomSheet.state !== 'hidden') bottomSheet.hide();
+      }
+    }
   }
+
+  // Hide bottom sheet when viewport exceeds mobile breakpoint (e.g. rotation)
+  window.addEventListener('resize', () => {
+    if (!bottomSheet.isMobile() && bottomSheet.state !== 'hidden') {
+      bottomSheet.setState('hidden', false);
+      document.body.style.overflow = '';
+    }
+  });
 
   // Assign each file to exactly one major concept sector (for radial layout)
   // Uses the major concept with the most tagged_with connections (direct + via minors)
