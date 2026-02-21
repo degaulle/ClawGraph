@@ -1,0 +1,12 @@
+Name: Jörg Thalheim
+Total commits: 1
+First contribution: 2025-10-17T19:19:08+00:00
+Emails: Mic92@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .nix: 2 files
+  - .lock: 1 files
+
+Sample commit messages:
+  - Fix nix build (#4048)

@@ -1,0 +1,11 @@
+Name: Abkari Mohammed Sayeem
+Total commits: 1
+First contribution: 2025-11-15T17:25:46+00:00
+Emails: 169171880+Sayeem3051@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fix documentation errors for Custom Prompts named arguments and add canonical examples (#5910)

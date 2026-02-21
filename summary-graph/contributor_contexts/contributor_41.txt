@@ -1,0 +1,15 @@
+Name: Scott Leibrand
+Total commits: 4
+First contribution: 2025-04-17T15:12:38+00:00
+Emails: scottleibrand@gmail.com
+Files authored: 7
+
+File type distribution:
+  - .tsx: 6 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - bugfix: remove redundant thinking updates and put a thinking timer above the prompt instead (#216)
+  - feat: allow switching approval modes when prompted to approve an edit/command (#400)
+  - fix: allow proper exit from new Switch approval mode dialog (#453)
+  - agent-loop: minimal mid-stream #429 retry loop using existing back-off (#506)

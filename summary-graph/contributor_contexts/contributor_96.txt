@@ -1,0 +1,12 @@
+Name: Andrey Mishchenko
+Total commits: 2
+First contribution: 2025-05-03T17:17:44+00:00
+Emails: mishchea@gmail.com, andrey@openai.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - use "Title case" in README.md (#798)
+  - Use "Title case" for ToC (#812)

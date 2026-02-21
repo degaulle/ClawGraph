@@ -1,0 +1,13 @@
+Name: Corry Haines
+Total commits: 2
+First contribution: 2025-05-10T22:58:59+00:00
+Emails: github@corryh.com
+Files authored: 2
+
+File type distribution:
+  - .tsx: 1 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: flex-mode via config/flag (#813)
+  - Add reasoning effort option to CLI help text (#815)

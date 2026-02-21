@@ -1,0 +1,11 @@
+Name: wkrettek
+Total commits: 1
+First contribution: 2025-08-22T23:05:39+00:00
+Emails: 50168688+wkrettek@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fix typo in AGENTS.md (#2518)

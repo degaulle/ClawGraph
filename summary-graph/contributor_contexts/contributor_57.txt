@@ -1,0 +1,12 @@
+Name: Prama
+Total commits: 1
+First contribution: 2025-04-18T18:35:51+00:00
+Emails: 109050315+PramaYudhistira@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .js: 1 files
+  - .json: 1 files
+
+Sample commit messages:
+  - fix: Improper spawn of sh on Windows Powershell (#318)

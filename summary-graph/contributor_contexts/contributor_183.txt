@@ -1,0 +1,13 @@
+Name: Ryan Lopopolo
+Total commits: 2
+First contribution: 2025-10-17T21:58:27+00:00
+Emails: lopopolo@openai.com
+Files authored: 7
+
+File type distribution:
+  - .ts: 5 files
+  - .md: 2 files
+
+Sample commit messages:
+  - feat(ts-sdk): allow overriding CLI environment (#6648)
+  - Fix link to MCP Servers config section (#5301)

@@ -1,0 +1,12 @@
+Name: Jay Sabva
+Total commits: 2
+First contribution: 2025-12-06T18:17:18+00:00
+Emails: 94957904+JaySabva@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .md: 2 files
+
+Sample commit messages:
+  - docs: fix documentation of rmcp client flag (#7665)
+  - docs: Remove experimental_use_rmcp_client from config (#7672)

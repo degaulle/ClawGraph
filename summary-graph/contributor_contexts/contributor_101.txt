@@ -1,0 +1,13 @@
+Name: Pranav
+Total commits: 2
+First contribution: 2025-05-10T23:16:19+00:00
+Emails: 56645758+pranav4501@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .ts: 2 files
+  - .md: 1 files
+
+Sample commit messages:
+  - fix: guard against missing choices (#817)
+  - feat: added arceeai as a provider (#818)

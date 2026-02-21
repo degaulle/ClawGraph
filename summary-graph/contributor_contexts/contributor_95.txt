@@ -1,0 +1,13 @@
+Name: anup-openai
+Total commits: 1
+First contribution: 2025-05-02T19:08:13+00:00
+Emails: 148260946+anup-openai@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .json: 1 files
+  - .ts: 1 files
+  - .yaml: 1 files
+
+Sample commit messages:
+  - Configure HTTPS agent for proxies (#775)

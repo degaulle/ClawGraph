@@ -1,0 +1,11 @@
+Name: Abhinav Das
+Total commits: 1
+First contribution: 2025-04-16T19:44:03+00:00
+Emails: theabhinavdas@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - changing some readme text to make it more exact (#77)

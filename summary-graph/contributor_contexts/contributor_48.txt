@@ -1,0 +1,11 @@
+Name: lugui
+Total commits: 1
+First contribution: 2025-04-17T23:19:45+00:00
+Emails: lugui1998@hotmail.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: update position of cursor when navigating input history with arrow keys to the end of the text (#255)

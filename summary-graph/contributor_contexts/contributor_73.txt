@@ -1,0 +1,12 @@
+Name: Gabriel Bianconi
+Total commits: 1
+First contribution: 2025-04-22T14:51:26+00:00
+Emails: 1275491+GabrielBianconi@users.noreply.github.com
+Files authored: 5
+
+File type distribution:
+  - .ts: 3 files
+  - .tsx: 2 files
+
+Sample commit messages:
+  - fix: inconsistent usage of base URL and API key (#507)

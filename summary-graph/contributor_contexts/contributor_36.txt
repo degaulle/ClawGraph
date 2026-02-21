@@ -1,0 +1,11 @@
+Name: Ikko Eltociear Ashimine
+Total commits: 1
+First contribution: 2025-04-17T14:08:38+00:00
+Emails: eltociear@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .yaml: 1 files
+
+Sample commit messages:
+  - chore: update task.yaml (#237)

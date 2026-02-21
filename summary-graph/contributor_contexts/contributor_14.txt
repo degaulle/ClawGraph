@@ -1,0 +1,12 @@
+Name: Eric Burke
+Total commits: 1
+First contribution: 2025-04-16T19:02:41+00:00
+Emails: 163169620+eburke-openai@users.noreply.github.com
+Files authored: 4
+
+File type distribution:
+  - .unknown: 2 files
+  - .sh: 2 files
+
+Sample commit messages:
+  - (fix) update Docker container scripts (#47)

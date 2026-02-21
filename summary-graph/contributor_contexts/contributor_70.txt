@@ -1,0 +1,13 @@
+Name: Aaron Casanova
+Total commits: 2
+First contribution: 2025-04-21T06:54:27+00:00
+Emails: 32409546+aaronccasanova@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .json: 1 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: remove extraneous type casts (#462)
+  - Remove `README.md` and `bin` from `package.json#files` field (#461)

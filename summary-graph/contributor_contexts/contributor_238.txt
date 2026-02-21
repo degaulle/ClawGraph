@@ -1,0 +1,11 @@
+Name: simister
+Total commits: 1
+First contribution: 2025-11-18T22:06:13+00:00
+Emails: simcoea@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fix typo in config.md for MCP server (#6845)

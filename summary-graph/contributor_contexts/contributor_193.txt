@@ -1,0 +1,102 @@
+Name: Celia Chen
+Total commits: 42
+First contribution: 2025-10-27T18:01:14+00:00
+Emails: celia@openai.com
+Files authored: 131
+
+File type distribution:
+  - .rs: 103 files
+  - .toml: 7 files
+  - .json: 6 files
+  - .md: 5 files
+  - .ts: 3 files
+  - .yml: 2 files
+  - .lock: 1 files
+  - .sh: 1 files
+  - .sql: 1 files
+  - .bazel: 1 files
+
+Packages contributed to (18 total):
+  - codex-app-server: 32 commits (since 2025-10-27)
+  - codex-app-server-protocol: 17 commits (since 2025-11-04)
+  - codex-core: 15 commits (since 2025-10-27)
+  - app_test_support: 10 commits (since 2025-10-27)
+  - codex-tui: 8 commits (since 2025-10-27)
+  - codex-exec: 7 commits (since 2025-10-28)
+  - codex-protocol: 7 commits (since 2025-11-14)
+  - codex-app-server-test-client: 6 commits (since 2025-11-19)
+  - codex-cli: 3 commits (since 2025-10-27)
+  - codex-mcp-server: 3 commits (since 2025-10-28)
+  - codex-chatgpt: 2 commits (since 2025-10-27)
+  - codex-keyring-store: 2 commits (since 2025-10-27)
+  - codex-login: 2 commits (since 2025-10-27)
+  - core_test_support: 2 commits (since 2025-11-04)
+  - codex-cloud-tasks: 1 commits (since 2025-10-28)
+
+Major product areas touched:
+  - Session Lifecycle (41 files)
+  - Model & Reasoning (16 files)
+  - Agent Actions (16 files)
+  - Safety & Containment (13 files)
+  - Autonomy & Approval (13 files)
+  - Conversation (10 files)
+  - Project Context (10 files)
+  - Extensibility (8 files)
+  - Surfaces (4 files)
+
+Specific features touched (35 total, top 15):
+  - App Server Protocol (34 files)
+  - Authentication & Identity (30 files)
+  - Turn Management (20 files)
+  - Configuration File (18 files)
+  - Rollout Persistence (15 files)
+  - Thread Resume (12 files)
+  - Telemetry & Metrics (8 files)
+  - Interactive TUI (6 files)
+  - Headless Exec Mode (5 files)
+  - Agent Response Stream (4 files)
+  - Structured Output (4 files)
+  - Feature Flags (4 files)
+  - Thread Creation (4 files)
+  - Onboarding Flow (4 files)
+  - Session Interrupt (3 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/app-server/tests/common/auth_fixtures.rs: This file provides testing utilities for creating fake ChatGPT authentication credentials. It allows test engineers to easily generate mock login data (tokens, user IDs, email addresses, etc.) and write them to a test environment, so they can verify that the product correctly handles user authentication without needing real OpenAI accounts.
+  - codex-rs/chatgpt/src/chatgpt_token.rs: This file manages the ChatGPT authentication token used by the application. It provides functions to store and retrieve the user's token in memory, and includes logic to load the token from the system's authentication configuration file when the application starts up.
+  - codex-rs/cli/src/login.rs: This file handles user authentication for the Codex command-line tool, supporting multiple login methods: ChatGPT browser-based login, API key login, and device code login. It provides commands to log in, check login status, and log out, while respecting configuration rules that may restrict which login methods are available.
+  - codex-rs/core/src/auth.rs: This file manages user authentication for the Codex product, handling login, logout, and token refresh across three auth methods: API keys, ChatGPT accounts with stored credentials, and externally-managed ChatGPT tokens. It loads user credentials from storage (or environment variables), keeps them in memory, automatically refreshes expired tokens when needed, and enforces login restrictions like requiring a specific authentication method or workspace. The file also provides recovery logic when API requests fail with authentication errors—it can reload fresh credentials from disk or request new tokens from an external service before retrying.
+  - codex-rs/core/src/auth/storage.rs: This file handles how Codex stores and retrieves user authentication credentials (like API keys and tokens). It supports four different storage methods: saving to a local file, saving to the system's secure credential storage (keyring), automatically choosing between the two, or keeping credentials in memory only for the current session. The file includes the logic to read from, write to, and delete credentials using whichever storage method the user has configured.
+  - codex-rs/core/tests/suite/client.rs: This file is a comprehensive test suite that verifies how the Codex client sends requests to AI model APIs and processes responses. It tests critical product features like authentication, conversation history management, user instructions, model configuration options (reasoning effort, verbosity), rate limiting, error handling, and resuming saved conversations—essentially ensuring that user inputs are properly formatted and transmitted to the backend with all necessary context and settings.
+  - codex-rs/login/src/lib.rs: This file serves as the main entry point for user login and authentication in Codex, exposing the key features needed to log in users (like device code authentication and a local login server) along with core authentication utilities for managing API keys, tokens, and user sessions.
+  - codex-rs/login/src/server.rs: # LoginServer
+
+This file runs a lightweight web server that handles the login flow for Codex. When a user initiates login, it starts a local server, directs them to OpenAI's authentication page, waits for them to complete the login, captures the returned credentials, and saves them locally for future use. It also handles graceful shutdown and retry logic if the server port is already in use from a previous login attempt.
+  - codex-rs/login/tests/suite/device_code_login.rs: This file tests the device code login flow—a method that lets users authenticate by entering a code on a website rather than typing credentials directly into the app. It simulates the entire login process by mocking server responses and verifies that credentials are properly saved, workspace restrictions are enforced, and errors are handled gracefully.
+
+Sample commit messages:
+  - fix: Emit response.completed immediately for Responses SSE (#9170)
+  - [fix] app server flaky send_messages test (#8874)
+  - [App-server] Implement v2 for `account/login/start` and `account/login/completed` (#6183)
+  - [app-server-test-client] add send-followup-v2 (#7271)
+  - [Auth] Add keyring support for Codex CLI (#5591)
+  - [app-server] fix config loading for conversations (#8765)
+  - chore: add `codex debug app-server` tooling (#10367)
+  - [App-server] Add account/login/cancel v2 endpoint (#6288)
+  -  [release] Add a dmg target for MacOS (#8207)
+  - [App-server] Add auth v2 doc & update codex mcp interface auth section (#6353)
+  - [app-server] make `file_path` for config optional (#7560)
+  - [app-server] add `turn/plan/updated` event (#7329)
+  - [app-server] add `thread/tokenUsage/updated` v2 event (#7268)
+  - [Auth] Choose which auth storage to use based on config (#5792)
+  - [App server] add mcp tool call item started/completed events (#6642)
+  - chore: persist turn_id in rollout session and make turn_id uuid based (#11246)
+  - [hygiene][app-server] have a helper function for duplicate code in turn APIs (#6488)
+  - [Hygiene] Remove `include_view_image_tool` config (#5976)
+  - [app-server] add new RawResponseItem v2 event (#8152)
+  - [feat] persist dynamic tools in session rollout file (#10130)

@@ -1,0 +1,11 @@
+Name: miraclebakelaser
+Total commits: 1
+First contribution: 2025-12-15T23:30:06+00:00
+Emails: 65143272+miraclebakelaser@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .js: 1 files
+
+Sample commit messages:
+  - Fix: Detect Bun global install via path check (#8004)

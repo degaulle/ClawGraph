@@ -1,0 +1,20 @@
+Name: Ashutosh Kumar Singh
+Total commits: 1
+First contribution: 2026-02-05T08:59:32+00:00
+Emails: 161562995+Ashutosh0x@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2026-02-05)
+
+Specific features touched (1 total, top 15):
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+
+Sample commit messages:
+  - fix(tui): flush input buffer on init to prevent early exit on Windows (#10729)

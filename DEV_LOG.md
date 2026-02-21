@@ -1,4 +1,4 @@
-# Knowledge Graph Builder — Dev Log
+# ClawGraph — Dev Log
 
 ## Goal
 

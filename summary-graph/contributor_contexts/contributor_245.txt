@@ -1,0 +1,99 @@
+Name: Matthew Zeng
+Total commits: 25
+First contribution: 2025-11-24T19:05:37+00:00
+Emails: mzeng@openai.com
+Files authored: 116
+
+File type distribution:
+  - .rs: 86 files
+  - .ts: 11 files
+  - .json: 9 files
+  - .toml: 4 files
+  - .md: 3 files
+  - .txt: 2 files
+  - .lock: 1 files
+
+Packages contributed to (15 total):
+  - codex-core: 15 commits (since 2025-11-24)
+  - codex-app-server: 12 commits (since 2025-11-24)
+  - codex-tui: 12 commits (since 2025-11-24)
+  - codex-chatgpt: 8 commits (since 2026-01-23)
+  - codex-app-server-protocol: 8 commits (since 2026-01-23)
+  - codex-protocol: 4 commits (since 2025-11-24)
+  - codex-cli: 3 commits (since 2026-01-09)
+  - codex-login: 3 commits (since 2025-12-03)
+  - app_test_support: 2 commits (since 2026-01-23)
+  - codex-rmcp-client: 2 commits (since 2026-01-23)
+  - codex-exec-server: 1 commits (since 2026-02-08)
+  - codex-feedback: 1 commits (since 2025-11-24)
+  - codex-mcp-server: 1 commits (since 2026-02-08)
+  - exec_server_test_support: 1 commits (since 2026-02-08)
+  - mcp_test_support: 1 commits (since 2026-02-08)
+
+Major product areas touched:
+  - Session Lifecycle (17 files)
+  - Agent Actions (13 files)
+  - Conversation (12 files)
+  - Safety & Containment (11 files)
+  - Project Context (11 files)
+  - Extensibility (10 files)
+  - Model & Reasoning (8 files)
+  - Autonomy & Approval (7 files)
+  - Surfaces (6 files)
+
+Specific features touched (87 total, top 15):
+  - Authentication & Identity (20 files)
+  - MCP Client (19 files)
+  - Interactive TUI (17 files)
+  - Skills System (12 files)
+  - MCP Tool Call (12 files)
+  - App Server Protocol (10 files)
+  - App Connectors (9 files)
+  - Turn Management (8 files)
+  - File Mention (6 files)
+  - Configuration File (6 files)
+  - Feature Flags (6 files)
+  - Approval Request Flow (5 files)
+  - MCP Server (5 files)
+  - Onboarding Flow (5 files)
+  - Slash Command (5 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/core/src/thread_manager.rs: This file manages the lifecycle of conversation threads in Codex. It creates new threads, loads previous threads from saved history, allows users to fork threads at specific points in a conversation, and keeps track of all active threads in memory. It also handles setup tasks like monitoring for skill updates and managing authentication and AI model availability for each thread.
+  - codex-rs/feedback/src/lib.rs: This file implements a feedback collection and reporting system that captures detailed diagnostic information (logs and metadata) from the Codex application and uploads it to Sentry for debugging and issue tracking. It maintains a rolling buffer of recent logs so that when users report problems, the system can attach comprehensive context about what happened, then sends that data along with user-provided classification (like "bug" or "bad result") to a centralized error monitoring service.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/tui/src/bottom_pane/feedback_view.rs: This file implements a feedback submission dialog that lets users report bugs, comment on code quality, or provide general feedback about Codex. When submitted, it captures the user's optional note and uploads it along with session logs (if the user consents), then displays a confirmation message with links to follow up on GitHub or internal channels depending on whether they're an employee.
+  - codex-rs/login/src/device_code_auth.rs: This file implements a device-code login flow that allows users to authenticate with their ChatGPT account through a browser-based code exchange. When a user runs the login command, the system generates a unique code and verification URL, displays them in the terminal with clear instructions, and then polls the server in the background until the user completes authentication in their browser—at which point login credentials are securely saved locally.
+  - codex-rs/tui/src/onboarding/auth.rs: This file handles the onboarding authentication flow for Codex, letting users sign in via three methods: ChatGPT account, device code, or API key. It manages the visual screens users see during login (prompts, input fields, success messages) and processes user interactions like keyboard input and API key pasting to guide them through whichever authentication method they choose.
+  - codex-rs/cli/src/login.rs: This file handles user authentication for the Codex command-line tool, supporting multiple login methods: ChatGPT browser-based login, API key login, and device code login. It provides commands to log in, check login status, and log out, while respecting configuration rules that may restrict which login methods are available.
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/core/src/env.rs: This file detects the computing environment where Codex is running—checking whether it's in Windows Subsystem for Linux, running over SSH, in a CI/CD system, or without a graphical display. The product uses these detections to adapt its behavior, such as avoiding browser-based login flows when there's no GUI available.
+
+Sample commit messages:
+  - [apps] Add thread_id param to optionally load thread config for apps feature check. (#11279)
+  - [device-auth] Add device code auth as a standalone option when headless environment is detected. (#9333)
+  - Raise welcome animation breakpoint to 37 rows (#9778)
+  - [device-auth] When headless environment is detected, show device login flow instead. (#8756)
+  - MCP tool call approval (simplified version) (#10200)
+  - [skills] Auto install MCP dependencies when running skils with dependency specs. (#9982)
+  - [apps] Improve app loading. (#10994)
+  - [apps] Improve app installation flow. (#11249)
+  - Make the device auth instructions more clear. (#7745)
+  - [apps] Allow Apps SDK apps. (#11486)
+  - [apps] Gateway MCP should be blocking. (#10289)
+  - Add stage field for experimental flags. (#10793)
+  - [app-server] Add a method to list experimental features. (#10721)
+  - [apps] Improve app listing filtering. (#11697)
+  - Upgrade rmcp to 0.14 (#10718)
+  - [connectors] Support connectors part 1 - App server & MCP (#9667)
+  - [apps] Cache MCP actions from apps. (#10662)
+  - [connectors] Support connectors part 2 - slash command and tui (#9728)
+  - [device-auth] Update login instruction for headless environments. (#8753)
+  - [feedback] Add source info into feedback metadata. (#7140)

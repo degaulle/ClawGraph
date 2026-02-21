@@ -1,0 +1,24 @@
+Name: Josh LeBlanc
+Total commits: 1
+First contribution: 2025-08-08T17:57:16+00:00
+Emails: joshleblanc94@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 2 files
+  - .toml: 1 files
+
+Packages contributed to (2 total):
+  - codex-login: 1 commits (since 2025-08-08)
+  - codex-tui: 1 commits (since 2025-08-08)
+
+Specific features touched (2 total, top 15):
+  - Authentication & Identity (1 files)
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/login/src/lib.rs: This file serves as the main entry point for user login and authentication in Codex, exposing the key features needed to log in users (like device code authentication and a local login server) along with core authentication utilities for managing API keys, tokens, and user sessions.
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+
+Sample commit messages:
+  - Fix rust build on windows (#2019)

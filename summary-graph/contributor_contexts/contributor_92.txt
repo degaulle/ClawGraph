@@ -1,0 +1,12 @@
+Name: Rashim
+Total commits: 1
+First contribution: 2025-04-29T14:30:49+00:00
+Emails: 114280987+rashim27us@users.noreply.github.com
+Files authored: 4
+
+File type distribution:
+  - .ts: 3 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: add `--reasoning` CLI flag (#314)

@@ -1,0 +1,90 @@
+Name: canvrno-oai
+Total commits: 6
+First contribution: 2026-02-04T17:38:41+00:00
+Emails: kbond@openai.com
+Files authored: 27
+
+File type distribution:
+  - .rs: 17 files
+  - .ts: 4 files
+  - .snap: 3 files
+  - .json: 3 files
+
+Packages contributed to (4 total):
+  - codex-core: 4 commits (since 2026-02-04)
+  - codex-app-server-protocol: 2 commits (since 2026-02-06)
+  - codex-app-server: 1 commits (since 2026-02-06)
+  - codex-tui: 1 commits (since 2026-02-04)
+
+Major product areas touched:
+  - Session Lifecycle (6 files)
+  - Safety & Containment (5 files)
+  - Autonomy & Approval (5 files)
+  - Extensibility (4 files)
+  - Agent Actions (4 files)
+  - Project Context (4 files)
+  - Model & Reasoning (4 files)
+  - Conversation (4 files)
+  - Surfaces (1 files)
+
+Specific features touched (29 total, top 15):
+  - Configuration File (5 files)
+  - App Server Protocol (4 files)
+  - Interactive TUI (4 files)
+  - MCP Tool Call (3 files)
+  - MCP Client (3 files)
+  - Turn Management (3 files)
+  - Approval Request Flow (2 files)
+  - User Input Request (2 files)
+  - Session Interrupt (2 files)
+  - Inline Diff Display (2 files)
+  - Feature Flags (1 files)
+  - Rollout Persistence (1 files)
+  - Context Compaction (1 files)
+  - Custom Provider (1 files)
+  - User Prompt (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/mcp_tool_call.rs: This file manages when and how external tools (called "apps") can be executed within a conversation. It acts as a gatekeeper that may ask users for permission before running certain tools—particularly those that could modify data or contact external services—and then executes the tool and reports back the results. It also tracks which apps have been used for analytics purposes.
+  - codex-rs/tui/src/bottom_pane/list_selection_view.rs: This file implements a searchable, scrollable list picker dialog that lets users select one item from a menu of options. It handles keyboard navigation (up/down arrows, number keys, search typing), renders the list with descriptions and status indicators, and executes callbacks when a selection is made.
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/bottom_pane/selection_popup_common.rs: This file provides the shared layout and rendering logic for selection popup menus that appear in the bottom pane (like model selection, approvals, and user input prompts). It handles displaying lists of options with names, descriptions, keyboard shortcuts, and status indicators—managing text wrapping, column alignment, scrolling, and visual styling to keep the menus consistent and readable across different screen sizes and content lengths.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/app-server-protocol/src/protocol/v2.rs: # Summary
+
+This file defines the API contract for Codex's version 2 protocol, translating between internal data structures and the external API format that clients use. It establishes what information flows between the app and clients (like the VS Code extension), covering everything from user authentication and configuration to thread management, conversation turns, and real-time progress notifications. The file essentially acts as a gatekeeper, ensuring clients see a consistent, well-documented interface while the internal system can evolve independently.
+  - codex-rs/app-server/tests/suite/v2/config_rpc.rs: This file tests the configuration system that lets users and administrators control how the Codex application behaves. It verifies that settings are correctly read from different configuration sources (user preferences, project-specific settings, and system-wide policies), written back to disk, and properly merged when multiple sources provide conflicting values. The tests ensure version conflicts are caught and that batch updates work correctly.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/service.rs: # ConfigService
+
+This file manages reading and writing Codex's configuration settings, which can come from multiple sources like user preferences, system policies, and project-specific settings. It handles merging these different configuration layers, validating changes, and persisting updates while respecting which settings are locked by administrators or higher-priority sources.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+
+Sample commit messages:
+  - Mark Config.apps as experimental, correct schema generation issue (#10938)
+  - Parse first order skill/connector mentions (#11547)
+  - Add option to approve and remember MCP/Apps tool usage (#10584)
+  - Add app configs to config.toml (#10822)
+  - Add new apps_mcp_gateway (#11630)
+  - Fix jitter in TUI apps/connectors picker  (#10593)

@@ -1,0 +1,32 @@
+Name: friel-openai
+Total commits: 1
+First contribution: 2025-09-22T18:16:25+00:00
+Emails: friel@openai.com
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-09-22)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+  - Conversation (1 files)
+  - Autonomy & Approval (1 files)
+  - Agent Actions (1 files)
+
+Specific features touched (2 total, top 15):
+  - Interactive TUI (2 files)
+  - Rollback (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/app_backtrack.rs: # app_backtrack.rs
+
+This file implements Codex's "backtrack" feature, which lets users rewind conversations to an earlier point and try a different direction. When users press Esc, they can browse through past messages in an overlay, select one with arrow keys, and press Enter to roll back to that point—the agent then regenerates responses from there, and the UI updates to reflect the new state.
+
+Sample commit messages:
+  - Tui: fix backtracking (#4020)

@@ -1,0 +1,20 @@
+Name: Ricardo Ander-Egg
+Total commits: 1
+First contribution: 2025-11-04T04:28:33+00:00
+Emails: 37962604+polyrand@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-file-search: 1 commits (since 2025-11-04)
+
+Specific features touched (1 total, top 15):
+  - Codebase Search (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/file-search/src/lib.rs: This file implements a fast, fuzzy file search engine that scans directories for files matching a search query. It powers quick-open and file-finding features by running queries in the background while continuously scanning the file system, returning ranked results that update in real-time as the user types. The search respects `.gitignore` rules by default, supports excluding specific patterns, and can optionally highlight which characters in filenames matched the query.
+
+Sample commit messages:
+  - Follow symlinks during file search (#4453)

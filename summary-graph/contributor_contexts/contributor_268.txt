@@ -1,0 +1,22 @@
+Name: Pavel
+Total commits: 1
+First contribution: 2025-12-08T16:47:33+00:00
+Emails: 19418601+rakleed@users.noreply.github.com
+Files authored: 5
+
+File type distribution:
+  - .snap: 4 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-12-08)
+
+Specific features touched (2 total, top 15):
+  - Model Upgrade Path (1 files)
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/model_migration.rs: This file displays and manages a dialog that prompts users when Codex upgrades to a newer AI model version. It shows information about the upgrade and lets users choose whether to switch to the new model or keep using their current one (if that option is available). The dialog handles keyboard navigation and captures the user's decision.
+
+Sample commit messages:
+  - fix: update URLs to use HTTPS in model migration prompts (#7705)

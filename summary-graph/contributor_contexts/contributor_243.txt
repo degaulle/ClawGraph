@@ -1,0 +1,24 @@
+Name: Weiller Carvalho
+Total commits: 1
+First contribution: 2025-11-20T21:20:03+00:00
+Emails: 99501431+weillercarvalho@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-11-20)
+
+Major product areas touched:
+  - Session Lifecycle (1 files)
+
+Specific features touched (2 total, top 15):
+  - Feedback Dialog (1 files)
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/feedback_view.rs: This file implements a feedback submission dialog that lets users report bugs, comment on code quality, or provide general feedback about Codex. When submitted, it captures the user's optional note and uploads it along with session logs (if the user consents), then displays a confirmation message with links to follow up on GitHub or internal channels depending on whether they're an employee.
+
+Sample commit messages:
+  - fix: route feedback issue links by category (#6840)

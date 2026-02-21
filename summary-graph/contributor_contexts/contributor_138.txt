@@ -1,0 +1,11 @@
+Name: Jamie Magee
+Total commits: 1
+First contribution: 2025-08-20T01:07:21+00:00
+Emails: jamie.magee@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .yaml: 1 files
+
+Sample commit messages:
+  - Enable Dependabot updates for Rust toolchain (#2460)

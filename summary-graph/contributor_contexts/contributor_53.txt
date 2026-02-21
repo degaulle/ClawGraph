@@ -1,0 +1,11 @@
+Name: Rohith Gilla
+Total commits: 1
+First contribution: 2025-04-18T03:25:44+00:00
+Emails: gillarohith1@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .tsx: 2 files
+
+Sample commit messages:
+  - fix: standardize filename to kebab-case 🐍➡️🥙 (#302)

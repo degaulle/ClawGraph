@@ -1,0 +1,14 @@
+Name: Connor Christie
+Total commits: 3
+First contribution: 2025-04-23T05:08:52+00:00
+Emails: chillercraft@hotmail.com
+Files authored: 2
+
+File type distribution:
+  - .ts: 1 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: don't clear turn input before retries (#611)
+  - bug: fix error catching when checking for updates (#597)
+  - fix: remove unreachable "disableResponseStorage" logic flow introduced in #543 (#573)

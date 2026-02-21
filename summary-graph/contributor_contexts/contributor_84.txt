@@ -1,0 +1,21 @@
+Name: Luci
+Total commits: 7
+First contribution: 2025-04-24T17:48:35+00:00
+Emails: 22126563+LuciNyan@users.noreply.github.com
+Files authored: 30
+
+File type distribution:
+  - .ts: 20 files
+  - .tsx: 6 files
+  - .json: 2 files
+  - .yaml: 1 files
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: provider config (#653)
+  - fix: lint-staged error (#617)
+  - fix: nits in apply patch (#640)
+  - feat: enhance toCodePoints to prevent potential unicode 14 errors (#615)
+  - chore: upgrade prettier to v3 (#644)
+  - fix(utils): save config (#578)
+  - fix(agent-loop): notify type (#608)

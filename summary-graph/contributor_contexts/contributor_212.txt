@@ -1,0 +1,11 @@
+Name: Lukas
+Total commits: 1
+First contribution: 2025-11-05T01:07:37+00:00
+Emails: 56000765+lukasl-dev@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .nix: 1 files
+
+Sample commit messages:
+  - Fix nix build (#6230)

@@ -1,0 +1,11 @@
+Name: ddgond
+Total commits: 1
+First contribution: 2025-04-16T17:45:24+00:00
+Emails: dadangond@protonmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Update README.md to include correct default (#12)

@@ -1,0 +1,33 @@
+Name: squinlan-oai
+Total commits: 1
+First contribution: 2025-12-18T17:44:38+00:00
+Emails: squinlan@openai.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 2 files
+  - .toml: 1 files
+
+Packages contributed to (1 total):
+  - codex-cloud-tasks: 1 commits (since 2025-12-18)
+
+Major product areas touched:
+  - Surfaces (1 files)
+  - Session Lifecycle (1 files)
+  - Agent Actions (1 files)
+
+Specific features touched (3 total, top 15):
+  - Cloud Tasks (2 files)
+  - Headless Exec Mode (2 files)
+  - Structured Output (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/cloud-tasks/src/cli.rs: This file defines the command-line interface for Codex Cloud tasks, allowing users to submit code generation jobs, check their status, list previous tasks, and preview or apply the generated changes from the command line.
+  - codex-rs/cloud-tasks/src/lib.rs: # lib.rs – Cloud Tasks Command-Line Interface and Interactive UI
+
+This file is the main entry point for Codex's cloud task management system. It provides both command-line commands (exec, status, list, apply, diff) and an interactive terminal UI where users can browse, create, and apply code suggestions from the cloud backend.
+
+The file handles authentication, task listing and filtering by environment, viewing task details (prompts and diffs), previewing changes before applying them, and managing multiple attempt variants. It also includes a real-time text composer for submitting new tasks, environment detection to automatically select workspaces, and error handling with user-friendly messages throughout the workflow.
+
+Sample commit messages:
+  - cloud: default to current branch in cloud exec (#7460)

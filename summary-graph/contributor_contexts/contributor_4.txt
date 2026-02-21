@@ -1,0 +1,11 @@
+Name: mkusaka
+Total commits: 1
+First contribution: 2025-04-16T17:44:53+00:00
+Emails: hinoshita1992@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .json: 1 files
+
+Sample commit messages:
+  - fix: update package-lock.json name to codex (#4)

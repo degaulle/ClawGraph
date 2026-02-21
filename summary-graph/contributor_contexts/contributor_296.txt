@@ -1,0 +1,83 @@
+Name: Curtis 'Fjord' Hawthorne
+Total commits: 5
+First contribution: 2026-01-05T22:12:09+00:00
+Emails: fjord@openai.com
+Files authored: 26
+
+File type distribution:
+  - .rs: 16 files
+  - .unknown: 3 files
+  - .bazel: 2 files
+  - .js: 2 files
+  - .json: 1 files
+  - .txt: 1 files
+  - .md: 1 files
+
+Packages contributed to (2 total):
+  - codex-core: 4 commits (since 2026-02-11)
+  - codex-exec: 2 commits (since 2026-01-05)
+
+Major product areas touched:
+  - Agent Actions (8 files)
+  - Safety & Containment (5 files)
+  - Model & Reasoning (4 files)
+  - Autonomy & Approval (3 files)
+  - Project Context (3 files)
+  - Session Lifecycle (3 files)
+  - Extensibility (2 files)
+  - Conversation (2 files)
+  - Surfaces (1 files)
+
+Specific features touched (30 total, top 15):
+  - Configuration File (5 files)
+  - Headless Exec Mode (3 files)
+  - JavaScript REPL (3 files)
+  - Review Mode (2 files)
+  - Thread Resume (2 files)
+  - Shell Execution (2 files)
+  - Image Analysis (2 files)
+  - MCP Tool Call (2 files)
+  - Turn Management (2 files)
+  - Interactive TUI (1 files)
+  - User Prompt (1 files)
+  - Model Switching (1 files)
+  - Custom Provider (1 files)
+  - File Read (1 files)
+  - File Patch (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/exec/src/cli.rs: This file defines the command-line interface for Codex, specifying all the options and arguments users can pass when running the tool from the terminal. It handles everything from basic settings like which AI model to use, to safety controls like sandboxing modes, to advanced features like resuming past sessions and running code reviews. It also parses and validates user input to ensure flags are used correctly together.
+  - codex-rs/exec/src/lib.rs: This file is the entry point for Codex's command-line execution engine. It initializes the application, loads configuration and authentication settings, handles user input (prompts, images, or code review requests), and orchestrates communication between the user and the AI system—managing approvals, sandbox policies, and displaying results either as human-readable text or machine-readable JSON.
+  - codex-rs/exec/tests/suite/resume.rs: This file tests the "resume session" feature of Codex, which allows users to continue previous conversations. The tests verify that users can pick up where they left off by resuming their most recent session, resuming a specific session by ID, and that resumed sessions properly preserve configuration settings, accept new prompts and images, and correctly filter sessions by working directory.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/profile.rs: This file defines the structure for user configuration profiles that can be saved in the product's config file. It specifies all the settings a user might want to customize as a group—like which AI model to use, how verbose the responses should be, what tools are enabled, and various safety and behavior options—so they can easily switch between different configurations or save their preferences.
+  - codex-rs/core/src/features.rs: This file manages Codex's feature flags—a centralized control system that lets users turn experimental and new capabilities on or off. It defines which features are available (like web search, sandbox environments, and multi-agent collaboration), tracks their maturity level (stable, experimental, or under development), sets their defaults, and handles reading feature settings from user configuration files. The file also detects when users enable unstable features and warns them that these may behave unpredictably.
+  - codex-rs/core/src/project_doc.rs: This file enables Codex to automatically discover and load project-level documentation to guide the AI model's behavior. It searches for `AGENTS.md` files starting from the current directory and walking up to the Git repository root, then combines them with any configured system instructions, JavaScript runtime guidance, and available skills into a single instruction set that shapes how the AI operates within that project.
+  - codex-rs/core/src/tools/handlers/js_repl.rs: This file enables the AI agent to execute JavaScript code in a sandboxed environment and report results back. It handles two operations: running arbitrary JavaScript snippets with optional timeout settings, and resetting the JavaScript runtime between executions. The code validates input to reject common mistakes (like JSON-wrapped code or markdown formatting) and tracks execution events for debugging and monitoring purposes.
+  - codex-rs/core/src/tools/handlers/mod.rs: This file serves as a central hub that organizes and exposes all the different tools that Codex can use to accomplish tasks—such as reading files, running shell commands, searching code, applying patches, and getting user input. It acts as a switchboard that makes these capabilities available to the rest of the system.
+
+Sample commit messages:
+  - Add js_repl_tools_only model and routing restrictions (#10671)
+  - Add feature-gated freeform js_repl core runtime (#10674)
+  - Add js_repl host helpers and exec end events (#10672)
+  - Allow global exec flags after `resume` and fix CI codex build/timeout (#8440)
+  - Add js_repl kernel crash diagnostics (#11666)

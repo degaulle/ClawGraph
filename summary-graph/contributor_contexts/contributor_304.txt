@@ -1,0 +1,56 @@
+Name: Helmut Januschka
+Total commits: 1
+First contribution: 2026-01-09T18:38:26+00:00
+Emails: helmut@januschka.com
+Files authored: 11
+
+File type distribution:
+  - .rs: 9 files
+  - .js: 1 files
+  - .md: 1 files
+
+Packages contributed to (3 total):
+  - codex-core: 1 commits (since 2026-01-09)
+  - codex-protocol: 1 commits (since 2026-01-09)
+  - codex-tui: 1 commits (since 2026-01-09)
+
+Major product areas touched:
+  - Safety & Containment (3 files)
+  - Model & Reasoning (2 files)
+  - Autonomy & Approval (2 files)
+  - Project Context (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (16 total, top 15):
+  - Configuration File (4 files)
+  - Interactive TUI (3 files)
+  - Custom Provider (2 files)
+  - User Prompt (1 files)
+  - Multimodal Input (1 files)
+  - Model Switching (1 files)
+  - Web Search (1 files)
+  - Working Directory Awareness (1 files)
+  - Onboarding Flow (1 files)
+  - Authentication & Identity (1 files)
+  - Directory Trust (1 files)
+  - MCP Client (1 files)
+  - MCP Tool Call (1 files)
+  - Collaboration Mode (1 files)
+  - Personality Style (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/protocol/src/config_types.rs: This file defines the configuration options and settings that users can customize when working with Codex, including choices like which AI model to use, how detailed the AI's reasoning should be, what level of access sandbox environments have, and which collaboration mode (Plan or Default) to start in. It essentially provides all the knobs and switches that control how Codex behaves.
+  - codex-rs/tui/src/cli.rs: This file defines the command-line interface for Codex, capturing all the flags and options users can pass when starting the tool from the terminal. It specifies what inputs users can provide—like initial prompts, images, which AI model to use, security settings for command execution, and workspace configuration—so the application knows how to initialize and what behaviors to enable based on user preferences.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+
+Sample commit messages:
+  - fix: add tui.alternate_screen config and --no-alt-screen CLI flag for Zellij scrollback (#8555)

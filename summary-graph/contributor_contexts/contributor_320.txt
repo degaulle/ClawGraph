@@ -1,0 +1,30 @@
+Name: Max Kong
+Total commits: 3
+First contribution: 2026-01-20T21:59:59+00:00
+Emails: kongzheyuan@outlook.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 3 files
+
+Packages contributed to (1 total):
+  - codex-windows-sandbox: 3 commits (since 2026-01-20)
+
+Major product areas touched:
+  - Safety & Containment (2 files)
+
+Specific features touched (4 total, top 15):
+  - Windows Sandbox (3 files)
+  - Shell Execution (1 files)
+  - Workspace-Write Sandbox (1 files)
+  - Git Awareness (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/windows-sandbox-rs/src/allow.rs: This file determines which folders and files a sandboxed code execution environment is allowed to read and write to. It enforces security policies by identifying writable workspace directories while explicitly blocking access to Git metadata (`.git` folders), and optionally includes temporary directories based on the configured security level.
+  - codex-rs/windows-sandbox-rs/src/audit.rs: This file scans the file system to identify folders that anyone on the system can write to, then locks down those folders to prevent the sandboxed code from accessing them. It runs a quick security audit when the sandbox starts up, checks commonly-used directories (temp folders, the current working directory, system paths), and if it finds any world-writable locations, it applies restrictions so the sandboxed process can't exploit them.
+  - codex-rs/windows-sandbox-rs/src/command_runner_win.rs: This file is the main entry point for securely running user code on Windows with restricted permissions. It reads execution instructions from a request file, sets up a sandboxed environment with limited access based on a security policy, launches the process with restricted credentials, and monitors it until completion or timeout.
+
+Sample commit messages:
+  - fix(windows-sandbox): parse PATH list entries for audit roots (#9319)
+  - fix(windows-sandbox): remove request files after read (#9316)
+  - fix(windows-sandbox): deny .git file entries under writable roots (#9314)

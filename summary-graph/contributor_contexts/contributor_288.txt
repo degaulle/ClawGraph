@@ -1,0 +1,31 @@
+Name: Andrew Ambrosino
+Total commits: 1
+First contribution: 2025-12-18T22:28:30+00:00
+Emails: ambrosino@openai.com
+Files authored: 4
+
+File type distribution:
+  - .rs: 2 files
+  - .md: 2 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-12-18)
+
+Major product areas touched:
+  - Safety & Containment (2 files)
+
+Specific features touched (5 total, top 15):
+  - Shell Execution (1 files)
+  - Configuration File (1 files)
+  - MCP Client (1 files)
+  - MCP Tool Call (1 files)
+  - Custom Provider (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/core/src/exec_env.rs: This file controls which environment variables (like PATH, API keys, etc.) are passed to code that Codex executes, based on a configurable security policy. It filters out sensitive variables by default (those containing "KEY", "SECRET", or "TOKEN"), allows customization through allowlists and blocklists, and automatically injects a thread identifier so executed code can identify which Codex session it belongs to.
+
+Sample commit messages:
+  - Set exclude to true by default in app server (#8281)

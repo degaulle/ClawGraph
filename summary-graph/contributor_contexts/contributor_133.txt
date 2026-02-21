@@ -1,0 +1,11 @@
+Name: LongYinan
+Total commits: 1
+First contribution: 2025-08-15T20:54:47+00:00
+Emails: lynweklm@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .json: 1 files
+
+Sample commit messages:
+  - chore: remove duplicated lockfile (#2336)

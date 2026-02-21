@@ -1,0 +1,60 @@
+Name: willwang-openai
+Total commits: 4
+First contribution: 2026-01-14T23:22:59+00:00
+Emails: willwang@openai.com
+Files authored: 36
+
+File type distribution:
+  - .json: 19 files
+  - .rs: 13 files
+  - .ts: 2 files
+  - .yml: 1 files
+  - .lock: 1 files
+
+Packages contributed to (6 total):
+  - codex-core: 3 commits (since 2026-01-30)
+  - codex-api: 2 commits (since 2026-01-31)
+  - codex-protocol: 2 commits (since 2026-01-30)
+  - codex-backend-client: 1 commits (since 2026-01-30)
+  - codex-tui: 1 commits (since 2026-02-12)
+  - codex-app-server-protocol: 1 commits (since 2026-02-12)
+
+Major product areas touched:
+  - Session Lifecycle (5 files)
+  - Safety & Containment (4 files)
+  - Model & Reasoning (4 files)
+  - Conversation (3 files)
+  - Project Context (3 files)
+  - Autonomy & Approval (3 files)
+  - Agent Actions (3 files)
+  - Extensibility (2 files)
+  - Surfaces (1 files)
+
+Specific features touched (7 total, top 15):
+  - Authentication & Identity (5 files)
+  - App Server Protocol (3 files)
+  - Telemetry & Metrics (3 files)
+  - Interactive TUI (2 files)
+  - Custom AI Provider (1 files)
+  - Agent Response Stream (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/backend-client/src/client.rs: This file implements a communication bridge between the Codex application and its backend servers. It handles making requests to fetch and create coding tasks, check usage limits and credits, retrieve configuration files, and view alternative solution attempts—all while managing authentication headers and supporting connections to different server endpoints (Codex or ChatGPT's backend).
+  - codex-rs/core/src/auth.rs: This file manages user authentication for the Codex product, handling login, logout, and token refresh across three auth methods: API keys, ChatGPT accounts with stored credentials, and externally-managed ChatGPT tokens. It loads user credentials from storage (or environment variables), keeps them in memory, automatically refreshes expired tokens when needed, and enforces login restrictions like requiring a specific authentication method or workspace. The file also provides recovery logic when API requests fail with authentication errors—it can reload fresh credentials from disk or request new tokens from an external service before retrying.
+  - codex-rs/core/src/error.rs: This file defines how Codex handles and communicates errors to users. It establishes a comprehensive error system that categorizes different failure modes—like network issues, rate limits, sandbox execution failures, and authentication problems—then formats them into user-friendly messages appropriate for each situation, such as upgrade prompts for free-tier users who hit usage limits or specific recovery instructions for expired credentials.
+  - codex-rs/core/src/token_data.rs: This file manages user authentication credentials and subscription information extracted from OpenAI login tokens. It parses user details like email address, subscription plan type (Free, Plus, Pro, Team, Business, etc.), and account identifiers from authentication tokens so the product can identify who the user is and what features they have access to.
+  - codex-rs/protocol/src/account.rs: This file defines the different subscription plan types that users can have on the platform (Free, Pro, Team, Enterprise, etc.), making this information available across the system so features and access levels can be tied to a user's plan.
+  - codex-rs/codex-api/src/rate_limits.rs: This file extracts rate limit and credit usage information from server responses so the product can enforce usage quotas and display account status to users. It parses special headers sent by the API server to understand how much of a user's rate limit they've consumed, when their limits reset, and how many credits they have remaining.
+  - codex-rs/core/src/api_bridge.rs: This file translates error responses from the API into user-friendly error messages that the rest of the product can understand and handle consistently. It also manages authentication credentials by converting different authentication methods (API keys, tokens, user accounts) into a standardized format that the API layer expects.
+  - codex-rs/app-server-protocol/src/protocol/v2.rs: # Summary
+
+This file defines the API contract for Codex's version 2 protocol, translating between internal data structures and the external API format that clients use. It establishes what information flows between the app and clients (like the VS Code extension), covering everything from user authentication and configuration to thread management, conversation turns, and real-time progress notifications. The file essentially acts as a gatekeeper, ensuring clients see a consistent, well-documented interface while the internal system can evolve independently.
+  - codex-rs/codex-api/src/error.rs: This file defines the different types of errors that can occur when the API communicates with OpenAI's service, such as network failures, rate limiting, quota restrictions, context window limits, and server issues. It provides a consistent way for the rest of the codebase to report and handle these failures so the product can respond appropriately to users.
+  - codex-rs/codex-api/src/sse/responses.rs: This file handles receiving and parsing real-time streaming responses from the API. It takes the raw server stream and converts it into a series of events—like text deltas, reasoning updates, completion signals, and errors—that the rest of the product can consume. It also detects specific error conditions (like rate limits, quota issues, or context window overflows) and extracts retry timing when available.
+
+Sample commit messages:
+  - display promo message in usage error (#10285)
+  - change model cap to server overload (#11388)
+  - upgrade runners in rust-ci.yml to use the larger runners (#9106)
+  - add error messages for the go plan type (#10181)

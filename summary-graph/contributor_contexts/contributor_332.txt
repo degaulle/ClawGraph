@@ -1,0 +1,25 @@
+Name: David Gilbertson
+Total commits: 1
+First contribution: 2026-01-26T23:11:27+00:00
+Emails: gilbertson.david@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .lock: 1 files
+  - .toml: 1 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-windows-sandbox: 1 commits (since 2026-01-26)
+
+Major product areas touched:
+  - Safety & Containment (1 files)
+
+Specific features touched (1 total, top 15):
+  - Windows Sandbox (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/windows-sandbox-rs/src/logging.rs: This file handles logging for the Windows Sandbox tool, recording what commands were run, whether they succeeded or failed, and any debug information. It writes timestamped log entries to a `sandbox.log` file, truncating long commands to keep logs readable while being careful not to corrupt text with special characters.
+
+Sample commit messages:
+  - fix: handle utf-8 in windows sandbox logs (#8647)

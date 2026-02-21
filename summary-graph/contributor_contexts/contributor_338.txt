@@ -1,0 +1,14 @@
+Name: baumann-oai
+Total commits: 1
+First contribution: 2026-01-30T18:14:46+00:00
+Emails: baumann@openai.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-01-30)
+
+Sample commit messages:
+  - plan mode: add TL;DR checkpoint and client behavior note (#10195)

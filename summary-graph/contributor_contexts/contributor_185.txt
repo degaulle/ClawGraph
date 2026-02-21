@@ -1,0 +1,11 @@
+Name: Truls Borgvall
+Total commits: 1
+First contribution: 2025-10-18T18:02:22+00:00
+Emails: 51020190+truls27a@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .toml: 1 files
+
+Sample commit messages:
+  - docs(changelog): update install command to @openai/codex@<version> (#2073)

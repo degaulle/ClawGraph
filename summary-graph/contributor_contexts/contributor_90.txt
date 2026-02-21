@@ -1,0 +1,12 @@
+Name: rumple
+Total commits: 1
+First contribution: 2025-04-25T16:52:42+00:00
+Emails: amrut.joshi@gmail.com
+Files authored: 4
+
+File type distribution:
+  - .ts: 3 files
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: Add support for OpenAI-Organization and OpenAI-Project headers (#626)

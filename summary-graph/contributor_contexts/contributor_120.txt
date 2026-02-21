@@ -1,0 +1,88 @@
+Name: vishnu-oai
+Total commits: 2
+First contribution: 2025-07-24T18:35:28+00:00
+Emails: vishnu@openai.com
+Files authored: 41
+
+File type distribution:
+  - .rs: 34 files
+  - .toml: 5 files
+  - .lock: 1 files
+  - .md: 1 files
+
+Packages contributed to (7 total):
+  - codex-core: 2 commits (since 2025-07-24)
+  - codex-exec: 1 commits (since 2025-09-29)
+  - codex-otel: 1 commits (since 2025-09-29)
+  - codex-protocol: 1 commits (since 2025-09-29)
+  - codex-tui: 1 commits (since 2025-09-29)
+  - codex-app-server-protocol: 1 commits (since 2025-09-29)
+  - core_test_support: 1 commits (since 2025-09-29)
+
+Major product areas touched:
+  - Session Lifecycle (13 files)
+  - Agent Actions (7 files)
+  - Model & Reasoning (7 files)
+  - Safety & Containment (7 files)
+  - Project Context (5 files)
+  - Autonomy & Approval (4 files)
+  - Conversation (3 files)
+  - Extensibility (3 files)
+  - Surfaces (1 files)
+
+Specific features touched (28 total, top 15):
+  - Telemetry & Metrics (7 files)
+  - Structured Output (4 files)
+  - Headless Exec Mode (4 files)
+  - Rollout Persistence (4 files)
+  - Configuration File (4 files)
+  - Turn Management (4 files)
+  - Authentication & Identity (3 files)
+  - Thread Resume (3 files)
+  - MCP Tool Call (2 files)
+  - MCP Client (2 files)
+  - File Patch (2 files)
+  - Context Compaction (2 files)
+  - Git Awareness (1 files)
+  - Review Mode (1 files)
+  - Background Notification (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/git_info.rs: # Summary
+
+This file provides Git repository information to the Codex product by querying Git commands from the file system. It extracts details like the current commit hash, branch name, repository URL, recent commit history, and uncommitted changes—enabling Codex to understand the state of a user's codebase and compare it against remote versions.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/rollout/recorder.rs: # RolloutRecorder
+
+This file saves and retrieves conversation session recordings (called "rollouts") so users can replay, inspect, and resume their Codex sessions. It writes each session's events to a timestamped file on disk, manages listing and browsing past sessions, and coordinates between in-memory buffering and persistent storage.
+  - codex-rs/core/tests/suite/cli_stream.rs: This file contains automated tests that verify the command-line interface works correctly when users run Codex commands. It tests key scenarios like streaming responses from AI models, applying custom instructions, saving conversation history to files, tracking git repository information, and resuming previous conversations—ensuring the CLI behaves as expected from a user's perspective.
+  - codex-rs/core/src/apply_patch.rs: This file handles the safety assessment and approval workflow when Codex applies code patches to user files. It evaluates whether a patch should be automatically allowed, requires user approval, or should be rejected based on the user's security policies, then routes the patch to the appropriate execution path.
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/core/src/otel_init.rs: This file sets up the observability and monitoring system for the Codex application. It translates the app's configuration settings into instructions for where and how to send performance data, traces, and metrics (such as to external monitoring services), and includes a filter to ensure only Codex-owned monitoring events are exported.
+
+Sample commit messages:
+  - OpenTelemetry events (#2103)
+  - Record Git metadata to rollout (#1598)

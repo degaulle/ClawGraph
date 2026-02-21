@@ -1,0 +1,114 @@
+Name: Michael Bolin
+Total commits: 593
+First contribution: 2025-04-16T21:16:53+00:00
+Emails: bolinfest@gmail.com, mbolin@openai.com
+Files authored: 1529
+
+File type distribution:
+  - .ts: 546 files
+  - .rs: 518 files
+  - .json: 177 files
+  - .md: 59 files
+  - .toml: 57 files
+  - .tsx: 53 files
+  - .unknown: 21 files
+  - .bazel: 17 files
+  - .js: 13 files
+  - .yml: 12 files
+
+Packages contributed to (47 total):
+  - codex-core: 235 commits (since 2025-04-24)
+  - codex-tui: 127 commits (since 2025-04-24)
+  - codex-exec: 73 commits (since 2025-04-24)
+  - codex-mcp-server: 62 commits (since 2025-05-03)
+  - codex-cli: 61 commits (since 2025-04-24)
+  - codex-protocol: 58 commits (since 2025-04-24)
+  - codex-app-server: 58 commits (since 2025-07-24)
+  - codex-app-server-protocol: 40 commits (since 2025-08-14)
+  - codex-exec-server: 24 commits (since 2025-11-19)
+  - codex-login: 21 commits (since 2025-06-04)
+  - codex-shell-command: 18 commits (since 2025-04-24)
+  - mcp_test_support: 17 commits (since 2025-07-21)
+  - codex-linux-sandbox: 16 commits (since 2025-05-23)
+  - codex-config: 14 commits (since 2025-12-17)
+  - codex-utils-cli: 14 commits (since 2025-04-24)
+
+Major product areas touched:
+  - Safety & Containment (83 files)
+  - Session Lifecycle (68 files)
+  - Agent Actions (57 files)
+  - Autonomy & Approval (35 files)
+  - Model & Reasoning (34 files)
+  - Conversation (20 files)
+  - Project Context (16 files)
+  - Extensibility (12 files)
+  - Surfaces (5 files)
+
+Specific features touched (88 total, top 15):
+  - Configuration File (63 files)
+  - Execution Policy (60 files)
+  - Shell Execution (60 files)
+  - App Server Protocol (56 files)
+  - Interactive TUI (43 files)
+  - Turn Management (43 files)
+  - Authentication & Identity (34 files)
+  - MCP Client (27 files)
+  - File Patch (27 files)
+  - Rollout Persistence (26 files)
+  - Thread Resume (24 files)
+  - MCP Tool Call (23 files)
+  - Approval Request Flow (22 files)
+  - Telemetry & Metrics (22 files)
+  - Network Restriction (22 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/ansi-escape/src/lib.rs: This file handles the display of text output in the Codex terminal interface by converting ANSI color codes (formatting that tools use to add colors and styles to text) into a format the UI can render, while also cleaning up tabs to prevent visual glitches in transcript views.
+  - codex-rs/apply-patch/src/lib.rs: This file implements a patch application system that parses and applies code changes to files on disk. It reads patch instructions (which specify files to add, delete, or modify), validates them against the actual file contents, applies the changes to the filesystem, and reports which files were affected. The system is designed to work with AI-generated patches, particularly from GPT-4, and ensures changes are applied accurately before execution.
+  - codex-rs/apply-patch/src/parser.rs: This file parses patch instructions that tell Codex how to modify files. It reads a specially-formatted patch text (marked with `*** Begin Patch` and `*** End Patch`), breaks it into individual operations like "add this file," "delete that file," or "change these specific lines," and validates that the instructions are well-formed so they can be applied to the codebase.
+  - codex-rs/apply-patch/src/seek_sequence.rs: This file finds where a specific sequence of lines appears in a file so that code patches can be applied correctly. It's flexible about matching—it first tries an exact match, then ignores trailing whitespace, then ignores all whitespace, and finally converts fancy Unicode characters (like curly quotes and em-dashes) to their plain ASCII equivalents to handle files that may have been edited in word processors or other tools. This helps patches apply successfully even when source files have minor formatting differences.
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/utils/cli/src/approval_mode_cli_arg.rs: This file defines the approval mode options users can select when running Codex from the command line, controlling when the system asks for permission before executing suggested commands—ranging from only trusting safe commands, to asking on-demand, to never asking at all.
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/error.rs: This file defines how Codex handles and communicates errors to users. It establishes a comprehensive error system that categorizes different failure modes—like network issues, rate limits, sandbox execution failures, and authentication problems—then formats them into user-friendly messages appropriate for each situation, such as upgrade prompts for free-tier users who hit usage limits or specific recovery instructions for expired credentials.
+
+Sample commit messages:
+  - feat: leverage elicitations in the MCP server (#1623)
+  - feat: port maybeRedeemCredits() from get-api-key.tsx to login_with_chatgpt.py (#1221)
+  - chore: make CodexAuth::api_key a private field (#1965)
+  - fix: add stricter checks and better error messages to create_github_release.sh (#1874)
+  - fix: remove unused _writableRoots arg to exec() function (#762)
+  - feat: introduce the use of tui-markdown (#851)
+  - fix: add a hopefully-temporary sleep to reduce test flakiness (#7848)
+  - chore: move each view used in BottomPane into its own file (#928)
+  - feat: `codex exec` writes only the final message to stdout (#4644)
+  - doc: update the config.toml documentation for the Rust CLI in codex-rs/README.md (#795)
+  - chore: upgrade to actions/setup-node@v5 (#3316)
+  - fix: prepare ExecPolicy in exec-server for execpolicy2 cutover (#6888)
+  - fix: always load version from package.json at runtime (#909)
+  - chore: change create_github_release to create a fresh clone in a temp directory (#3228)
+  - fix: pre-main hardening logic must tolerate non-UTF-8 env vars (#7749)
+  - feat: remove "cargo check individual crates" from CI (#11475)
+  - fix: ensure PatchApplyBeginEvent and PatchApplyEndEvent are dispatched reliably (#1760)
+  - fix: inline function marked as dead code (#7508)
+  - feat: redesign sandbox config (#1373)
+  - fix: make all fields of Session private (#2285)

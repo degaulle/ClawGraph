@@ -1,0 +1,11 @@
+Name: Alex Kwiatkowski
+Total commits: 1
+First contribution: 2026-02-13T20:19:25+00:00
+Emails: rupurt@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .nix: 2 files
+
+Sample commit messages:
+  - fix(nix): use correct version from Cargo.toml in flake build (#11770)

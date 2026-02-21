@@ -1,0 +1,48 @@
+Name: joshka-oai
+Total commits: 1
+First contribution: 2025-10-15T21:57:05+00:00
+Emails: joshka@openai.com
+Files authored: 3
+
+File type distribution:
+  - .rs: 2 files
+  - .snap: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-10-15)
+
+Major product areas touched:
+  - Conversation (1 files)
+  - Session Lifecycle (1 files)
+  - Agent Actions (1 files)
+  - Autonomy & Approval (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+  - Safety & Containment (1 files)
+
+Specific features touched (2 total, top 15):
+  - Interactive TUI (2 files)
+  - Inline Diff Display (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/list_selection_view.rs: This file implements a searchable, scrollable list picker dialog that lets users select one item from a menu of options. It handles keyboard navigation (up/down arrows, number keys, search typing), renders the list with descriptions and status indicators, and executes callbacks when a selection is made.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+
+Sample commit messages:
+  - feat(tui): warn high effort rate use (#5035)

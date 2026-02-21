@@ -1,0 +1,15 @@
+Name: mjr-openai
+Total commits: 2
+First contribution: 2026-01-27T17:19:43+00:00
+Emails: mjr@openai.com
+Files authored: 6
+
+File type distribution:
+  - .json: 2 files
+  - .yml: 2 files
+  - .md: 1 files
+  - .yaml: 1 files
+
+Sample commit messages:
+  - update the ci pnpm workflow for shell-tool-mcp to use corepack for pnpm versioning (#10115)
+  - update pnpm to 10.28.2 to address security issues (#9992)

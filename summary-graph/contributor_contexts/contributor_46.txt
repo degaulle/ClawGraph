@@ -1,0 +1,17 @@
+Name: Thomas
+Total commits: 6
+First contribution: 2025-04-17T23:17:13+00:00
+Emails: tomc98@users.noreply.github.com
+Files authored: 8
+
+File type distribution:
+  - .tsx: 4 files
+  - .ts: 4 files
+
+Sample commit messages:
+  - feat: add /command autocomplete (#317)
+  - fix: update context left display logic in TerminalChatInput component (#307)
+  - feat: add /compact (#289)
+  - feat: enhance image path detection in input processing (#189)
+  - fix(agent-loop): update required properties to include workdir and ti… (#530)
+  - feat: add support for `/diff` command autocomplete in TerminalChatInput (#431)

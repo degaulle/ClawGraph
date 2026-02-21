@@ -1,0 +1,150 @@
+Name: Josh McKinney
+Total commits: 70
+First contribution: 2025-10-24T03:04:15+00:00
+Emails: joshka@openai.com
+Files authored: 937
+
+File type distribution:
+  - .txt: 362 files
+  - .snap: 308 files
+  - .rs: 180 files
+  - .toml: 50 files
+  - .md: 16 files
+  - .json: 7 files
+  - .yml: 4 files
+  - .unknown: 3 files
+  - .lock: 2 files
+  - .jsonl: 2 files
+
+Packages contributed to (47 total):
+  - codex-tui: 31 commits (since 2025-10-24)
+  - codex-core: 10 commits (since 2025-10-28)
+  - codex-cli: 5 commits (since 2025-11-24)
+  - app_test_support: 2 commits (since 2025-11-24)
+  - codex-exec: 2 commits (since 2025-10-28)
+  - codex-linux-sandbox: 2 commits (since 2025-11-24)
+  - codex-app-server-protocol: 2 commits (since 2025-11-24)
+  - core_test_support: 2 commits (since 2025-11-24)
+  - mcp_test_support: 2 commits (since 2025-11-24)
+  - codex-backend-client: 1 commits (since 2025-11-24)
+  - codex-backend-openapi-models: 1 commits (since 2025-11-24)
+  - codex-chatgpt: 1 commits (since 2025-11-24)
+  - codex-cloud-tasks: 1 commits (since 2025-11-24)
+  - codex-cloud-tasks-client: 1 commits (since 2025-11-24)
+  - codex-ansi-escape: 1 commits (since 2025-11-24)
+
+Major product areas touched:
+  - Session Lifecycle (15 files)
+  - Agent Actions (8 files)
+  - Safety & Containment (7 files)
+  - Model & Reasoning (7 files)
+  - Conversation (7 files)
+  - Autonomy & Approval (7 files)
+  - Project Context (5 files)
+  - Surfaces (4 files)
+  - Extensibility (4 files)
+
+Specific features touched (88 total, top 15):
+  - Interactive TUI (27 files)
+  - Configuration File (10 files)
+  - Turn Management (9 files)
+  - Agent Response Stream (6 files)
+  - Authentication & Identity (5 files)
+  - Telemetry & Metrics (5 files)
+  - Directory Trust (5 files)
+  - MCP Client (5 files)
+  - Feature Flags (4 files)
+  - Inline Diff Display (4 files)
+  - Execution Policy (4 files)
+  - Inline Approval Prompt (4 files)
+  - Prompt History (4 files)
+  - Session Interrupt (4 files)
+  - Shell Execution (3 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/key_hint.rs: This file defines how keyboard shortcuts are recognized and displayed in the terminal interface. It maps physical keyboard inputs (like Ctrl+C or Alt+Enter) to human-readable labels that appear as on-screen hints, with formatting that adapts to whether the user is on Mac, Windows, or Linux.
+  - codex-rs/tui/src/status_indicator_widget.rs: This file displays a live progress indicator that appears above the composer when the AI agent is working on a task. It shows an animated spinner, elapsed time, an option to interrupt the task (via Esc key), and optional contextual details like what process is running in the background — all kept on a single line to avoid visual layout shifts in the interface.
+  - codex-rs/utils/approval-presets/src/lib.rs: This file defines preset security and permission configurations that users can select to control what Codex is allowed to do—such as whether it can edit files, run commands, or access the internet, and when it needs to ask for approval before taking actions. The three built-in presets (Read Only, Default, and Full Access) provide quick setup options for different trust levels, and this code makes them available to both the command-line interface and other parts of the system.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/exec/tests/suite/resume.rs: This file tests the "resume session" feature of Codex, which allows users to continue previous conversations. The tests verify that users can pick up where they left off by resuming their most recent session, resuming a specific session by ID, and that resumed sessions properly preserve configuration settings, accept new prompts and images, and correctly filter sessions by working directory.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/app_event.rs: This file defines the internal communication system that lets different parts of the terminal interface talk to the main application loop—it's like a message board where UI components post requests (like "open the model picker" or "save this setting") rather than directly manipulating the app. It handles everything from user actions like switching threads or updating preferences, to background operations like file search results and rate limit checks, to special Windows sandbox setup flows, ensuring the UI stays responsive and loosely coupled from the core logic.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+
+Sample commit messages:
+  - feat(tui2): add multi-click transcript selection (#8471)
+  - Add features enable/disable subcommands (#10180)
+  - fix(tui2): align Steer submit keys (#9218)
+  - feat(tui2): add /experimental menu (#9562)
+  - feat(tui2): add feature-flagged tui2 frontend (#7793)
+  - test(tui): add deterministic paste-burst tests (#9121)
+  - tui2: copy selection dismisses highlight (#8718)
+  - fix: brighten transcript copy affordance (#8697)
+  - feat(tui2): coalesce transcript scroll redraws (#8295)
+  - Point Codex App tooltip links to app landing page (#11515)
+  - fix(tui2): avoid scroll stickiness at cell boundaries (#8695)
+  - fix(tui): disable double-press quit shortcut (#9220)
+  - fix(tui2): start transcript selection on drag (#8466)
+  - fix(tui): keep unified exec summary on working line (#10962)
+  - fix(tui2): fix screen corruption (#8463)
+  - deflake linux-sandbox NoNewPrivs timeout (#11245)
+  - ci: fall back to local Bazel on forks without BuildBuddy key (#11359)
+  - feat(tui): route employee feedback follow-ups to internal link (#10198)
+  - Clarify external editor env var message (#10030)
+  - test(tui2): re-enable ANSI for VT100 tests (#8423)

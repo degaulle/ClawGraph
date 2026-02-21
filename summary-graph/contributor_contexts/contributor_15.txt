@@ -1,0 +1,30 @@
+Name: Misha Davidov
+Total commits: 5
+First contribution: 2025-04-16T19:12:44+00:00
+Emails: md@openai.com
+Files authored: 7
+
+File type distribution:
+  - .ts: 4 files
+  - .rs: 2 files
+  - .md: 1 files
+
+Packages contributed to (1 total):
+  - codex-apply-patch: 1 commits (since 2025-04-25)
+
+Major product areas touched:
+  - Agent Actions (1 files)
+
+Specific features touched (1 total, top 15):
+  - File Patch (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/apply-patch/src/lib.rs: This file implements a patch application system that parses and applies code changes to files on disk. It reads patch instructions (which specify files to add, delete, or modify), validates them against the actual file contents, applies the changes to the filesystem, and reports which files were affected. The system is designed to work with AI-generated patches, particularly from GPT-4, and ensures changes are applied accurately before execution.
+  - codex-rs/apply-patch/src/seek_sequence.rs: This file finds where a specific sequence of lines appears in a file so that code patches can be applied correctly. It's flexible about matching—it first tries an exact match, then ignores trailing whitespace, then ignores all whitespace, and finally converts fancy Unicode characters (like curly quotes and em-dashes) to their plain ASCII equivalents to handle files that may have been edited in word processors or other tools. This helps patches apply successfully even when source files have minor formatting differences.
+
+Sample commit messages:
+  - fix: handling weird unicode characters in `apply_patch` (#674)
+  - feat: create parent directories when creating new files. (#552)
+  - feat: more loosely match context for apply_patch (#610)
+  - [readme] security review recipe (#72)
+  - fix: `apply_patch` unicode characters (#625)

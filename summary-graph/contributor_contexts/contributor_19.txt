@@ -1,0 +1,157 @@
+Name: Fouad Matin
+Total commits: 57
+First contribution: 2025-04-16T20:21:22+00:00
+Emails: 169186268+fouad-openai@users.noreply.github.com
+Files authored: 119
+
+File type distribution:
+  - .rs: 38 files
+  - .ts: 20 files
+  - .snap: 20 files
+  - .tsx: 18 files
+  - .md: 6 files
+  - .json: 5 files
+  - .unknown: 3 files
+  - .toml: 3 files
+  - .yml: 2 files
+  - .yaml: 2 files
+
+Packages contributed to (11 total):
+  - codex-core: 6 commits (since 2025-05-29)
+  - codex-tui: 4 commits (since 2025-09-15)
+  - codex-cli: 2 commits (since 2025-10-03)
+  - codex-exec: 2 commits (since 2025-04-29)
+  - codex-protocol: 2 commits (since 2025-05-29)
+  - codex-chatgpt: 1 commits (since 2025-10-03)
+  - codex-api: 1 commits (since 2026-01-17)
+  - codex-login: 1 commits (since 2025-10-03)
+  - codex-mcp-server: 1 commits (since 2025-10-03)
+  - codex-app-server: 1 commits (since 2025-10-03)
+  - codex-utils-cli: 1 commits (since 2025-05-29)
+
+Major product areas touched:
+  - Session Lifecycle (12 files)
+  - Safety & Containment (9 files)
+  - Agent Actions (8 files)
+  - Model & Reasoning (8 files)
+  - Conversation (7 files)
+  - Project Context (7 files)
+  - Autonomy & Approval (6 files)
+  - Extensibility (5 files)
+  - Surfaces (3 files)
+
+Specific features touched (88 total, top 15):
+  - Configuration File (12 files)
+  - Interactive TUI (9 files)
+  - Authentication & Identity (8 files)
+  - Turn Management (7 files)
+  - App Server Protocol (5 files)
+  - MCP Client (4 files)
+  - Agent Response Stream (3 files)
+  - Feature Flags (3 files)
+  - Shell Execution (3 files)
+  - Approval Request Flow (3 files)
+  - Directory Trust (3 files)
+  - MCP Server (3 files)
+  - Collaboration Mode (3 files)
+  - Telemetry & Metrics (2 files)
+  - Cloud Tasks (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/exec/src/lib.rs: This file is the entry point for Codex's command-line execution engine. It initializes the application, loads configuration and authentication settings, handles user input (prompts, images, or code review requests), and orchestrates communication between the user and the AI system—managing approvals, sandbox policies, and displaying results either as human-readable text or machine-readable JSON.
+  - codex-rs/utils/cli/src/config_override.rs: This file enables users to override configuration settings from the command line using the `-c key=value` syntax (e.g., `-c model="o3"`). It parses these overrides and applies them to the tool's configuration, supporting nested settings via dotted paths like `foo.bar.baz` and automatically converting values to the correct type.
+  - codex-rs/core/src/flags.rs: This file defines configuration options that control how the system behaves during testing—specifically, it allows tests to use pre-recorded responses instead of making real network requests to the API.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/core/src/unified_exec/mod.rs: This file manages interactive command execution with built-in safeguards—it orchestrates running commands in isolated environments, handles user approvals, buffers output, and lets processes persist across multiple requests so users can maintain stateful shell sessions.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/footer.rs: This file renders the footer bar at the bottom of the chat interface, displaying helpful hints, keyboard shortcuts, and context information to guide users on what they can do next.
+
+The footer adapts its content based on the current state (whether the user is composing a message, a task is running, etc.) and intelligently collapses hints to fit narrower terminal widths—prioritizing the most important information like queue notifications over less critical hints like "press ? for shortcuts." It also shows transient reminders like "press Ctrl+C again to quit" and handles special modes like collaboration mode labels, context window usage, and custom status lines.
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+
+Sample commit messages:
+  - add: codex-mini-latest (#951)
+  - chore: bug report form (#313)
+  - update: readme (#491)
+  - bump(version): 0.1.2504251709 (#660)
+  - bump(version): 0.1.2504221401 (#559)
+  - bump(version): 0.1.2504161510 (#135)
+  - fix(tui): update full-auto to default preset (#3608)
+  - [codex-rs] fix: exit code 1 if no api key (#697)
+  - bump(version): 0.1.2505161800 (#978)
+  - bump(version): 0.1.2504220136 (#518)
+  - fix: migrate to AGENTS.md (#764)
+  - bump(version): 0.1.2505160811 `codex-mini-latest` (#953)
+  - bump(version): 0.1.2504161551 (#254)
+  - fix: windows instructions (#4807)
+  - add: release script (#96)
+  - add: sign in with chatgpt credits (#974)
+  - fix: input keyboard shortcuts (#676)
+  - bump(version): 0.1.2505172129 (#1008)
+  - revert: suggest mode file read behavior openai/codex#197 (#285)
+  - bump(version): 0.1.2504301751 (#768)

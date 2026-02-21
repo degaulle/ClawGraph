@@ -1,0 +1,11 @@
+Name: Jonathan Yang
+Total commits: 1
+First contribution: 2025-04-16T20:23:18+00:00
+Emails: github@jyang.cc
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - fix: miss catching `auto-edit` (#99)

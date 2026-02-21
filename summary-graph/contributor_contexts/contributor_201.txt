@@ -1,0 +1,11 @@
+Name: uonr
+Total commits: 1
+First contribution: 2025-10-31T17:17:42+00:00
+Emails: dev@yuru.me
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: "Configuration" is not belongs "Getting started" (#4797)

@@ -1,0 +1,29 @@
+Name: zerone0x
+Total commits: 2
+First contribution: 2026-01-20T22:53:14+00:00
+Emails: soberzml2333@gmail.com, hi@trine.dev
+Files authored: 2
+
+File type distribution:
+  - .js: 1 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-exec: 1 commits (since 2026-01-23)
+
+Major product areas touched:
+  - Conversation (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (4 total, top 15):
+  - Headless Exec Mode (1 files)
+  - Structured Output (1 files)
+  - Review Mode (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/exec/src/lib.rs: This file is the entry point for Codex's command-line execution engine. It initializes the application, loads configuration and authentication settings, handles user input (prompts, images, or code review requests), and orchestrates communication between the user and the AI system—managing approvals, sandbox policies, and displaying results either as human-readable text or machine-readable JSON.
+
+Sample commit messages:
+  - fix(exec): skip git repo check when --yolo flag is used (#9590)
+  - fix(cli): add execute permission to bin/codex.js (#9532)

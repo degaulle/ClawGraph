@@ -1,0 +1,21 @@
+Name: Bryant Rolfe
+Total commits: 1
+First contribution: 2025-12-09T22:41:10+00:00
+Emails: brolfe@openai.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-12-09)
+
+Specific features touched (2 total, top 15):
+  - Interactive TUI (1 files)
+  - Inline Diff Display (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/list_selection_view.rs: This file implements a searchable, scrollable list picker dialog that lets users select one item from a menu of options. It handles keyboard navigation (up/down arrows, number keys, search typing), renders the list with descriptions and status indicators, and executes callbacks when a selection is made.
+
+Sample commit messages:
+  - Add vim-style navigation for CLI option selection (#7784)

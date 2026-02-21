@@ -1,0 +1,11 @@
+Name: agro
+Total commits: 1
+First contribution: 2025-08-29T04:40:28+00:00
+Emails: agro1986@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Bugfix: Prevents `brew install codex` in comment to be executed (#2868)

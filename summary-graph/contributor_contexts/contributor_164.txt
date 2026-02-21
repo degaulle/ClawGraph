@@ -1,0 +1,100 @@
+Name: Justin Lebar
+Total commits: 1
+First contribution: 2025-09-08T21:48:48+00:00
+Emails: justin.lebar@gmail.com
+Files authored: 8
+
+File type distribution:
+  - .rs: 6 files
+  - .lock: 1 files
+  - .toml: 1 files
+
+Packages contributed to (3 total):
+  - codex-exec: 1 commits (since 2025-09-08)
+  - codex-protocol: 1 commits (since 2025-09-08)
+  - codex-tui: 1 commits (since 2025-09-08)
+
+Major product areas touched:
+  - Session Lifecycle (4 files)
+  - Agent Actions (4 files)
+  - Autonomy & Approval (3 files)
+  - Model & Reasoning (3 files)
+  - Conversation (2 files)
+  - Safety & Containment (2 files)
+  - Project Context (2 files)
+  - Extensibility (2 files)
+  - Surfaces (1 files)
+
+Specific features touched (88 total, top 15):
+  - App Server Protocol (3 files)
+  - Telemetry & Metrics (3 files)
+  - Interactive TUI (2 files)
+  - Inline Diff Display (2 files)
+  - Headless Exec Mode (2 files)
+  - Agent Response Stream (1 files)
+  - User Prompt (1 files)
+  - Slash Command (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Collaboration Mode (1 files)
+  - Personality Style (1 files)
+  - External Editor (1 files)
+  - Prompt History (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/exec/src/event_processor_with_human_output.rs: This file formats and displays the output of Codex operations to users in the terminal. It processes events from the AI agent's execution—like commands being run, files being updated, tools being called, and reasoning steps—and prints them in a human-readable format with colors, timestamps, and appropriate emphasis to help users follow what's happening.
+  - codex-rs/protocol/src/lib.rs: This file serves as the main entry point that organizes and exposes all the different data structures and message types used throughout the Codex system—such as user accounts, chat messages, AI models, tools, and configuration settings—so other parts of the codebase can easily access them.
+  - codex-rs/protocol/src/num_format.rs: This file formats numbers for display in the user interface, handling both locale-specific formatting (like commas in "12,345" for US English) and abbreviated notation for large numbers (like "1.23M" for millions or "1.00K" for thousands). It automatically detects the user's system locale and falls back to US English if detection fails.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/history_cell.rs: # Summary
+
+This file defines the rendering system for conversation history entries in Codex's terminal interface. It provides a framework (`HistoryCell` trait) for converting different types of events—user messages, agent responses, command execution results, MCP tool calls, web searches, and more—into formatted text lines that display in a scrollable chat history. Each cell type handles its own formatting, wrapping, and styling to present rich, interactive information in the TUI.
+
+Sample commit messages:
+  - Format large numbers in a more readable way. (#2046)

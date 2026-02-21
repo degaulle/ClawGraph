@@ -1,0 +1,20 @@
+Name: Abrar Ahmed
+Total commits: 1
+First contribution: 2026-01-05T20:09:05+00:00
+Emails: 13979201+abrar71@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-login: 1 commits (since 2026-01-05)
+
+Specific features touched (1 total, top 15):
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/login/src/device_code_auth.rs: This file implements a device-code login flow that allows users to authenticate with their ChatGPT account through a browser-based code exchange. When a user runs the login command, the system generates a unique code and verification URL, displays them in the terminal with clear instructions, and then polls the server in the background until the user completes authentication in their browser—at which point login credentials are securely saved locally.
+
+Sample commit messages:
+  - Use issuer URL in device auth prompt link (#7858)

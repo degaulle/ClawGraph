@@ -1,0 +1,11 @@
+Name: UnownPlain
+Total commits: 1
+First contribution: 2025-08-19T00:43:19+00:00
+Emails: 38232575+UnownPlain@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .yml: 1 files
+
+Sample commit messages:
+  - Release zip archived binaries (#2438)

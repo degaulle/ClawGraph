@@ -1,0 +1,32 @@
+Name: Vinh Nguyen
+Total commits: 2
+First contribution: 2025-10-31T23:53:09+00:00
+Emails: 1097578+vinhnx@users.noreply.github.com
+Files authored: 9
+
+File type distribution:
+  - .snap: 6 files
+  - .rs: 2 files
+  - .md: 1 files
+
+Packages contributed to (2 total):
+  - codex-core: 1 commits (since 2025-11-03)
+  - codex-tui: 1 commits (since 2025-11-03)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+  - Safety & Containment (2 files)
+  - Model & Reasoning (1 files)
+  - Autonomy & Approval (1 files)
+
+Specific features touched (2 total, top 15):
+  - Interactive TUI (1 files)
+  - Telemetry & Metrics (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/error.rs: This file defines how Codex handles and communicates errors to users. It establishes a comprehensive error system that categorizes different failure modes—like network issues, rate limits, sandbox execution failures, and authentication problems—then formats them into user-friendly messages appropriate for each situation, such as upgrade prompts for free-tier users who hit usage limits or specific recovery instructions for expired credentials.
+  - codex-rs/tui/src/status/card.rs: This file generates the visual status display that appears when users run the `/status` command in Codex. It formats and displays information about the current session, including the active AI model, working directory, permission settings, account details, token usage, rate limits, and context window capacity—organizing all this information into an organized, readable card layout on the terminal screen.
+
+Sample commit messages:
+  - docs: Fix link anchor and markdown format in advanced guide (#5649)
+  - fix: improve usage URLs in status card and snapshots (#6111)

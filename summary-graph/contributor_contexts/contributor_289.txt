@@ -1,0 +1,11 @@
+Name: jdijk-deventit
+Total commits: 1
+First contribution: 2025-12-19T17:42:56+00:00
+Emails: jdijk@deventit.nl
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Fix link to contributing.md in experimental.md (#8311)

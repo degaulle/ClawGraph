@@ -1,0 +1,16 @@
+Name: Daniel Nakov
+Total commits: 4
+First contribution: 2025-04-21T03:59:34+00:00
+Emails: daniel.nakov@gmail.com
+Files authored: 12
+
+File type distribution:
+  - .ts: 6 files
+  - .tsx: 5 files
+  - .md: 1 files
+
+Sample commit messages:
+  - bug: non-openai mode - fix for gemini content: null, fix 429 to throw before stream (#563)
+  - bug: non-openai mode - don't default temp and top_p (#572)
+  - docs: Add note about non-openai providers; add --provider cli flag to the help (#484)
+  - feat: support multiple providers via Responses-Completion transformation (#247)

@@ -1,0 +1,11 @@
+Name: Arash Ari Sheyda
+Total commits: 1
+First contribution: 2025-04-16T18:03:52+00:00
+Emails: 38922203+arashsheyda@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - chore(readme): fix typos (#27)

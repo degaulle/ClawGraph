@@ -1,0 +1,11 @@
+Name: Suyash-K
+Total commits: 1
+First contribution: 2025-04-19T14:24:29+00:00
+Emails: 114049661+Suyash-K@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - gracefully handle SSE parse errors and suppress raw parser code (#367)

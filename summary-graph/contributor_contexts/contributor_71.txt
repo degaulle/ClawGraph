@@ -1,0 +1,12 @@
+Name: nerdielol
+Total commits: 1
+First contribution: 2025-04-21T16:39:46+00:00
+Emails: 60550503+nerdielol@users.noreply.github.com
+Files authored: 4
+
+File type distribution:
+  - .tsx: 3 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: `/clear` now clears terminal screen and resets context left indicator (#425)

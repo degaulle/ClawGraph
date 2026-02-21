@@ -1,0 +1,144 @@
+Name: Jeremy Rose
+Total commits: 194
+First contribution: 2025-07-25T19:26:40+00:00
+Emails: 172423086+nornagon-openai@users.noreply.github.com
+Files authored: 372
+
+File type distribution:
+  - .rs: 227 files
+  - .snap: 107 files
+  - .toml: 9 files
+  - .md: 9 files
+  - .json: 4 files
+  - .ts: 4 files
+  - .unknown: 2 files
+  - .txt: 2 files
+  - .sbpl: 2 files
+  - .patch: 2 files
+
+Packages contributed to (24 total):
+  - codex-tui: 153 commits (since 2025-07-25)
+  - codex-core: 36 commits (since 2025-07-30)
+  - codex-cli: 10 commits (since 2025-07-29)
+  - codex-exec: 10 commits (since 2025-07-30)
+  - codex-protocol: 7 commits (since 2025-07-30)
+  - codex-app-server: 6 commits (since 2025-08-24)
+  - codex-cloud-tasks: 5 commits (since 2025-10-14)
+  - codex-mcp-server: 5 commits (since 2025-08-24)
+  - codex-apply-patch: 5 commits (since 2025-09-02)
+  - codex-exec-server: 3 commits (since 2025-11-19)
+  - codex-file-search: 3 commits (since 2026-01-28)
+  - codex-login: 3 commits (since 2025-07-29)
+  - codex-shell-command: 3 commits (since 2025-08-14)
+  - codex-chatgpt: 2 commits (since 2025-07-31)
+  - codex-cloud-tasks-client: 2 commits (since 2025-12-05)
+
+Major product areas touched:
+  - Session Lifecycle (35 files)
+  - Safety & Containment (32 files)
+  - Agent Actions (26 files)
+  - Conversation (15 files)
+  - Autonomy & Approval (13 files)
+  - Model & Reasoning (13 files)
+  - Extensibility (10 files)
+  - Project Context (9 files)
+  - Surfaces (5 files)
+
+Specific features touched (88 total, top 15):
+  - Interactive TUI (65 files)
+  - Turn Management (21 files)
+  - Execution Policy (19 files)
+  - Shell Execution (19 files)
+  - Authentication & Identity (18 files)
+  - App Server Protocol (14 files)
+  - MCP Client (13 files)
+  - Configuration File (12 files)
+  - Approval Request Flow (12 files)
+  - Cloud Tasks (11 files)
+  - File Patch (11 files)
+  - macOS Seatbelt (10 files)
+  - Agent Response Stream (10 files)
+  - Headless Exec Mode (10 files)
+  - Telemetry & Metrics (10 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/insert_history.rs: This file manages displaying message history in Codex's terminal interface. When new content needs to appear above the current conversation viewport, it inserts the formatted lines while scrolling the existing view down to make room, preserving all text colors, styles (bold, underline, etc.), and proper word wrapping that matches what users see on screen.
+  - codex-rs/cli/src/main.rs: This file is the main entry point for the Codex command-line tool. It parses user commands and routes them to the appropriate features—whether that's starting an interactive chat session, running code non-interactively, managing login credentials, resuming past conversations, or accessing experimental tools like the desktop app and cloud task browser. It also handles configuration overrides, feature flags, and platform-specific sandbox tools.
+  - codex-rs/login/src/lib.rs: This file serves as the main entry point for user login and authentication in Codex, exposing the key features needed to log in users (like device code authentication and a local login server) along with core authentication utilities for managing API keys, tokens, and user sessions.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/main.rs: This is the entry point for the Codex text-based user interface application. It parses command-line arguments, starts the interactive interface, and displays a summary of API tokens used when the session ends.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/core/src/mcp_tool_call.rs: This file manages when and how external tools (called "apps") can be executed within a conversation. It acts as a gatekeeper that may ask users for permission before running certain tools—particularly those that could modify data or contact external services—and then executes the tool and reports back the results. It also tracks which apps have been used for analytics purposes.
+  - codex-rs/protocol/src/protocol.rs: # Summary
+
+This file defines the communication protocol between Codex (an AI coding agent) and its clients. It establishes the message format for two-way streaming communication: clients send **submissions** (user requests, approvals, configuration changes) and receive **events** (agent responses, command output, status updates). The file also specifies execution policies for sandboxing shell commands, approving actions, and managing file access permissions—allowing clients to control how much freedom the agent has when running code on the user's system.
+  - codex-rs/exec/src/event_processor_with_human_output.rs: This file formats and displays the output of Codex operations to users in the terminal. It processes events from the AI agent's execution—like commands being run, files being updated, tools being called, and reasoning steps—and prints them in a human-readable format with colors, timestamps, and appropriate emphasis to help users follow what's happening.
+
+Sample commit messages:
+  - tui: ^C in prompt area resets history navigation cursor (#5078)
+  - Fix notify documentation to use emitted input-messages key (#5071)
+  - wrap markdown at render time (#4506)
+  - add codex debug seatbelt --log-denials (#4098)
+  - core/tui: non-blocking MCP startup (#6334)
+  - notifications on approvals and turn end (#3329)
+  - Use ⌥⇧⌃ glyphs for key hints on mac (#3143)
+  - tui: patch crossterm for better color queries (#5935)
+  - rework patch/exec approval UI (#4573)
+  - show a transient history cell for commands (#1824)
+  - detect terminal and include in request headers (#2437)
+  - refactor onboarding screen to a separate "app" (#2524)
+  - tui: fix occasional UI flicker (#2918)
+  - tui: bring the transcript closer to display mode (#4848)
+  - fix: esc w/ queued messages overwrites draft in composer (#4237)
+  - build: 8mb stacks on win (#5997)
+  - refactor: move slash command handling into chatwidget (#2536)
+  - add ^Y and kill-buffer to textarea (#5075)
+  - do not show timeouts as "sandbox error"s (#2587)
+  - timeouts for mcp tool calls (#3959)

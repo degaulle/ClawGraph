@@ -1,0 +1,11 @@
+Name: Ilya Kamen
+Total commits: 1
+First contribution: 2025-04-24T17:48:42+00:00
+Emails: ikamenshchikov@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .yml: 1 files
+
+Sample commit messages:
+  - fix: update bug report template - there is no --revision flag (#614)

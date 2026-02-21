@@ -1,0 +1,11 @@
+Name: Amar Sood
+Total commits: 1
+First contribution: 2025-04-18T16:19:06+00:00
+Emails: mail@tekacs.com
+Files authored: 3
+
+File type distribution:
+  - .tsx: 3 files
+
+Sample commit messages:
+  - Fix handling of Shift+Enter in e.g. Ghostty (#338)

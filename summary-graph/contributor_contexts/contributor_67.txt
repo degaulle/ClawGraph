@@ -1,0 +1,13 @@
+Name: Jordan Docherty
+Total commits: 2
+First contribution: 2025-04-20T19:21:02+00:00
+Emails: 20336279+jdocherty@users.noreply.github.com
+Files authored: 3
+
+File type distribution:
+  - .tsx: 2 files
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix(raw-exec-process-group): improve test reliability (#434)
+  - refactor(history-overlay): split into modular functions & add tests (fixes #402) (#403)

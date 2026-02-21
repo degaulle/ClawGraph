@@ -1,0 +1,12 @@
+Name: needs
+Total commits: 1
+First contribution: 2025-10-20T16:54:59+00:00
+Emails: 624097+needs@users.noreply.github.com
+Files authored: 5
+
+File type distribution:
+  - .ts: 4 files
+  - .md: 1 files
+
+Sample commit messages:
+  - feat: add images support to the Codex Typescript SDK (#5281)

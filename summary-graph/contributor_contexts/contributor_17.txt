@@ -1,0 +1,11 @@
+Name: Varun Khalate
+Total commits: 1
+First contribution: 2025-04-16T19:43:10+00:00
+Emails: 68511458+khalatevarun@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: prompt typo (#81)

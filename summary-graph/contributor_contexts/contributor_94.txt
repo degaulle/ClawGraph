@@ -1,0 +1,11 @@
+Name: Matan Yemini
+Total commits: 1
+First contribution: 2025-04-29T19:07:00+00:00
+Emails: 50515643+MatanYemini@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .sh: 2 files
+
+Sample commit messages:
+  - feat: add common package registries domains to allowed-domains list (#414)

@@ -1,0 +1,11 @@
+Name: khai-oai
+Total commits: 1
+First contribution: 2025-08-21T18:26:37+00:00
+Emails: kh.ai@openai.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Update README.md (#2564)

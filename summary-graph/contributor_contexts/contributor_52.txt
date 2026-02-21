@@ -1,0 +1,13 @@
+Name: Sam Verhasselt
+Total commits: 1
+First contribution: 2025-04-18T00:32:19+00:00
+Emails: verhasseltsamuelj@gmail.com
+Files authored: 3
+
+File type distribution:
+  - .md: 1 files
+  - .unknown: 1 files
+  - .json: 1 files
+
+Sample commit messages:
+  - feat(bin): support bun fallback runtime for codex CLI (#282)

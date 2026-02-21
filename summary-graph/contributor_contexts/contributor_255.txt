@@ -1,0 +1,23 @@
+Name: Steve Mostovoy
+Total commits: 1
+First contribution: 2025-12-02T00:29:01+00:00
+Emails: stevemostovoy@openai.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-12-02)
+
+Major product areas touched:
+  - Session Lifecycle (1 files)
+
+Specific features touched (1 total, top 15):
+  - Rollout Persistence (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/message_history.rs: This file manages a persistent log of all messages exchanged in conversations. It saves each message to a file (`~/.codex/history.jsonl`) so users can review past interactions, while automatically deleting old messages when the log grows too large to respect storage limits and privacy concerns.
+
+Sample commit messages:
+  - fix(core): enable history lookup on windows (#7457)

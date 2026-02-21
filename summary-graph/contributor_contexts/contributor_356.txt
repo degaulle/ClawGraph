@@ -1,0 +1,47 @@
+Name: acrognale-oai
+Total commits: 1
+First contribution: 2026-02-13T02:05:04+00:00
+Emails: acrognale@openai.com
+Files authored: 10
+
+File type distribution:
+  - .rs: 4 files
+  - .json: 3 files
+  - .md: 2 files
+  - .ts: 1 files
+
+Packages contributed to (3 total):
+  - codex-debug-client: 1 commits (since 2026-02-13)
+  - codex-app-server: 1 commits (since 2026-02-13)
+  - codex-app-server-protocol: 1 commits (since 2026-02-13)
+
+Major product areas touched:
+  - Session Lifecycle (4 files)
+  - Autonomy & Approval (2 files)
+  - Conversation (2 files)
+  - Model & Reasoning (2 files)
+  - Project Context (2 files)
+  - Safety & Containment (2 files)
+  - Extensibility (1 files)
+  - Agent Actions (1 files)
+
+Specific features touched (4 total, top 15):
+  - App Server Protocol (4 files)
+  - Thread Resume (1 files)
+  - Turn Management (1 files)
+  - Authentication & Identity (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server-protocol/src/protocol/v2.rs: # Summary
+
+This file defines the API contract for Codex's version 2 protocol, translating between internal data structures and the external API format that clients use. It establishes what information flows between the app and clients (like the VS Code extension), covering everything from user authentication and configuration to thread management, conversation turns, and real-time progress notifications. The file essentially acts as a gatekeeper, ensuring clients see a consistent, well-documented interface while the internal system can evolve independently.
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/app-server/tests/suite/v2/thread_list.rs: This file is a test suite that validates the thread listing feature—the ability to retrieve and browse a user's conversation history with various filters and sorting options. It tests core functionality like pagination, filtering by AI provider and working directory, sorting by creation or update time, and handling of archived conversations.
+  - codex-rs/debug-client/src/client.rs: This file implements a debug client that communicates with the Codex AI assistant backend server. It manages the back-and-forth conversation between a user and the AI, handling requests like starting new threads (conversations), sending messages, and managing approvals for commands and file changes that the AI wants to execute.
+
+Sample commit messages:
+  - Add cwd as an optional field to thread/list (#11651)

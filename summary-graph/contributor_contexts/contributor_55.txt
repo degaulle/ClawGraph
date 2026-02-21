@@ -1,0 +1,14 @@
+Name: Gerred Dillon
+Total commits: 1
+First contribution: 2025-04-18T05:52:54+00:00
+Emails: hello@gerred.org
+Files authored: 4
+
+File type distribution:
+  - .unknown: 1 files
+  - .md: 1 files
+  - .lock: 1 files
+  - .nix: 1 files
+
+Sample commit messages:
+  - feat: add Nix flake for reproducible development environments (#225)

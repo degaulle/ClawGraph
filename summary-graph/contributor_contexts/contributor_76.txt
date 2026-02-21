@@ -1,0 +1,14 @@
+Name: moppywhip
+Total commits: 3
+First contribution: 2025-04-22T17:59:31+00:00
+Emails: 48742547+moppywhip@users.noreply.github.com
+Files authored: 13
+
+File type distribution:
+  - .ts: 8 files
+  - .tsx: 5 files
+
+Sample commit messages:
+  - fix: remove requirement for api key for ollama (#546)
+  - fix: duplicate messages in quiet mode (#680)
+  - feat: `@mention` files in codex (#701)

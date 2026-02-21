@@ -1,0 +1,11 @@
+Name: Juan Miguel Rodriguez Ceron
+Total commits: 1
+First contribution: 2025-04-18T00:03:15+00:00
+Emails: juanmirod@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: add empty vite config file to prevent resolving to parent (#273)

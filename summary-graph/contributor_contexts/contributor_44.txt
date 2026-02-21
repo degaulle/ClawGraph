@@ -1,0 +1,11 @@
+Name: Khalil Yao
+Total commits: 1
+First contribution: 2025-04-17T19:32:08+00:00
+Emails: 47586954+yyz945947732@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .unknown: 1 files
+
+Sample commit messages:
+  - chore: git ignore unwanted package managers (#214)

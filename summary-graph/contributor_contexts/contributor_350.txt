@@ -1,0 +1,24 @@
+Name: Tom
+Total commits: 1
+First contribution: 2026-02-08T18:45:26+00:00
+Emails: wiltzius@openai.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2026-02-08)
+
+Major product areas touched:
+  - Agent Actions (1 files)
+  - Model & Reasoning (1 files)
+  - Extensibility (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/tools/spec.rs: # Summary
+
+This file defines and configures the set of tools available to AI agents in Codex. It translates feature flags and model configurations into a concrete list of capabilities—like running shell commands, reading files, searching the web, spawning sub-agents, and integrating with external services via MCP—and ensures each tool has the right parameters and descriptions for the AI to use them correctly.
+
+Sample commit messages:
+  - Gate view_image tool by model input_modalities (#11051)

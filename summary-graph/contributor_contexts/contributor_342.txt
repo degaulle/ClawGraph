@@ -1,0 +1,70 @@
+Name: pash-openai
+Total commits: 3
+First contribution: 2026-02-03T00:57:29+00:00
+Emails: pash@openai.com
+Files authored: 16
+
+File type distribution:
+  - .rs: 16 files
+
+Packages contributed to (1 total):
+  - codex-core: 3 commits (since 2026-02-03)
+
+Major product areas touched:
+  - Session Lifecycle (7 files)
+  - Model & Reasoning (6 files)
+  - Agent Actions (3 files)
+  - Project Context (3 files)
+  - Safety & Containment (3 files)
+  - Conversation (2 files)
+  - Extensibility (2 files)
+  - Autonomy & Approval (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (9 total, top 15):
+  - Turn Management (6 files)
+  - Telemetry & Metrics (4 files)
+  - Git Awareness (3 files)
+  - Authentication & Identity (2 files)
+  - Agent Response Stream (2 files)
+  - Session Interrupt (1 files)
+  - Context Compaction (1 files)
+  - Working Directory Awareness (1 files)
+  - Network Restriction (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/client.rs: This file manages the communication layer between Codex and AI model providers' APIs. It handles session-level configuration (like authentication and provider selection) that persists across multiple conversation turns, while accepting turn-specific settings (like model choice and reasoning effort) as explicit parameters to keep those lifetimes clear. The file implements two main abstractions: a session-scoped `ModelClient` that holds stable connection setup, and a turn-scoped `ModelClientSession` that manages per-turn state like WebSocket connections and sticky-routing tokens. It supports both HTTP and WebSocket transports for streaming responses, with automatic fallback from WebSocket to HTTP when needed, and handles features like request compression, auth token refresh, and incremental request appending to avoid resending data.
+  - codex-rs/core/src/codex.rs: # Summary
+
+This file implements the **core orchestration engine for the Codex AI assistant**. It manages conversation sessions, coordinates model interactions, handles user input, processes tool calls, and maintains conversation history.
+
+## Key Responsibilities
+
+**Session Management**: The `Codex` struct serves as the high-level public interface—clients submit operations through it and receive events back. The `Session` struct manages the actual conversation state, including history, configuration, active turns, and communication with backend services (models, tools, authentication).
+
+**Turn Processing**: The `run_turn` function executes a single conversation turn by repeatedly calling the model, collecting its responses, executing requested tools, and feeding results back to the model until it produces a final message rather than requesting more tool calls.
+
+**Tool Integration**: Builds and routes tool calls to appropriate handlers (shell commands, file operations, web search, MCP servers, etc.), managing approval workflows and sandbox policies along the way.
+
+**History & Context Management**: Tracks conversation history, applies automatic compaction when reaching token limits, handles session resumption and forking, and manages initial context seeding with permissions and environment information.
+
+**Configuration & Personalization**: Applies per-turn configuration overrides (model, reasoning effort, approvals, sandbox policies, personality preferences), manages MCP server connections, and handles feature flags.
+
+**Event Streaming**: Provides a real-time event channel to clients showing model output deltas, plan segments, token usage, and system notifications as they happen.
+  - codex-rs/core/src/compact.rs: This file handles **conversation compaction** — the process of summarizing long chat histories to fit within the model's memory limits so Codex can continue working effectively on extended conversations.
+
+When a conversation gets too long, this code automatically summarizes older messages (asking the AI model to create a condensed version), then replaces the lengthy history with that summary plus recent user messages. It manages retries if the compaction request fails, handles edge cases like oversized messages, and ensures important context (like project instructions and environment details) stays fresh and isn't lost in the compression process.
+  - codex-rs/core/src/environment_context.rs: This file captures and communicates the user's execution environment (working directory, shell type, and network access rules) to the AI model in a format it can understand. It tracks how the environment changes between conversation turns and formats this information as structured data that gets sent to the model to provide context for code generation.
+  - codex-rs/core/src/git_info.rs: # Summary
+
+This file provides Git repository information to the Codex product by querying Git commands from the file system. It extracts details like the current commit hash, branch name, repository URL, recent commit history, and uncommitted changes—enabling Codex to understand the state of a user's codebase and compare it against remote versions.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/core/src/turn_metadata.rs: This file captures and packages context about the user's workspace—including the current Git repository state, commit history, and any uncommitted changes—to send along with requests to the AI. It intelligently gathers this information both immediately and in the background, so the AI model can better understand the codebase it's working with.
+  - codex-rs/core/tests/responses_headers.rs: This file tests that Codex correctly attaches the right metadata headers to outgoing requests when communicating with AI models. It verifies that features like sub-agent identification, reasoning summaries, and workspace information (Git repository details) are properly included in request headers, ensuring the backend receives complete context about where requests come from and what environment they're operating in.
+  - codex-rs/core/tests/suite/client.rs: This file is a comprehensive test suite that verifies how the Codex client sends requests to AI model APIs and processes responses. It tests critical product features like authentication, conversation history management, user instructions, model configuration options (reasoning effort, verbosity), rate limiting, error handling, and resuming saved conversations—essentially ensuring that user inputs are properly formatted and transmitted to the backend with all necessary context and settings.
+  - codex-rs/core/tests/suite/client_websockets.rs: This file contains integration tests for Codex's WebSocket-based communication with AI models. It verifies that the product correctly establishes WebSocket connections, sends requests, receives streaming responses, handles errors, manages rate limits, tracks performance metrics, and intelligently reuses connections across multiple conversation turns. The tests ensure features like connection pre-warming, timing instrumentation, and continuation of previous responses all work as expected.
+
+Sample commit messages:
+  - make codex better at git (#10145)
+  - turn metadata: per-turn non-blocking (#11677)
+  - turn metadata followups (#11782)

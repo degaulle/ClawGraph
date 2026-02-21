@@ -1,0 +1,32 @@
+Name: Ruyut
+Total commits: 1
+First contribution: 2026-01-31T06:11:02+00:00
+Emails: a@ruyut.com
+Files authored: 5
+
+File type distribution:
+  - .rs: 3 files
+  - .md: 1 files
+  - .ts: 1 files
+
+Packages contributed to (3 total):
+  - codex-cloud-requirements: 1 commits (since 2026-01-31)
+  - codex-tui: 1 commits (since 2026-01-31)
+  - codex-apply-patch: 1 commits (since 2026-01-31)
+
+Specific features touched (7 total, top 15):
+  - File Patch (1 files)
+  - Shell Execution (1 files)
+  - Slash Command (1 files)
+  - Interactive TUI (1 files)
+  - Configuration File (1 files)
+  - Authentication & Identity (1 files)
+  - Zero Data Retention (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/apply-patch/src/standalone_executable.rs: This file enables the patch-application tool to run as a standalone command-line program, accepting patch instructions either as a command argument or through standard input, then executing the patch and reporting success or failure through exit codes.
+  - codex-rs/cloud-requirements/src/lib.rs: This file manages configuration rules for Business and Enterprise ChatGPT customers by fetching them from OpenAI's backend servers. It stores these rules locally and applies retry logic, caching, and signature verification to ensure the data stays current and hasn't been tampered with. If fetching fails, Codex continues running without the cloud requirements rather than blocking startup.
+  - codex-rs/tui/src/bottom_pane/command_popup.rs: This file powers the command discovery popup that appears when users type "/" in the message composer. It maintains a searchable list of both built-in slash commands (like `/init`, `/model`, `/clear`) and user-created custom prompts, filters them as the user types, handles keyboard navigation through the results, and renders the popup display with descriptions and visual highlighting.
+
+Sample commit messages:
+  - Fix minor typos in comments and documentation (#10287)

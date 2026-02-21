@@ -1,0 +1,12 @@
+Name: Amit Halfon
+Total commits: 1
+First contribution: 2025-12-10T18:17:00+00:00
+Emails: amit@halfons.com
+Files authored: 2
+
+File type distribution:
+  - .yaml: 1 files
+  - .json: 1 files
+
+Sample commit messages:
+  - fix: Upgrade @modelcontextprotocol/sdk to ^1.24.0 (#7817)

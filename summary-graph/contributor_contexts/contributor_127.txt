@@ -1,0 +1,112 @@
+Name: Charlie Weems
+Total commits: 4
+First contribution: 2025-08-06T16:10:23+00:00
+Emails: charlie@openai.com
+Files authored: 9
+
+File type distribution:
+  - .rs: 5 files
+  - .md: 4 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-08-06)
+
+Major product areas touched:
+  - Conversation (3 files)
+  - Session Lifecycle (3 files)
+  - Agent Actions (3 files)
+  - Autonomy & Approval (3 files)
+  - Model & Reasoning (2 files)
+  - Project Context (2 files)
+  - Extensibility (2 files)
+  - Safety & Containment (2 files)
+  - Surfaces (1 files)
+
+Specific features touched (87 total, top 15):
+  - Interactive TUI (4 files)
+  - Slash Command (3 files)
+  - User Prompt (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Collaboration Mode (1 files)
+  - Personality Style (1 files)
+  - Inline Diff Display (1 files)
+  - External Editor (1 files)
+  - Prompt History (1 files)
+  - Background Notification (1 files)
+  - Suggest Mode (1 files)
+  - Auto-Edit Mode (1 files)
+  - Full-Auto Mode (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/command_popup.rs: This file powers the command discovery popup that appears when users type "/" in the message composer. It maintains a searchable list of both built-in slash commands (like `/init`, `/model`, `/clear`) and user-created custom prompts, filters them as the user types, handles keyboard navigation through the results, and renders the popup display with descriptions and visual highlighting.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/slash_command.rs: This file defines all the slash commands (the "/" shortcuts) available in Codex, such as `/review`, `/plan`, and `/model`. It specifies what each command does, whether it can be used while Codex is working on a task, and which commands appear in the user-facing command menu.
+
+Sample commit messages:
+  - Add more detailed documentation on MCP server usage (#3345)
+  - Update ghost_commit flag reference to undo (#8091)
+  - MCP Documentation Changes Requests in Code Review (#3507)
+  - Initial implementation of /init (#1822)

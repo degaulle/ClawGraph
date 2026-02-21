@@ -1,0 +1,14 @@
+Name: Govind Kamtamneni
+Total commits: 2
+First contribution: 2025-05-10T01:11:32+00:00
+Emails: gok@microsoft.com
+Files authored: 10
+
+File type distribution:
+  - .ts: 6 files
+  - .tsx: 3 files
+  - .md: 1 files
+
+Sample commit messages:
+  - feat(ts): provider‑specific API‑key discovery and clearer Azure guidance (#1324)
+  - Adds Azure OpenAI support (#769)

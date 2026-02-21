@@ -1,0 +1,17 @@
+Name: Brayden Moon
+Total commits: 5
+First contribution: 2025-04-17T05:20:19+00:00
+Emails: crazywolf132@gmail.com
+Files authored: 19
+
+File type distribution:
+  - .ts: 11 files
+  - .tsx: 6 files
+  - .json: 2 files
+
+Sample commit messages:
+  - feat: allow multi-line input  (#438)
+  - fix: command pipe execution by improving shell detection (#437)
+  - fix: allow continuing after interrupting assistant (#178)
+  - fix(security): Shell commands auto-executing in 'suggest' mode without permission (#197)
+  - feat: shell command explanation option (#173)

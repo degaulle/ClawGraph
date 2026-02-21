@@ -1,0 +1,96 @@
+Name: iceweasel-oai
+Total commits: 72
+First contribution: 2025-09-24T21:03:43+00:00
+Emails: iceweasel@openai.com
+Files authored: 151
+
+File type distribution:
+  - .rs: 113 files
+  - .toml: 8 files
+  - .snap: 8 files
+  - .yml: 5 files
+  - .md: 4 files
+  - .py: 4 files
+  - .yaml: 3 files
+  - .lock: 2 files
+  - .json: 2 files
+  - .ps1: 1 files
+
+Packages contributed to (13 total):
+  - codex-windows-sandbox: 38 commits (since 2025-10-30)
+  - codex-core: 26 commits (since 2025-09-24)
+  - codex-tui: 25 commits (since 2025-10-01)
+  - codex-cli: 9 commits (since 2025-10-30)
+  - codex-app-server: 4 commits (since 2025-11-19)
+  - codex-shell-command: 4 commits (since 2025-09-24)
+  - codex-otel: 2 commits (since 2026-02-05)
+  - codex-exec-server: 1 commits (since 2026-01-27)
+  - codex-linux-sandbox: 1 commits (since 2026-01-27)
+  - codex-protocol: 1 commits (since 2026-01-27)
+  - codex-utils-approval-presets: 1 commits (since 2025-11-18)
+  - codex-app-server-protocol: 1 commits (since 2025-11-18)
+  - codex-utils-string: 1 commits (since 2026-02-05)
+
+Major product areas touched:
+  - Safety & Containment (47 files)
+  - Session Lifecycle (18 files)
+  - Agent Actions (15 files)
+  - Autonomy & Approval (14 files)
+  - Model & Reasoning (13 files)
+  - Conversation (10 files)
+  - Project Context (9 files)
+  - Extensibility (8 files)
+  - Surfaces (4 files)
+
+Specific features touched (88 total, top 15):
+  - Windows Sandbox (34 files)
+  - Shell Execution (18 files)
+  - Configuration File (13 files)
+  - Turn Management (13 files)
+  - Interactive TUI (12 files)
+  - Execution Policy (9 files)
+  - Authentication & Identity (9 files)
+  - Telemetry & Metrics (8 files)
+  - Workspace-Write Sandbox (7 files)
+  - Feature Flags (7 files)
+  - Linux Sandbox (6 files)
+  - macOS Seatbelt (6 files)
+  - App Server Protocol (5 files)
+  - Network Restriction (5 files)
+  - Onboarding Flow (5 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/shell-command/src/command_safety/is_safe_command.rs: This file determines whether shell commands are safe to run automatically without user approval. It maintains an allowlist of safe commands (like `ls`, `cat`, `git status`) and blocks dangerous ones (like `git branch -d`, `find -delete`, or anything with file output redirection), so Codex can confidently execute read-only operations while protecting users from accidental data loss or code execution.
+  - codex-rs/shell-command/src/command_safety/mod.rs: This file organizes safety-checking logic for shell commands by grouping related validation rules—determining whether a command is dangerous, safe, or part of a trusted Windows command list—so the system can decide whether it's safe to execute user-requested terminal operations.
+  - codex-rs/shell-command/src/command_safety/windows_safe_commands.rs: This file controls what shell commands are allowed to run on Windows machines. It acts as a security gatekeeper by parsing and validating PowerShell commands to ensure only safe, read-only operations (like viewing files or checking Git status) can execute, while strictly blocking any commands that could modify, delete, or harm the system.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/shell-command/src/bash.rs: This file safely analyzes shell commands to extract their arguments in a way that prevents dangerous or complex scripting constructs from being misinterpreted. It parses bash and zsh scripts to identify simple, straightforward commands (like `ls -l` or `echo "hello"`) while rejecting anything potentially risky such as variable expansion, command substitution, redirects, or subshells. This allows Codex to understand and work with user-provided shell commands without executing them blindly.
+  - codex-rs/shell-command/src/command_safety/is_dangerous_command.rs: This file identifies whether a shell command is unsafe to execute automatically. It flags dangerous operations like `rm -rf` and checks for risky patterns in git commands and Windows-specific threats, helping prevent Codex from running destructive commands without user confirmation.
+  - codex-rs/core/src/safety.rs: This file decides whether code patches are safe to apply automatically or need user approval. It analyzes proposed file changes to determine if they stay within allowed project boundaries, what type of security sandbox (if any) should be used, and whether to auto-approve the patch, ask the user, or reject it entirely.
+  - codex-rs/core/src/project_doc.rs: This file enables Codex to automatically discover and load project-level documentation to guide the AI model's behavior. It searches for `AGENTS.md` files starting from the current directory and walking up to the Git repository root, then combines them with any configured system instructions, JavaScript runtime guidance, and available skills into a single instruction set that shapes how the AI operates within that project.
+  - codex-rs/tui/src/status/helpers.rs: This file provides formatting helpers for the status display in the terminal UI—converting technical information like token counts, file paths, authentication details, and timestamps into user-friendly text that fits nicely on screen.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+
+Sample commit messages:
+  - log sandbox commands to $CODEX_HOME instead of cwd (#6171)
+  - best effort to "hide" Sandbox users (#8492)
+  - use machine scope instead of user scope for dpapi. (#9713)
+  - adds a windows-specific method to check if a command is safe (#4119)
+  - Elevated Sandbox 2 (#7792)
+  - speed and reliability improvements for setting reads ACLs (#8216)
+  - Do not skip trust prompt on Windows if sandbox is enabled. (#6167)
+  - stop over-reporting world-writable directories (#6936)
+  - really fix pwd for windows codex zip (#10011)
+  - add footer note to TUI (#8867)
+  - templates and build step for validating/submitting winget package (#6485)
+  - fix typo in sandbox doc (#4256)
+  - include new windows binaries in npm package. (#8140)
+  - Windows: flag some invocations that launch browsers/URLs as dangerous (#7111)
+  - fix cargo build switch (#7948)
+  - bug fixes and perf improvements for elevated sandbox setup (#8094)
+  - Elevated Sandbox 3 (#7809)
+  - add deny ACEs for world writable dirs (#7022)
+  - consolidate world-writable-directories scanning. (#7234)
+  - Prompt to turn on windows sandbox when auto mode selected. (#6618)

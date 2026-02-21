@@ -1,0 +1,27 @@
+Name: 李琼羽
+Total commits: 1
+First contribution: 2026-01-15T17:29:05+00:00
+Emails: libiao_0303@live.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-exec: 1 commits (since 2026-01-15)
+
+Major product areas touched:
+  - Conversation (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (4 total, top 15):
+  - Headless Exec Mode (1 files)
+  - Structured Output (1 files)
+  - Review Mode (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/exec/src/lib.rs: This file is the entry point for Codex's command-line execution engine. It initializes the application, loads configuration and authentication settings, handles user input (prompts, images, or code review requests), and orchestrates communication between the user and the AI system—managing approvals, sandbox policies, and displaying results either as human-readable text or machine-readable JSON.
+
+Sample commit messages:
+  - fix(exec): improve stdin prompt decoding (#9151)

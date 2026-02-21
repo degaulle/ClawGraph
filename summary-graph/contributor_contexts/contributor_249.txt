@@ -1,0 +1,26 @@
+Name: lionel-oai
+Total commits: 2
+First contribution: 2025-11-26T17:35:08+00:00
+Emails: lionel@openai.com
+Files authored: 4
+
+File type distribution:
+  - .md: 3 files
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-git: 1 commits (since 2025-12-02)
+
+Major product areas touched:
+  - Session Lifecycle (1 files)
+
+Specific features touched (2 total, top 15):
+  - Rollback (1 files)
+  - Git Awareness (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/utils/git/src/ghost_commits.rs: This file implements Codex's "ghost commit" feature, which creates hidden snapshots of your repository's current state and lets you undo changes by restoring from those snapshots. It captures both tracked and untracked files, intelligently excludes large files and common dependency folders to keep snapshots lightweight, and supports restoring your working directory to any previous snapshot while preserving files that existed before the snapshot was made.
+
+Sample commit messages:
+  - Fix: track only untracked paths in ghost snapshots (#7470)
+  - doc: fix relative links and add tips (#7319)

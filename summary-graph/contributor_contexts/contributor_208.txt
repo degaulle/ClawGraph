@@ -1,0 +1,21 @@
+Name: Mark Hemmings
+Total commits: 1
+First contribution: 2025-11-03T16:59:00+00:00
+Emails: mark@mhemmings.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-cli: 1 commits (since 2025-11-03)
+
+Specific features touched (2 total, top 15):
+  - MCP Client (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/cli/src/mcp_cmd.rs: This file provides command-line tools for managing MCP servers—external tools and services that Codex can connect to and use. It lets users add new servers, remove them, log in with credentials, and view their configured servers in both human-readable and machine-readable formats.
+
+Sample commit messages:
+  - Fix typo in error message for OAuth login (#6159)

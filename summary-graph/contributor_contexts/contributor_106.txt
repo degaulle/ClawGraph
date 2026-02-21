@@ -1,0 +1,24 @@
+Name: Sebastian Lund
+Total commits: 1
+First contribution: 2025-05-16T16:12:16+00:00
+Emails: me@sebastianlund.se
+Files authored: 2
+
+File type distribution:
+  - .rs: 2 files
+
+Packages contributed to (1 total):
+  - codex-apply-patch: 1 commits (since 2025-05-16)
+
+Major product areas touched:
+  - Agent Actions (2 files)
+
+Specific features touched (1 total, top 15):
+  - File Patch (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/apply-patch/src/lib.rs: This file implements a patch application system that parses and applies code changes to files on disk. It reads patch instructions (which specify files to add, delete, or modify), validates them against the actual file contents, applies the changes to the filesystem, and reports which files were affected. The system is designed to work with AI-generated patches, particularly from GPT-4, and ensures changes are applied accurately before execution.
+  - codex-rs/apply-patch/src/parser.rs: This file parses patch instructions that tell Codex how to modify files. It reads a specially-formatted patch text (marked with `*** Begin Patch` and `*** End Patch`), breaks it into individual operations like "add this file," "delete that file," or "change these specific lines," and validates that the instructions are well-formed so they can be applied to the codebase.
+
+Sample commit messages:
+  - fix: apply patch issue when using different cwd (#942)

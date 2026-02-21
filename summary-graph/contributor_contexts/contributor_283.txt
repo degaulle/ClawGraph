@@ -1,0 +1,11 @@
+Name: Conor Branagan
+Total commits: 1
+First contribution: 2025-12-16T19:32:27+00:00
+Emails: 472446+conorbranagan@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - feat(sdk): add xhigh reasoning effort support to TypeScript SDK (#8108)

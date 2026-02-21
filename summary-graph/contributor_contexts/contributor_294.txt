@@ -1,0 +1,11 @@
+Name: leezenn
+Total commits: 1
+First contribution: 2026-01-03T20:12:16+00:00
+Emails: 76214474+leezenn@users.noreply.github.com
+Files authored: 4
+
+File type distribution:
+  - .yml: 4 files
+
+Sample commit messages:
+  - ci: prevent workflows from running on forks (#8629)

@@ -1,0 +1,11 @@
+Name: katyhshi
+Total commits: 1
+First contribution: 2025-09-10T17:39:53+00:00
+Emails: 115659651+katyhshi@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: fix codex exec heading typo (#2703)

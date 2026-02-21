@@ -1,0 +1,26 @@
+Name: Joonsoo Lee
+Total commits: 1
+First contribution: 2025-11-16T21:41:10+00:00
+Emails: jlee14281@gmail.com
+Files authored: 5
+
+File type distribution:
+  - .rs: 3 files
+  - .lock: 1 files
+  - .toml: 1 files
+
+Packages contributed to (1 total):
+  - codex-rmcp-client: 1 commits (since 2025-11-16)
+
+Specific features touched (3 total, top 15):
+  - MCP Client (3 files)
+  - Authentication & Identity (2 files)
+  - MCP Tool Call (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/rmcp-client/src/lib.rs: This file serves as the public interface for the RMCP client library, exposing the key features that other parts of the product need to interact with: user authentication (including OAuth login flows), tool discovery and listing, and the ability to send requests to connected services and handle their responses.
+  - codex-rs/rmcp-client/src/program_resolver.rs: This file handles finding and launching programs on different operating systems, solving a key compatibility problem: Windows requires file extensions (like `.cmd` or `.bat`) to run scripts, while Unix systems don't. On Unix, the file simply passes the program name through unchanged since the operating system handles it natively. On Windows, it uses a lookup tool to find the full path and extension of the program so it can actually be executed. This is essential for tools like `npm`, `yarn`, and `pnpm` to work correctly across platforms without users having to manually specify file paths or extensions.
+  - codex-rs/rmcp-client/src/rmcp_client.rs: This file implements the core MCP client that applications use to connect to and communicate with MCP servers. It handles three types of connections (local processes, HTTP, and HTTP with OAuth authentication), manages the initialization handshake, and provides methods to list and call tools, access resources, and send custom requests to the server—while automatically handling OAuth token refresh and persistence in the background.
+
+Sample commit messages:
+  - fix: resolve Windows MCP server execution for script-based tools (#3828)

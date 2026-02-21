@@ -1,0 +1,92 @@
+Name: Yaroslav Volovich
+Total commits: 1
+First contribution: 2026-02-13T18:31:39+00:00
+Emails: yvolovich@openai.com
+Files authored: 12
+
+File type distribution:
+  - .rs: 6 files
+  - .toml: 3 files
+  - .lock: 1 files
+  - .json: 1 files
+  - .bazel: 1 files
+
+Packages contributed to (3 total):
+  - codex-core: 1 commits (since 2026-02-13)
+  - codex-tui: 1 commits (since 2026-02-13)
+  - codex-utils-sleep-inhibitor: 1 commits (since 2026-02-13)
+
+Major product areas touched:
+  - Conversation (2 files)
+  - Session Lifecycle (2 files)
+  - Agent Actions (2 files)
+  - Autonomy & Approval (1 files)
+  - Model & Reasoning (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+  - Safety & Containment (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (3 total, top 15):
+  - Interactive TUI (2 files)
+  - Feature Flags (1 files)
+  - Configuration File (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/features.rs: This file manages Codex's feature flags—a centralized control system that lets users turn experimental and new capabilities on or off. It defines which features are available (like web search, sandbox environments, and multi-agent collaboration), tracks their maturity level (stable, experimental, or under development), sets their defaults, and handles reading feature settings from user configuration files. The file also detects when users enable unstable features and warns them that these may behave unpredictably.
+  - codex-rs/tui/src/chatwidget.rs: # ChatWidget File Summary
+
+This file implements the main chat interface for the OpenAI Codex TUI. It manages the conversation viewport, command input, history display, and all user interactions while streaming and executing AI responses.
+
+**Key Responsibilities:**
+
+- **Conversation State**: Maintains message history, active message being streamed, and transcript rendering for both the main viewport and overlay (Ctrl+T)
+- **Event Processing**: Consumes protocol events from codex-core (agent messages, command execution, approvals, errors) and updates UI state accordingly
+- **User Input**: Routes keyboard commands, slash commands, and composed messages to codex-core; handles special cases like image attachments and mention resolution
+- **Agent Feedback**: Displays real-time command output, execution status, MCP server startup progress, and approval requests as work happens
+- **Configuration & Modes**: Manages runtime model/effort selection, collaboration modes (Plan/Default/etc.), approval policies, and sandbox settings; persists user choices
+- **UI Overlays**: Opens popups for model selection, permissions, status line setup, experimental features, and feedback submission
+- **Session Lifecycle**: Handles session creation, resuming existing conversations, thread naming, forking, and token/rate-limit tracking
+- **Accessibility**: Provides status-line display with git branch, token usage, context remaining, and custom items; schedules async lookups when needed
+
+The widget acts as a bridge between the low-level chat stream and the terminal UI, translating agent work into visible transcript cells and fielding user intent back to the agent engine.
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+  - codex-rs/utils/sleep-inhibitor/src/dummy.rs: This file provides a no-op fallback implementation for preventing the system from sleeping, used when the platform doesn't have native sleep-prevention support or as a placeholder for testing purposes.
+  - codex-rs/utils/sleep-inhibitor/src/lib.rs: This file prevents the computer from going to sleep while Codex is actively processing a request. On macOS, it uses the system's native power management APIs to keep the machine awake; on other systems, it's a no-op placeholder.
+  - codex-rs/utils/sleep-inhibitor/src/macos_inhibitor.rs: This file prevents macOS from going to sleep while Codex is actively running a task. It communicates with macOS's power management system to request that the computer stay awake, and releases that request when the task is complete.
+
+Sample commit messages:
+  - feat(tui): prevent macOS idle sleep while turns run (#11711)

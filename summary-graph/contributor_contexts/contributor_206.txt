@@ -1,0 +1,22 @@
+Name: Rohan Godha
+Total commits: 1
+First contribution: 2025-11-03T04:19:08+00:00
+Emails: dev@rohangodha.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-11-03)
+
+Specific features touched (3 total, top 15):
+  - Onboarding Flow (1 files)
+  - Authentication & Identity (1 files)
+  - Interactive TUI (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/onboarding/auth.rs: This file handles the onboarding authentication flow for Codex, letting users sign in via three methods: ChatGPT account, device code, or API key. It manages the visual screens users see during login (prompts, input fields, success messages) and processes user interactions like keyboard input and API key pasting to guide them through whichever authentication method they choose.
+
+Sample commit messages:
+  - fix: pasting api key stray character (#4903)

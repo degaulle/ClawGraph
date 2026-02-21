@@ -1,0 +1,53 @@
+Name: dank-openai
+Total commits: 2
+First contribution: 2025-09-09T22:41:23+00:00
+Emails: dank@openai.com
+Files authored: 11
+
+File type distribution:
+  - .rs: 9 files
+  - .md: 2 files
+
+Packages contributed to (3 total):
+  - codex-tui: 2 commits (since 2025-09-09)
+  - codex-cli: 1 commits (since 2025-12-11)
+  - codex-core: 1 commits (since 2025-12-11)
+
+Major product areas touched:
+  - Session Lifecycle (2 files)
+  - Model & Reasoning (1 files)
+  - Safety & Containment (1 files)
+  - Project Context (1 files)
+  - Extensibility (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (11 total, top 15):
+  - Interactive TUI (3 files)
+  - Background Notification (2 files)
+  - Configuration File (2 files)
+  - Authentication & Identity (2 files)
+  - User Prompt (1 files)
+  - Multimodal Input (1 files)
+  - File Mention (1 files)
+  - Inline Approval Prompt (1 files)
+  - Working Directory Awareness (1 files)
+  - Onboarding Flow (1 files)
+  - Directory Trust (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/bottom_pane/textarea.rs: # TextArea Summary
+
+This file implements a multi-line text editor component that powers user input fields in the product. It handles typing, editing (cut/copy/paste), cursor movement, text wrapping, and display — with special support for "atomic elements" (like command placeholders) that users can't partially edit or delete.
+  - codex-rs/cli/src/wsl_paths.rs: This file handles file path translation for users running Codex on Windows Subsystem for Linux (WSL), automatically converting Windows-style paths (like `C:\folder`) into the format WSL understands (`/mnt/c/folder`). It detects whether the tool is running under WSL and normalizes file paths accordingly so the product works seamlessly across Windows and Linux environments.
+  - codex-rs/core/src/env.rs: This file detects the computing environment where Codex is running—checking whether it's in Windows Subsystem for Linux, running over SSH, in a CI/CD system, or without a graphical display. The product uses these detections to adapt its behavior, such as avoiding browser-based login flows when there's no GUI available.
+  - codex-rs/core/src/lib.rs: This file is the main entry point for Codex Core, the foundational library that powers the Codex AI assistant. It organizes and exposes all the internal components the product needs—such as authentication, model management, sandboxing, conversation history, shell command execution, security policies, and AI model connections—so that other parts of the system can use them consistently. Think of it as the "blueprint" that tells the rest of the product what building blocks are available and how to access them.
+  - codex-rs/tui/src/lib.rs: # Summary
+
+This file is the main entry point and orchestrator for the Codex TUI (terminal user interface) application. It handles startup logic including loading configuration files, checking authentication status, prompting users through onboarding flows, and launching the interactive chat interface. It also manages terminal setup, logging, and graceful cleanup when the app closes.
+  - codex-rs/tui/src/notifications/mod.rs: This file manages how Codex sends desktop notifications to the user. It automatically detects which notification method the user's terminal supports (choosing between two different notification protocols) and routes notification messages through the appropriate handler, while allowing users to manually override the detection if needed.
+  - codex-rs/tui/src/notifications/osc9.rs: This file enables the terminal UI to send desktop notifications to the user's system using a standard terminal protocol called OSC 9, allowing messages to appear as native notifications outside the application window.
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+
+Sample commit messages:
+  - Fix toasts on Windows under WSL 2 (#7137)
+  - alt+delete deletes the word to the right of the cursor (delete_forward_word) (#3394)

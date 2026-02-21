@@ -1,0 +1,11 @@
+Name: Jake Kay
+Total commits: 1
+First contribution: 2025-04-17T05:16:16+00:00
+Emails: jake41397@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .ts: 1 files
+
+Sample commit messages:
+  - fix: add missing "as" in prompt prefix in agent loop (#186)

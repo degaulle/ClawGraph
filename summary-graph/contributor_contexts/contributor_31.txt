@@ -1,0 +1,11 @@
+Name: Cody Peterson
+Total commits: 1
+First contribution: 2025-04-17T01:01:33+00:00
+Emails: 54814569+lostmygithubaccount@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .tsx: 1 files
+
+Sample commit messages:
+  - feat: --config/-c flag to open global instructions in nvim (#158)

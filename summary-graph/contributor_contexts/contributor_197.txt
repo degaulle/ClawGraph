@@ -1,0 +1,11 @@
+Name: Brad M. Harris
+Total commits: 1
+First contribution: 2025-10-30T20:01:33+00:00
+Emails: bmichaelh13@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - Documentation improvement: add missing period (#3754)

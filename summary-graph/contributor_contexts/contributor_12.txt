@@ -1,0 +1,11 @@
+Name: Hugo
+Total commits: 1
+First contribution: 2025-04-16T18:24:35+00:00
+Emails: 34518954+hugobiais@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - add explanation on how to add OPENAI_API_KEY to docs (#28)

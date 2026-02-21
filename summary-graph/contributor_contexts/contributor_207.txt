@@ -1,0 +1,11 @@
+Name: pygarap
+Total commits: 1
+First contribution: 2025-11-03T16:27:13+00:00
+Emails: pygarap@gmail.com
+Files authored: 2
+
+File type distribution:
+  - .md: 2 files
+
+Sample commit messages:
+  - Add documentation for slash commands in `docs/slash_commands.md`. (#5685)

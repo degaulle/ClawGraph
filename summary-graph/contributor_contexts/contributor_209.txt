@@ -1,0 +1,11 @@
+Name: Lucas Freire Sangoi
+Total commits: 1
+First contribution: 2025-11-04T02:19:26+00:00
+Emails: 125471877+sangoi-exe@users.noreply.github.com
+Files authored: 2
+
+File type distribution:
+  - .md: 2 files
+
+Sample commit messages:
+  - docs: add example config.toml (#5175)

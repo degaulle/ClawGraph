@@ -1,0 +1,11 @@
+Name: Ritesh Chauhan
+Total commits: 1
+First contribution: 2025-10-31T22:09:35+00:00
+Emails: 155845254+ritesh-chauhan0x1@users.noreply.github.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: fix broken link in contributing guide (#4973)

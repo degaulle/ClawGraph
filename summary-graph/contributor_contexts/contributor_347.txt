@@ -1,0 +1,110 @@
+Name: Felipe Coury
+Total commits: 2
+First contribution: 2026-02-05T16:50:21+00:00
+Emails: felipe.coury@gmail.com
+Files authored: 29
+
+File type distribution:
+  - .rs: 19 files
+  - .snap: 9 files
+  - .json: 1 files
+
+Packages contributed to (2 total):
+  - codex-tui: 2 commits (since 2026-02-05)
+  - codex-core: 1 commits (since 2026-02-05)
+
+Major product areas touched:
+  - Session Lifecycle (7 files)
+  - Conversation (6 files)
+  - Autonomy & Approval (5 files)
+  - Agent Actions (5 files)
+  - Surfaces (4 files)
+  - Safety & Containment (4 files)
+  - Project Context (3 files)
+  - Model & Reasoning (3 files)
+  - Extensibility (3 files)
+
+Specific features touched (88 total, top 15):
+  - Interactive TUI (14 files)
+  - Configuration File (4 files)
+  - Turn Management (3 files)
+  - Slash Command (3 files)
+  - MCP Client (3 files)
+  - Collaboration Mode (3 files)
+  - Inline Diff Display (3 files)
+  - Thread Resume (2 files)
+  - User Prompt (2 files)
+  - Multimodal Input (2 files)
+  - File Mention (2 files)
+  - Inline Approval Prompt (2 files)
+  - External Editor (2 files)
+  - Prompt History (2 files)
+  - Background Notification (2 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/core/src/config/edit.rs: This file handles saving configuration changes to Codex's settings file. It provides a system for batching multiple configuration updates—like changing the AI model, updating server settings, or acknowledging user warnings—and writing them to disk atomically while preserving comments and formatting. The file offers both synchronous and asynchronous APIs, supports profile-scoped settings, and intelligently merges changes to avoid overwriting unrelated configuration data.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/tui/src/app.rs: # Summary
+
+This file is the core application state manager for the Codex TUI, handling the main event loop and user interactions. It orchestrates conversations between the user interface and the backend service, managing everything from keyboard input and chat rendering to model selection, session management (creating, resuming, forking threads), configuration persistence, and Windows sandbox setup flows.
+  - codex-rs/tui/src/app_event.rs: This file defines the internal communication system that lets different parts of the terminal interface talk to the main application loop—it's like a message board where UI components post requests (like "open the model picker" or "save this setting") rather than directly manipulating the app. It handles everything from user actions like switching threads or updating preferences, to background operations like file search results and rate limit checks, to special Windows sandbox setup flows, ensuring the UI stays responsive and loosely coupled from the core logic.
+  - codex-rs/tui/src/bottom_pane/chat_composer.rs: # ChatComposer Summary
+
+The `ChatComposer` is the interactive text input widget for the chat interface. It manages everything the user types, pastes, and attaches before sending a message.
+
+## Core Responsibilities
+
+**Text Editing & Input**
+- Handles typing, pasting, and deletion with a rich textarea that supports atomic elements (like image placeholders and slash commands)
+- Detects "paste bursts" (rapid input that looks like pasted content from the clipboard) to distinguish them from human typing
+- Expands large pastes into placeholder elements to keep the UI responsive, then restores full content on submission
+
+**Attachments**
+- Manages local image files attached by the user (with placeholder labels like `[Image #1]`)
+- Tracks remote image URLs separately and renders them as non-editable rows above the textarea
+- Automatically renumbers local image placeholders when remote images are added or removed
+
+**History Navigation**
+- Stores submitted messages in local in-session history and (via async lookup) persistent cross-session history
+- Supports shell-style Up/Down arrow navigation to recall previous messages, with cursor positioned at end-of-line for repeated navigation
+
+**Slash Commands & Popups**
+- Recognizes `/command` syntax and shows an autocomplete popup
+- Allows Tab to complete commands, Enter to dispatch them
+- Supports custom prompts with variable expansion (`$USER`, `$1`–`$9`, etc.)
+- Also manages `@file` search popups and `$mention` popups for skills and connectors
+
+**Submission Modes**
+- "Steer mode": Enter submits immediately, Tab queues while a task runs
+- Standard mode: Enter queues while a task runs, otherwise submits
+- Validates commands before submission and reports errors
+
+**State Preservation**
+- Tracks pending large-paste payloads so they survive editing and are expanded only on submit
+- Records mention bindings so `$skill` references resolve correctly even after history recall
+- Clears text on Ctrl+C while preserving it in history for undo-like recall
+
+## Key User-Facing Behavior
+
+- **Paste detection**: Small pastes insert directly; large pastes use placeholders to avoid lag
+- **IME-friendly**: Non-ASCII input (from input methods) is never held, avoiding dropped character feeling
+- **Image attachment**: Users can paste image file paths and they're automatically detected and attached
+- **Shell-like history**: Repeated Up/Down keeps navigating backwards/forwards without stopping at interior cursor positions
+- **Read-only mode**: Can be temporarily disabled (e.g. during setup) with a placeholder message shown instead
+  - codex-rs/tui/src/bottom_pane/footer.rs: This file renders the footer bar at the bottom of the chat interface, displaying helpful hints, keyboard shortcuts, and context information to guide users on what they can do next.
+
+The footer adapts its content based on the current state (whether the user is composing a message, a task is running, etc.) and intelligently collapses hints to fit narrower terminal widths—prioritizing the most important information like queue notifications over less critical hints like "press ? for shortcuts." It also shows transient reminders like "press Ctrl+C again to quit" and handles special modes like collaboration mode labels, context window usage, and custom status lines.
+  - codex-rs/tui/src/bottom_pane/mod.rs: # Summary
+
+This file manages the bottom footer section of the chat interface—the area where users type messages and interact with pop-up menus. It owns the message input box and handles a stack of temporary overlays (like approval dialogs, selection lists, and user input prompts) that appear on top of it. The bottom pane also routes keyboard input intelligently (deciding whether popups or the composer should respond to a keypress), displays status messages while tasks are running, shows queued follow-up questions, and manages time-based UI hints that fade away on their own.
+  - codex-rs/tui/src/bottom_pane/multi_select_picker.rs: This file implements a multi-select picker widget — a dialog box that lets users choose multiple items from a list with search and toggle capabilities. It powers features like enabling/disabling multiple options at once, with support for fuzzy searching to filter items, keyboard navigation, and optional reordering via arrow keys. The picker also supports live preview feedback showing the current selection state.
+  - codex-rs/tui/src/bottom_pane/selection_popup_common.rs: This file provides the shared layout and rendering logic for selection popup menus that appear in the bottom pane (like model selection, approvals, and user input prompts). It handles displaying lists of options with names, descriptions, keyboard shortcuts, and status indicators—managing text wrapping, column alignment, scrolling, and visual styling to keep the menus consistent and readable across different screen sizes and content lengths.
+
+Sample commit messages:
+  - feat(tui): add sortable resume picker with created/updated timestamp toggle (#10752)
+  - feat(tui): add /statusline command for interactive status line configuration (#10546)

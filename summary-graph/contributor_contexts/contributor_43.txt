@@ -1,0 +1,11 @@
+Name: Uladzimir Yancharuk
+Total commits: 1
+First contribution: 2025-04-17T18:44:02+00:00
+Emails: v.yancharuk@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: add tracing instructions to README (#257)

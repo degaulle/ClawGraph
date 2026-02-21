@@ -1,0 +1,11 @@
+Name: Zhongsheng Ji
+Total commits: 1
+First contribution: 2025-09-03T06:14:57+00:00
+Emails: 9573586@qq.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: fix typo of config.md (#3082)

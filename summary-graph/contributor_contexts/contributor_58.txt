@@ -1,0 +1,11 @@
+Name: BadPirate
+Total commits: 1
+First contribution: 2025-04-18T23:48:07+00:00
+Emails: badpirate@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .sh: 1 files
+
+Sample commit messages:
+  - Fix #371 Allow multiple containers on same machine (#373)

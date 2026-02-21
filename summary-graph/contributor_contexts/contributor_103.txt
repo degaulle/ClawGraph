@@ -1,0 +1,14 @@
+Name: Adeeb
+Total commits: 1
+First contribution: 2025-05-13T20:08:42+00:00
+Emails: 70152519+0xadeeb@users.noreply.github.com
+Files authored: 6
+
+File type distribution:
+  - .nix: 3 files
+  - .unknown: 1 files
+  - .md: 1 files
+  - .lock: 1 files
+
+Sample commit messages:
+  - restructure flake for codex-rs (#888)

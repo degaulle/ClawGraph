@@ -1,0 +1,11 @@
+Name: Dan Lewis
+Total commits: 1
+First contribution: 2025-04-17T20:29:57+00:00
+Emails: dglewi@gmail.com
+Files authored: 1
+
+File type distribution:
+  - .md: 1 files
+
+Sample commit messages:
+  - docs: mention dotenv support in Quickstart (#262)

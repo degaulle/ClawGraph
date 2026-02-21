@@ -1,0 +1,14 @@
+Name: Yaroslav
+Total commits: 1
+First contribution: 2025-08-11T00:57:39+00:00
+Emails: yaroslav.yashin@me.com
+Files authored: 1
+
+File type distribution:
+  - .rs: 1 files
+
+Packages contributed to (1 total):
+  - codex-core: 1 commits (since 2025-08-11)
+
+Sample commit messages:
+  - feat: add JSON schema sanitization for MCP tools to ensure compatibil… (#1975)

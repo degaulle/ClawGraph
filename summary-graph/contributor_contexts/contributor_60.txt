@@ -1,0 +1,19 @@
+Name: Benny Yen
+Total commits: 4
+First contribution: 2025-04-19T00:00:45+00:00
+Emails: benny123tw@gmail.com
+Files authored: 10
+
+File type distribution:
+  - .ts: 4 files
+  - .json: 2 files
+  - .tsx: 1 files
+  - .snap: 1 files
+  - .md: 1 files
+  - .yaml: 1 files
+
+Sample commit messages:
+  - refactor(updates): fetch version from registry instead of npm CLI to support multiple managers (#446)
+  - feat: notify when a newer version is available (#333)
+  - fix: correct fish completion function name in CLI script (#485)
+  - docs: update README to use pnpm commands (#390)

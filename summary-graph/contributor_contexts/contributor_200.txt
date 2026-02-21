@@ -1,0 +1,65 @@
+Name: Huaiwu Li
+Total commits: 1
+First contribution: 2025-10-31T01:07:51+00:00
+Emails: lhwzds@gmail.com
+Files authored: 5
+
+File type distribution:
+  - .rs: 5 files
+
+Packages contributed to (1 total):
+  - codex-tui: 1 commits (since 2025-10-31)
+
+Major product areas touched:
+  - Conversation (1 files)
+  - Agent Actions (1 files)
+  - Session Lifecycle (1 files)
+  - Surfaces (1 files)
+
+Specific features touched (3 total, top 15):
+  - Interactive TUI (5 files)
+  - Prompt History (1 files)
+  - Inline Diff Display (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/tui/src/chatwidget/tests.rs: # ChatWidget Test Suite
+
+This file contains comprehensive integration tests for the **ChatWidget**—the central UI component that adapts incoming protocol events (from the Codex agent backend) into a terminal UI display and handles user input.
+
+## Purpose
+
+The tests verify that ChatWidget correctly:
+- **Handles agent events** (messages, command execution, approvals, reasoning, plans, etc.) and renders them in the chat history
+- **Processes user input** (text submission, keyboard shortcuts, image attachments, slash commands) and translates it into operations sent back to the backend
+- **Manages UI state** (task running/idle, modal popups, composer text, status indicators, rate limit warnings, etc.)
+- **Preserves user data** (text elements, local/remote images, mention bindings, queued messages) through lifecycle events like interrupts and reconnects
+- **Renders correctly** at various terminal sizes and UI configurations using snapshot tests
+
+## Key Test Categories
+
+**Message & History Flow**: Tests for replayed messages, multi-turn conversations, image attachments, text elements, and proper history cell rendering.
+
+**Execution & Approval**: Tests for command execution display, approval modals (exec/patch), decision history, unified exec processes, and background terminal management.
+
+**User Input & Submission**: Tests for message submission with images/elements, keyboard shortcuts (Enter/Shift+Enter), Alt+Up history recall, Ctrl+C clearing, and Tab queuing.
+
+**Status & Indicators**: Tests for working status display, context window percentage, token counting, stream reconnection, and runtime metrics.
+
+**Rate Limiting & Prompts**: Tests for rate limit warnings, model switch suggestions, and plan implementation popups.
+
+**Collaboration Modes & Features**: Tests for mode switching (/plan, /collab), personality selection, reasoning effort, and feature gates.
+
+**Review Mode**: Tests for review request handling, commit picker, custom prompts, and branch selection.
+
+**Modals & Popups**: Tests for approval selection, model/reasoning pickers, experimental features, feedback submission, and app connectors.
+
+**Edge Cases**: Tests for interrupted turns, small terminal heights, disabled commands, constrained configs, and invalid status line items.
+
+The tests use snapshot assertions to detect unintended layout or message changes; many render to a VT100 terminal backend to capture the exact visual output.
+  - codex-rs/tui/src/insert_history.rs: This file manages displaying message history in Codex's terminal interface. When new content needs to appear above the current conversation viewport, it inserts the formatted lines while scrolling the existing view down to make room, preserving all text colors, styles (bold, underline, etc.), and proper word wrapping that matches what users see on screen.
+  - codex-rs/tui/src/tui.rs: This file sets up and manages the terminal user interface (TUI) for Codex, handling all the low-level terminal interactions needed to display the chat interface. It initializes the terminal with keyboard and mouse input support, manages switching between normal and full-screen modes, handles external program execution, and coordinates drawing updates to the screen—essentially acting as the bridge between the application logic and what users see on their terminal.
+  - codex-rs/tui/tests/suite/vt100_history.rs: This file contains automated tests that verify the text history display feature works correctly in different scenarios. It tests that text renders properly when inserted into the terminal view, including edge cases like long lines that need to wrap, emoji and international characters, colored text, word boundaries, and cursor positioning.
+  - codex-rs/tui/tests/suite/vt100_live_commit.rs: This file tests how the product handles text overflow when displaying live content (like streaming code or command output). It verifies that when new text is continuously added to a display area, older lines are properly saved to history while recent lines remain visible and ready for updates.
+
+Sample commit messages:
+  - fix(tui): propagate errors in insert_history_lines_to_writer (#4266)

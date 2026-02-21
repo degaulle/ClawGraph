@@ -1,0 +1,69 @@
+Name: blevy-oai
+Total commits: 2
+First contribution: 2026-01-26T22:13:04+00:00
+Emails: blevy@openai.com
+Files authored: 11
+
+File type distribution:
+  - .rs: 10 files
+  - .json: 1 files
+
+Packages contributed to (5 total):
+  - codex-cli: 1 commits (since 2026-01-26)
+  - codex-core: 1 commits (since 2026-01-26)
+  - codex-app-server: 1 commits (since 2026-01-26)
+  - codex-rmcp-client: 1 commits (since 2026-01-27)
+  - codex-tui: 1 commits (since 2026-01-26)
+
+Major product areas touched:
+  - Agent Actions (4 files)
+  - Safety & Containment (4 files)
+  - Model & Reasoning (3 files)
+  - Extensibility (3 files)
+  - Project Context (2 files)
+  - Conversation (2 files)
+  - Autonomy & Approval (1 files)
+  - Session Lifecycle (1 files)
+
+Specific features touched (11 total, top 15):
+  - MCP Client (5 files)
+  - Configuration File (4 files)
+  - MCP Tool Call (2 files)
+  - Authentication & Identity (2 files)
+  - Custom Provider (1 files)
+  - Tool Output Truncation (1 files)
+  - App Server Protocol (1 files)
+  - Turn Management (1 files)
+  - Interactive TUI (1 files)
+  - Inline Diff Display (1 files)
+  - Agent Response Stream (1 files)
+
+Sample of authored files (with descriptions):
+  - codex-rs/app-server/src/codex_message_processor.rs: # CodexMessageProcessor
+
+This file handles all incoming client requests for Codex's AI assistant features. It processes JSON-RPC messages that control thread (conversation) lifecycle, user interactions, authentication, file searching, and configuration management.
+
+The processor acts as a central hub that translates client API calls into operations on active threads, manages login sessions, handles file discovery, lists available AI models and collaboration modes, and orchestrates event delivery back to clients. It supports both legacy "conversation" APIs and newer "thread/turn" APIs, manages user authentication (API key and ChatGPT), and coordinates real-time event streaming to connected clients listening to specific threads.
+  - codex-rs/cli/src/mcp_cmd.rs: This file provides command-line tools for managing MCP servers—external tools and services that Codex can connect to and use. It lets users add new servers, remove them, log in with credentials, and view their configured servers in both human-readable and machine-readable formats.
+  - codex-rs/core/src/config/edit.rs: This file handles saving configuration changes to Codex's settings file. It provides a system for batching multiple configuration updates—like changing the AI model, updating server settings, or acknowledging user warnings—and writing them to disk atomically while preserving comments and formatting. The file offers both synchronous and asynchronous APIs, supports profile-scoped settings, and intelligently merges changes to avoid overwriting unrelated configuration data.
+  - codex-rs/core/src/config/mod.rs: # Config Management System
+
+This file is the core configuration loader and manager for Codex, handling how the application reads settings from files, merges multiple configuration layers, applies user overrides, and enforces organizational requirements. It transforms raw configuration data into a validated runtime configuration that controls everything from model selection to security policies.
+  - codex-rs/core/src/config/types.rs: # Summary
+
+This file defines the configuration data structures that Codex uses to manage tools, integrations, user preferences, and system behavior. It establishes what settings users can configure (like which AI tools to enable, how to handle shell environments, notification preferences, and memory settings) and provides the parsing logic to load these settings from configuration files into usable form.
+  - codex-rs/core/src/mcp_connection_manager.rs: # MCP Connection Manager
+
+This file manages connections to external Model Context Protocol (MCP) servers and makes their tools available to the AI model. It handles server startup, tool discovery, tool filtering, caching, and execution—essentially acting as a hub that aggregates capabilities from multiple MCP servers into a unified interface the model can use.
+  - codex-rs/core/tests/suite/rmcp_client.rs: # rmcp_client.rs
+
+This file contains integration tests that verify Codex can successfully call external tools through different connection methods (local processes and HTTP servers). The tests confirm that tool calls work end-to-end, including proper handling of images, environment variables, and authentication tokens.
+  - codex-rs/core/tests/suite/truncation.rs: This file tests how Codex handles oversized tool outputs to prevent overwhelming the AI model. It verifies that when shell commands or external tools (like MCP integrations) produce very large results, the system intelligently truncates them—either by character count or token count depending on the model's needs—while still showing the beginning and end of the output and noting what was removed. It also confirms that truncation can be disabled by increasing the token budget in configuration.
+  - codex-rs/tui/src/history_cell.rs: # Summary
+
+This file defines the rendering system for conversation history entries in Codex's terminal interface. It provides a framework (`HistoryCell` trait) for converting different types of events—user messages, agent responses, command execution results, MCP tool calls, web searches, and more—into formatted text lines that display in a scrollable chat history. Each cell type handles its own formatting, wrapping, and styling to present rich, interactive information in the TUI.
+  - codex-rs/rmcp-client/src/perform_oauth_login.rs: This file handles the OAuth login flow for Codex, guiding users through authentication with a server. It sets up a local callback server to receive authorization credentials, displays a login URL to the user (optionally opening it in their browser), and securely stores the resulting authentication tokens for future use.
+
+Sample commit messages:
+  - Add MCP server `scopes` config and use it as fallback for OAuth login (#9647)
+  - Show OAuth error descriptions in callback responses (#9654)
