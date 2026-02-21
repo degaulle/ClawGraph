@@ -2749,8 +2749,8 @@
       ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      ctx.fillText(hoveredNode.name, hoveredNode.x + hR + labelPad, hoveredNode.y - labelPad);
+      ctx.textBaseline = 'middle';
+      ctx.fillText(hoveredNode.name, hoveredNode.x + hR + labelPad, hoveredNode.y);
     }
 
     ctx.restore();
@@ -2763,17 +2763,35 @@
     const zk = fixedSize ? (1 / transform.k) : 1;
     let closest = null;
     let closestDist = Infinity;
+    const fontSize = fixedSize ? 12 * zk : Math.max(4, 12);
+    const labelPad = fixedSize ? 4 * zk : 4;
+    ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
     for (let i = nodes.length - 1; i >= 0; i--) {
       const n = nodes[i];
       if (!nodeDrawn(n)) continue;
       const scale = getNodeScale(n);
+      const r = n.radius * scale * zk;
+      // Circle hit test
       const dx = sx - n.x;
       const dy = sy - n.y;
       const dist = dx * dx + dy * dy;
-      const hitRadius = Math.max(n.radius * scale * zk, 5 / transform.k);
+      const hitRadius = Math.max(r, 5 / transform.k);
       if (dist < hitRadius * hitRadius && dist < closestDist) {
         closest = n;
         closestDist = dist;
+      }
+      // Label hit test — check if this node has a visible label
+      const showLabel = n.type === 'root' || n.type === 'major_concept' || n.type === 'minor_concept'
+        || n.type === 'symbol'
+        || (n.type === 'contributor' && activeFile)
+        || (hoveredNode && n.id === hoveredNode.id);
+      if (!showLabel) continue;
+      const labelX = n.x + r + labelPad;
+      const labelW = ctx.measureText(n.name).width;
+      const labelH = fontSize;
+      if (sx >= labelX && sx <= labelX + labelW && sy >= n.y - labelH / 2 && sy <= n.y + labelH / 2) {
+        closest = n;
+        closestDist = 0; // label hit takes priority
       }
     }
     return closest;
