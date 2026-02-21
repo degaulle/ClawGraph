@@ -2894,7 +2894,7 @@ if (window.location.search) {
             activeMajor = (activeMajor && activeMajor.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'minor_concept') {
-            activeFile = null; activeSymbol = null;
+            activeContributor = null; activeFile = null; activeSymbol = null;
             activeMinor = (activeMinor && activeMinor.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'file') {
@@ -2902,7 +2902,7 @@ if (window.location.search) {
             activeFile = (activeFile && activeFile.id === node.id) ? null : node;
             rebuildGraph(node);
           } else if (node.type === 'contributor') {
-            activeMajor = null; activeMinor = null; activeFile = null; activeSymbol = null;
+            activeSymbol = null;
             activeContributor = (activeContributor && activeContributor.id === node.id) ? null : node;
             rebuildGraph(node);
           }
