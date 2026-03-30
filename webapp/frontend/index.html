@@ -145,6 +145,102 @@
   #info-pane .value { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
   #info-pane .label { color: #e0e0e0; font-size: 13px; margin-bottom: 4px; white-space: normal; }
   #info-pane .info-empty { color: #555; font-style: italic; }
+
+  /* Welcome panel styles */
+  .welcome { animation: welcomeFadeIn 0.6s ease-out; }
+  @keyframes welcomeFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .welcome-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+  .welcome-title .claw { color: #3b82f6; }
+  .welcome-subtitle {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+  .welcome-desc {
+    font-size: 13px;
+    color: #bbb;
+    line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .welcome-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .welcome-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .welcome-stat .stat-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    display: block;
+    line-height: 1.2;
+  }
+  .welcome-stat .stat-label {
+    font-size: 10px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .welcome-stat.accent { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.06); }
+  .welcome-divider {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin: 12px 0;
+  }
+  .welcome-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .welcome-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px 0;
+  }
+  .welcome-features li {
+    font-size: 12px;
+    color: #aaa;
+    padding: 4px 0;
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.4;
+  }
+  .welcome-features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #3b82f6;
+    opacity: 0.6;
+  }
+  .welcome-hint {
+    font-size: 11px;
+    color: #555;
+    font-style: italic;
+    text-align: center;
+    margin-top: 6px;
+  }
   .ctrl-btn {
     background: #333;
     color: #ccc;
@@ -553,7 +649,23 @@
     <button class="tab-btn" data-tab="forces-pane">Forces</button>
   </div>
   <div class="tab-pane active" id="info-pane">
-    <div class="info-empty">Click a node to see details</div>
+    <div class="welcome">
+      <div class="welcome-title"><span class="claw">Claw</span>Graph</div>
+      <div class="welcome-subtitle">Knowledge Graph Explorer</div>
+      <div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>
+      <hr class="welcome-divider">
+      <div class="welcome-section-title">How to Explore</div>
+      <ul class="welcome-features">
+        <li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>
+        <li>Drill into a file to see contributors, AI summary, and symbols</li>
+        <li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve step by step</li>
+        <li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>
+      </ul>
+      <hr class="welcome-divider">
+      <div class="welcome-section-title">Powered By</div>
+      <div class="welcome-desc" style="margin-bottom:4px">Opus 4.6 knowledge indexing, D3 force simulation, and deep integration with Claude Code and Cursor IDE.</div>
+      <div class="welcome-hint">Click any node to begin</div>
+    </div>
   </div>
   <div class="tab-pane" id="forces-pane"></div>
 </div>
@@ -915,6 +1027,17 @@ if (window.location.search) {
     commitHist[bin]++;
   }
   const histMax = Math.max(1, ...commitHist);
+
+  // Capture stats before freeing raw data (used by welcome panel)
+  const graphStats = {
+    commits: raw.commits ? Object.keys(raw.commits).length : 0,
+    files: raw.nodes.files.length,
+    contributors: raw.nodes.contributors.length,
+    crates: (raw.nodes.crates || []).length,
+    concepts: (raw.nodes.major_concepts || []).length + (raw.nodes.minor_concepts || []).length,
+    symbols: (raw.nodes.symbols || []).length,
+    edges: raw.edges.length,
+  };
 
   // Free raw data
   raw = null;
@@ -2047,6 +2170,52 @@ if (window.location.search) {
     return html;
   }
 
+  // Build welcome/landing HTML for the info pane when nothing is selected
+  function buildWelcomeHTML() {
+    const nContrib = graphStats.contributors;
+    const nFiles = graphStats.files;
+    const nCrates = graphStats.crates;
+    const nSymbols = graphStats.symbols;
+    const nEdges = graphStats.edges;
+    const nCommits = graphStats.commits;
+    const nConcepts = graphStats.concepts;
+
+    let html = `<div class="welcome">`;
+    html += `<div class="welcome-title"><span class="claw">Claw</span>Graph</div>`;
+    html += `<div class="welcome-subtitle">Knowledge Graph Explorer</div>`;
+    html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>`;
+
+    html += `<div class="welcome-stats">`;
+    html += `<div class="welcome-stat accent"><span class="stat-num">${nCommits.toLocaleString()}</span><span class="stat-label">Commits</span></div>`;
+    html += `<div class="welcome-stat accent"><span class="stat-num">${nFiles.toLocaleString()}</span><span class="stat-label">Files</span></div>`;
+    html += `<div class="welcome-stat"><span class="stat-num">${nContrib.toLocaleString()}</span><span class="stat-label">Contributors</span></div>`;
+    html += `<div class="welcome-stat"><span class="stat-num">${nCrates.toLocaleString()}</span><span class="stat-label">Crates</span></div>`;
+    if (nConcepts > 0) {
+      html += `<div class="welcome-stat"><span class="stat-num">${nConcepts.toLocaleString()}</span><span class="stat-label">Concepts</span></div>`;
+    }
+    if (nSymbols > 0) {
+      html += `<div class="welcome-stat"><span class="stat-num">${nSymbols.toLocaleString()}</span><span class="stat-label">Symbols</span></div>`;
+    }
+    html += `</div>`;
+
+    html += `<hr class="welcome-divider">`;
+    html += `<div class="welcome-section-title">How to Explore</div>`;
+    html += `<ul class="welcome-features">`;
+    html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
+    html += `<li>Drill into a file to see contributors, AI summary, and symbols</li>`;
+    html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve step by step</li>`;
+    html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>`;
+    html += `</ul>`;
+
+    html += `<hr class="welcome-divider">`;
+    html += `<div class="welcome-section-title">Powered By</div>`;
+    html += `<div class="welcome-desc" style="margin-bottom:4px">Opus 4.6 knowledge indexing, D3 force simulation, and deep integration with Claude Code and Cursor IDE.</div>`;
+
+    html += `<div class="welcome-hint">Click any node to begin</div>`;
+    html += `</div>`;
+    return html;
+  }
+
   // Get the currently selected node from active* state
   function getSelectedNode() {
     return activeSymbol || activeContributor || activeFile || activeMinor || activeMajor || null;
@@ -2184,7 +2353,7 @@ if (window.location.search) {
         activeContributor = null; activeSymbol = null;
         rebuildGraph(rootNode);
         // Update info pane without re-triggering sheet (already hidden)
-        infoPaneEl.innerHTML = '<div class="info-empty">Click a node to see details</div>';
+        infoPaneEl.innerHTML = buildWelcomeHTML();
       } else if (currentY < 35) {
         bottomSheet.setState('full', true);
       } else {
@@ -2202,7 +2371,7 @@ if (window.location.search) {
     // When a symbol is active, show file info (with symbol browser) rather than symbol info
     const node = (activeSymbol && activeFile) ? activeFile : getSelectedNode();
     if (!node) {
-      infoPaneEl.innerHTML = '<div class="info-empty">Click a node to see details</div>';
+      infoPaneEl.innerHTML = buildWelcomeHTML();
     } else {
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
       // Wire up symbol browser click handlers
@@ -2391,6 +2560,7 @@ if (window.location.search) {
 
   // --- Initial graph build ---
   rebuildGraph();
+  infoPaneEl.innerHTML = buildWelcomeHTML();
 
   // --- Remote command SSE ---
   (function() {
