@@ -940,6 +940,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   const noHowTo = urlParams.get('nohowto') === 'true';
   const noBack = urlParams.get('noback') === 'true';
   const infoFolded = urlParams.get('infofolded') === 'true';
+  const infoSide = urlParams.get('infoside'); // 'left' or 'right'
 
   // Embed mode: hide repo bar, appearance, mode switch, timeline for clean embedding
   if (embedMode) {
@@ -950,18 +951,16 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     canvas.style.marginTop = '0';
     const controls = document.getElementById('controls');
     if (controls) {
-      if (infoBottom) {
-        // Position info panel at bottom instead of top-right
-        controls.style.top = 'auto';
-        controls.style.bottom = '12px';
-        controls.style.right = '12px';
+      controls.style.top = '16px';
+      controls.style.width = '240px';
+      controls.style.maxHeight = 'calc(100vh - 32px)';
+      controls.style.fontSize = '11px';
+      if (infoSide === 'left') {
+        controls.style.right = 'auto';
         controls.style.left = '12px';
-        controls.style.width = 'auto';
-        controls.style.maxHeight = '180px';
-        controls.style.overflowY = 'auto';
-      } else {
-        controls.style.top = '16px';
-        controls.style.maxHeight = 'calc(100vh - 32px)';
+      } else if (infoSide === 'right') {
+        controls.style.left = 'auto';
+        controls.style.right = '12px';
       }
     }
   }
