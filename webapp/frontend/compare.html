@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClawGraph</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+  #top-bar {
+    height: 48px;
+    background: rgba(14, 14, 14, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    z-index: 50;
+  }
+  #top-bar .brand {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+  }
+  #top-bar .brand .claw { color: #3b82f6; }
+  #top-bar .repo-input-wrap {
+    flex: 1;
+    max-width: 420px;
+    display: flex;
+    gap: 6px;
+  }
+  #top-bar .repo-input-wrap input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  #top-bar .repo-input-wrap input:focus { border-color: #3b82f6; }
+  #top-bar .repo-input-wrap input::placeholder { color: #555; }
+  #top-bar .repo-go-btn {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  #top-bar .repo-go-btn:hover { background: #2563eb; }
+  #top-bar .subtitle {
+    color: #666;
+    font-size: 12px;
+    margin-left: auto;
+  }
+
+  .panels {
+    display: flex;
+    height: calc(100vh - 48px);
+  }
+  .panel {
+    flex: 1;
+    position: relative;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .panel:last-child { border-right: none; }
+  .panel-label {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(14, 14, 14, 0.85);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 4px 14px;
+    color: #aaa;
+    font-size: 12px;
+    font-weight: 600;
+    z-index: 10;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+  .panel iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+</style>
+</head>
+<body>
+<div id="top-bar">
+  <span class="brand"><span class="claw">Claw</span>Graph</span>
+  <div class="repo-input-wrap">
+    <input type="text" id="repo-input" placeholder="Enter GitHub repo (owner/name or URL)"
+           onkeydown="if(event.key==='Enter'){go()}">
+    <button class="repo-go-btn" onclick="go()">Generate</button>
+  </div>
+  <span class="subtitle">Side-by-side comparison</span>
+</div>
+<div class="panels">
+  <div class="panel">
+    <div class="panel-label">OpenAI Codex</div>
+    <iframe src="/index.html?embed=true&label=Info-Codex"></iframe>
+  </div>
+  <div class="panel">
+    <div class="panel-label">nirholas/claude-code</div>
+    <iframe src="/index.html?repo=nirholas/claude-code&embed=true&label=Info-Claude+Code"></iframe>
+  </div>
+</div>
+<script>
+function go() {
+  var v = document.getElementById('repo-input').value.trim();
+  if (v) window.location.href = '/index.html?repo=' + encodeURIComponent(v);
+}
+</script>
+</body>
+</html>

@@ -333,7 +333,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         # Static files from frontend/
         if path == "/" or path == "":
-            path = "/index.html"
+            # Default: comparison view; /index.html for single graph
+            path = "/compare.html"
 
         file_path = FRONTEND / path.lstrip("/")
         file_path = file_path.resolve()

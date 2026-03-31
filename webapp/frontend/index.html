@@ -720,7 +720,7 @@
   <h3 onclick="document.getElementById('appear-body').classList.toggle('collapsed')">
     Appearance <span class="toggle">&#9660;</span>
   </h3>
-  <div class="ctrl-body" id="appear-body">
+  <div class="ctrl-body collapsed" id="appear-body">
     <div class="tab-bar" id="appear-tab-bar">
       <button class="tab-btn active" data-tab="legend-pane">Legend</button>
       <button class="tab-btn" data-tab="settings-pane">Settings</button>
@@ -762,8 +762,7 @@
 </div>
 <div id="controls">
   <div class="tab-bar">
-    <button class="tab-btn active" data-tab="info-pane">Info</button>
-    <button class="tab-btn" data-tab="forces-pane">Forces</button>
+    <button class="tab-btn active" data-tab="info-pane" id="info-tab-btn">Info</button>
   </div>
   <div class="tab-pane active" id="info-pane">
     <div class="welcome">
@@ -780,7 +779,6 @@
       <div class="welcome-hint">Enter a GitHub repo in the top bar, or click any node to begin</div>
     </div>
   </div>
-  <div class="tab-pane" id="forces-pane"></div>
 </div>
 <div id="stats" style="display:none"></div>
 <div id="timeline">
@@ -813,6 +811,10 @@
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
+// Early param detection (before async IIFE)
+const _earlyParams = new URLSearchParams(window.location.search);
+const _isEmbed = _earlyParams.get('embed') === 'true';
+
 // Strip password from the URL bar (but preserve ?repo= param)
 (function() {
   const params = new URLSearchParams(window.location.search);
@@ -851,12 +853,13 @@
   function resize() {
     dpr = window.devicePixelRatio || 1;
     width = window.innerWidth;
-    height = window.innerHeight - TOP_BAR_H;
+    const barH = _isEmbed ? 0 : TOP_BAR_H;
+    height = window.innerHeight - barH;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
-    canvas.style.marginTop = TOP_BAR_H + 'px';
+    canvas.style.marginTop = barH + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
@@ -925,6 +928,25 @@
   // Determine which graph to load
   const urlParams = new URLSearchParams(window.location.search);
   const repoParam = urlParams.get('repo');
+  const embedMode = urlParams.get('embed') === 'true';
+  const infoLabel = urlParams.get('label');
+
+  // Embed mode: hide repo bar, appearance, mode switch, timeline for clean embedding
+  if (embedMode) {
+    document.getElementById('repo-bar').style.display = 'none';
+    document.getElementById('appearance').style.display = 'none';
+    document.getElementById('mode-switch-standalone').style.display = 'none';
+    document.getElementById('timeline').style.display = 'none';
+    canvas.style.marginTop = '0';
+    const controls = document.getElementById('controls');
+    if (controls) { controls.style.top = '16px'; controls.style.maxHeight = 'calc(100vh - 32px)'; }
+  }
+
+  // Custom info tab label
+  if (infoLabel) {
+    const infoTabBtn = document.getElementById('info-tab-btn');
+    if (infoTabBtn) infoTabBtn.textContent = infoLabel;
+  }
 
   async function loadDynamicRepo(repo) {
     const overlayEl = document.getElementById('build-overlay');
@@ -1562,7 +1584,7 @@
     const ncr = nodes.filter(n => n.type === 'crate').length;
     const ncon = nodes.filter(n => n.type === 'major_concept' || n.type === 'minor_concept').length;
     const nsym = nodes.filter(n => n.type === 'symbol').length;
-    statsEl.style.display = 'block';
+    // Stats bar hidden by default (data shown in welcome panel instead)
     let text = `${nc} contributors | ${nf} files | ${ncr} crates | ${ncon} concepts`;
     if (nsym > 0) text += ` | ${nsym} symbols`;
     text += ` | ${links.length} edges`;
@@ -2185,8 +2207,8 @@
   makeSlider(edgeGroup, 'Highlight Width', 0.1, 5, 0.1, 1, v => { highlightEdgeWidth = v; draw(); });
   makeSlider(edgeGroup, 'Highlight Opacity', 0, 1, 0.01, 0.35, v => { highlightEdgeOpacity = v; draw(); });
 
-  // --- Force controls panel ---
-  const ctrlBody = document.getElementById('forces-pane');
+  // --- Force controls (inside Settings tab) ---
+  const ctrlBody = document.getElementById('settings-pane');
 
   const forceGroup = makeGroup('Forces', ctrlBody);
   makeSlider(forceGroup, 'Charge', -100, 0, 1, -25, v => { chargeForce.strength(v); });
