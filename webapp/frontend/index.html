@@ -2011,7 +2011,9 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   }
 
   // Schedule a fit-to-view after the simulation settles
+  let _firstBuild = true;
   function scheduleAutoFit() {
+    if (_firstBuild) { _firstBuild = false; return; }
     if (_fitTimer) clearTimeout(_fitTimer);
     _fitTimer = setTimeout(() => {
       _fitTimer = null;
