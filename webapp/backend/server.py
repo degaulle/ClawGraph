@@ -31,6 +31,15 @@ from urllib.parse import urlparse, parse_qs
 
 ROOT = Path(__file__).resolve().parent.parent.parent  # knowledge-graph/
 FRONTEND = ROOT / "webapp" / "frontend"
+
+# Load .env file from project root (if it exists) — simple key=value, no quotes needed
+_env_file = ROOT / ".env"
+if _env_file.is_file():
+    for line in _env_file.read_text().splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            k, v = line.split("=", 1)
+            os.environ.setdefault(k.strip(), v.strip())
 LOG_FILE = ROOT / "webapp" / "server.log"
 
 logging.basicConfig(
