@@ -1127,9 +1127,19 @@
   }
 
   // Synthetic edges: root → each major concept
+  const hasConcepts = allNodes.some(n => n.type === 'major_concept');
   for (const n of allNodes) {
     if (n.type === 'major_concept') {
       allLinksRaw.push({ source: ROOT_ID, target: n.id, type: 'has_major', commits: 0 });
+    }
+  }
+
+  // For repos without concepts, connect root directly to top contributors
+  if (!hasConcepts) {
+    const contribNodes = allNodes.filter(n => n.type === 'contributor')
+      .sort((a, b) => b.totalCommits - a.totalCommits);
+    for (const c of contribNodes) {
+      allLinksRaw.push({ source: ROOT_ID, target: c.id, type: 'has_major', commits: 0 });
     }
   }
 
@@ -1608,8 +1618,14 @@
         return false;
       };
     } else {
-      // Level 1: root + all major concepts
-      for (const mc of majorConceptNodes) allowedIds.add(mc.id);
+      // Level 1: root + all major concepts (or contributors for no-concept repos)
+      if (hasConcepts) {
+        for (const mc of majorConceptNodes) allowedIds.add(mc.id);
+      } else {
+        for (const n of allNodes) {
+          if (n.type === 'contributor') allowedIds.add(n.id);
+        }
+      }
       edgeFilter = l => l.type === 'has_major';
     }
 
@@ -3102,7 +3118,7 @@
       if (!nodeDrawn(node)) continue;
       const showLabel = node.type === 'root' || node.type === 'major_concept' || node.type === 'minor_concept'
         || node.type === 'symbol'
-        || (node.type === 'contributor' && activeFile);
+        || (node.type === 'contributor' && (activeFile || !hasConcepts));
       if (!showLabel) continue;
       if (hoveredNode && node.id === hoveredNode.id) continue; // drawn below with hover styling
 
@@ -3159,7 +3175,7 @@
       // Label hit test — check if this node has a visible label
       const showLabel = n.type === 'root' || n.type === 'major_concept' || n.type === 'minor_concept'
         || n.type === 'symbol'
-        || (n.type === 'contributor' && activeFile)
+        || (n.type === 'contributor' && (activeFile || !hasConcepts))
         || (hoveredNode && n.id === hoveredNode.id);
       if (!showLabel) continue;
       const labelX = n.x + r + labelPad;
