@@ -930,6 +930,9 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   const repoParam = urlParams.get('repo');
   const embedMode = urlParams.get('embed') === 'true';
   const infoLabel = urlParams.get('label');
+  const infoBottom = urlParams.get('infobottom') === 'true';
+  const noHowTo = urlParams.get('nohowto') === 'true';
+  const noBack = urlParams.get('noback') === 'true';
 
   // Embed mode: hide repo bar, appearance, mode switch, timeline for clean embedding
   if (embedMode) {
@@ -939,7 +942,21 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     document.getElementById('timeline').style.display = 'none';
     canvas.style.marginTop = '0';
     const controls = document.getElementById('controls');
-    if (controls) { controls.style.top = '16px'; controls.style.maxHeight = 'calc(100vh - 32px)'; }
+    if (controls) {
+      if (infoBottom) {
+        // Position info panel at bottom instead of top-right
+        controls.style.top = 'auto';
+        controls.style.bottom = '12px';
+        controls.style.right = '12px';
+        controls.style.left = '12px';
+        controls.style.width = 'auto';
+        controls.style.maxHeight = '180px';
+        controls.style.overflowY = 'auto';
+      } else {
+        controls.style.top = '16px';
+        controls.style.maxHeight = 'calc(100vh - 32px)';
+      }
+    }
   }
 
   // Custom info tab label
@@ -2466,7 +2483,9 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     if (isCustomRepo) {
       html += `<div class="welcome-subtitle" style="margin-bottom:8px">${displayName}</div>`;
       html += `<div class="welcome-desc">${nFiles.toLocaleString()} files, ${nContrib.toLocaleString()} contributors, ${nCommits.toLocaleString()} commits analyzed.</div>`;
-      html += `<span class="welcome-back" onclick="window.location.href='/'">Back to Codex showcase</span>`;
+      if (!noBack) {
+        html += `<span class="welcome-back" onclick="window.location.href='/'">Back to Codex showcase</span>`;
+      }
     } else {
       html += `<div class="welcome-subtitle" style="margin-bottom:8px">OpenAI Codex</div>`;
       html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them.</div>`;
@@ -2490,20 +2509,24 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     }
     html += `</div>`;
 
-    html += `<hr class="welcome-divider">`;
-    html += `<div class="welcome-section-title">How to Explore</div>`;
-    html += `<ul class="welcome-features">`;
-    if (!isCustomRepo) {
-      html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
-    } else {
-      html += `<li>Click a <strong style="color:#fff">contributor</strong> to see their authored files</li>`;
+    if (!noHowTo) {
+      html += `<hr class="welcome-divider">`;
+      html += `<div class="welcome-section-title">How to Explore</div>`;
+      html += `<ul class="welcome-features">`;
+      if (!isCustomRepo) {
+        html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
+      } else {
+        html += `<li>Click a <strong style="color:#fff">contributor</strong> to see their authored files</li>`;
+      }
+      html += `<li>Click a <strong style="color:#fff">file node</strong> to see its contributors and details</li>`;
+      html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve</li>`;
+      html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node at once</li>`;
+      html += `</ul>`;
     }
-    html += `<li>Click a <strong style="color:#fff">file node</strong> to see its contributors and details</li>`;
-    html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve</li>`;
-    html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node at once</li>`;
-    html += `</ul>`;
 
-    html += `<div class="welcome-hint">Click any node to begin</div>`;
+    if (!infoBottom) {
+      html += `<div class="welcome-hint">Click any node to begin</div>`;
+    }
     html += `</div>`;
     return html;
   }
