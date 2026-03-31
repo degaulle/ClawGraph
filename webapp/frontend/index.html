@@ -52,7 +52,7 @@
   }
   #controls {
     position: absolute;
-    top: 16px;
+    top: 64px;
     right: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -61,7 +61,7 @@
     color: #ccc;
     font-size: 12px;
     width: 320px;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #444 transparent;
@@ -241,27 +241,71 @@
     text-align: center;
     margin-top: 6px;
   }
-  .welcome-input-row {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .welcome-input-row input {
-    flex: 1;
-    background: #1a1a1a;
-    border: 1px solid #333;
-    border-radius: 4px;
-    color: #fff;
-    padding: 6px 10px;
-    font-size: 12px;
-    outline: none;
-    font-family: inherit;
-  }
-  .welcome-input-row input:focus { border-color: #3b82f6; }
-  .welcome-input-row input::placeholder { color: #555; }
-  .welcome-error { color: #ef4444; font-size: 11px; display: none; margin-bottom: 6px; }
   .welcome-back { display: inline-block; color: #3b82f6; font-size: 11px; cursor: pointer; margin-top: 4px; }
   .welcome-back:hover { text-decoration: underline; }
+
+  /* Top repo bar */
+  #repo-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 48px;
+    background: rgba(14, 14, 14, 0.95);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 10px;
+    z-index: 50;
+  }
+  #repo-bar .brand {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+  #repo-bar .brand .claw { color: #3b82f6; }
+  #repo-bar .repo-input-wrap {
+    flex: 1;
+    max-width: 420px;
+    display: flex;
+    gap: 6px;
+  }
+  #repo-bar .repo-input-wrap input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    color: #fff;
+    padding: 6px 12px;
+    font-size: 13px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  #repo-bar .repo-input-wrap input:focus { border-color: #3b82f6; }
+  #repo-bar .repo-input-wrap input::placeholder { color: #555; }
+  #repo-bar .repo-go-btn {
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  #repo-bar .repo-go-btn:hover { background: #2563eb; }
+  #repo-bar .repo-current {
+    color: #888;
+    font-size: 12px;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+  #repo-bar .repo-current strong { color: #ccc; }
 
   /* Build progress overlay */
   #build-overlay {
@@ -318,7 +362,7 @@
   .ctrl-btn:hover { background: #444; color: #fff; }
   #appearance {
     position: absolute;
-    top: 64px;
+    top: 112px;
     left: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -516,7 +560,7 @@
   /* Mode switch standalone (always visible, top-left) */
   #mode-switch-standalone {
     position: absolute;
-    top: 16px;
+    top: 64px;
     left: 16px;
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -659,6 +703,16 @@
 </style>
 </head>
 <body>
+<div id="repo-bar">
+  <span class="brand" onclick="window.location.href='/'"><span class="claw">Claw</span>Graph</span>
+  <div class="repo-input-wrap">
+    <input type="text" id="repo-input-top" placeholder="Enter GitHub repo (owner/name or URL)"
+           onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)}">
+    <button class="repo-go-btn"
+            onclick="var v=document.getElementById('repo-input-top').value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)">Generate</button>
+  </div>
+  <div class="repo-current" id="repo-current"></div>
+</div>
 <canvas id="canvas"></canvas>
 <div id="tooltip"></div>
 <div id="mode-switch-standalone"></div>
@@ -713,26 +767,17 @@
   </div>
   <div class="tab-pane active" id="info-pane">
     <div class="welcome">
-      <div class="welcome-title"><span class="claw">Claw</span>Graph</div>
-      <div class="welcome-subtitle">Knowledge Graph Explorer</div>
-      <div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>
+      <div class="welcome-subtitle" style="margin-bottom:8px">OpenAI Codex</div>
+      <div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them.</div>
       <hr class="welcome-divider">
       <div class="welcome-section-title">How to Explore</div>
       <ul class="welcome-features">
         <li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>
-        <li>Drill into a file to see contributors, AI summary, and symbols</li>
-        <li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve step by step</li>
-        <li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>
+        <li>Click a <strong style="color:#fff">file node</strong> to see its contributors and details</li>
+        <li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve</li>
+        <li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node at once</li>
       </ul>
-      <hr class="welcome-divider">
-      <div class="welcome-section-title">Explore Any Repo</div>
-      <div class="welcome-input-row">
-        <input type="text" id="repo-input-static" placeholder="owner/name or GitHub URL"
-               onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)}">
-        <button class="ctrl-btn" style="margin:0;margin-top:0"
-                onclick="var v=document.getElementById('repo-input-static').value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)">Generate</button>
-      </div>
-      <div class="welcome-hint">Click any node to begin</div>
+      <div class="welcome-hint">Enter a GitHub repo in the top bar, or click any node to begin</div>
     </div>
   </div>
   <div class="tab-pane" id="forces-pane"></div>
@@ -801,15 +846,17 @@
   document.querySelectorAll('.tab-bar').forEach(initTabBar);
 
   // High-DPI support
+  const TOP_BAR_H = 48;
   let width, height, dpr;
   function resize() {
     dpr = window.devicePixelRatio || 1;
     width = window.innerWidth;
-    height = window.innerHeight;
+    height = window.innerHeight - TOP_BAR_H;
     canvas.width = width * dpr;
     canvas.height = height * dpr;
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
+    canvas.style.marginTop = TOP_BAR_H + 'px';
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   resize();
@@ -985,7 +1032,14 @@
     }
   }
   loadingEl.style.display = 'none';
-  if (repoParam) document.title = 'ClawGraph — ' + repoParam;
+  // Update top bar with current repo info
+  if (repoParam) {
+    document.title = 'ClawGraph \u2014 ' + repoParam;
+    document.getElementById('repo-input-top').value = repoParam;
+    document.getElementById('repo-current').innerHTML = 'Viewing <strong>' + repoParam + '</strong>';
+  } else {
+    document.getElementById('repo-current').innerHTML = 'Viewing <strong>OpenAI Codex</strong> (showcase)';
+  }
 
   // Check if Cursor IDE is connected (non-blocking)
   let cursorConnected = false;
@@ -2382,14 +2436,14 @@
     const displayName = repoParam || 'OpenAI Codex';
 
     let html = `<div class="welcome">`;
-    html += `<div class="welcome-title"><span class="claw">Claw</span>Graph</div>`;
-    html += `<div class="welcome-subtitle">Knowledge Graph Explorer</div>`;
 
     if (isCustomRepo) {
-      html += `<div class="welcome-desc">Interactive visualization of <strong style="color:#fff">${displayName}</strong> &mdash; ${nFiles.toLocaleString()} files, ${nContrib.toLocaleString()} contributors, and the relationships between them.</div>`;
+      html += `<div class="welcome-subtitle" style="margin-bottom:8px">${displayName}</div>`;
+      html += `<div class="welcome-desc">${nFiles.toLocaleString()} files, ${nContrib.toLocaleString()} contributors, ${nCommits.toLocaleString()} commits analyzed.</div>`;
       html += `<span class="welcome-back" onclick="window.location.href='/'">Back to Codex showcase</span>`;
     } else {
-      html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>`;
+      html += `<div class="welcome-subtitle" style="margin-bottom:8px">OpenAI Codex</div>`;
+      html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them.</div>`;
     }
 
     html += `<div class="welcome-stats">`;
@@ -2415,37 +2469,17 @@
     html += `<ul class="welcome-features">`;
     if (!isCustomRepo) {
       html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
+    } else {
+      html += `<li>Click a <strong style="color:#fff">contributor</strong> to see their authored files</li>`;
     }
     html += `<li>Click a <strong style="color:#fff">file node</strong> to see its contributors and details</li>`;
-    html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve step by step</li>`;
-    html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>`;
+    html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve</li>`;
+    html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node at once</li>`;
     html += `</ul>`;
-
-    html += `<hr class="welcome-divider">`;
-    html += `<div class="welcome-section-title">Explore Any Repo</div>`;
-    html += `<div class="welcome-input-row">`;
-    html += `<input type="text" id="repo-input" placeholder="owner/name or GitHub URL">`;
-    html += `<button id="repo-go" class="ctrl-btn" style="margin:0;margin-top:0">Generate</button>`;
-    html += `</div>`;
-    html += `<div class="welcome-error" id="repo-error"></div>`;
 
     html += `<div class="welcome-hint">Click any node to begin</div>`;
     html += `</div>`;
     return html;
-  }
-
-  // Wire up repo input after welcome panel is rendered
-  function wireRepoInput() {
-    const input = document.getElementById('repo-input');
-    const btn = document.getElementById('repo-go');
-    if (!input || !btn) return;
-    function go() {
-      const val = input.value.trim();
-      if (!val) return;
-      window.location.href = '/?repo=' + encodeURIComponent(val);
-    }
-    btn.addEventListener('click', go);
-    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
   }
 
   // Get the currently selected node from active* state
@@ -2585,7 +2619,7 @@
         activeContributor = null; activeSymbol = null;
         rebuildGraph(rootNode);
         // Update info pane without re-triggering sheet (already hidden)
-        infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
+        infoPaneEl.innerHTML = buildWelcomeHTML();
       } else if (currentY < 35) {
         bottomSheet.setState('full', true);
       } else {
@@ -2603,7 +2637,7 @@
     // When a symbol is active, show file info (with symbol browser) rather than symbol info
     const node = (activeSymbol && activeFile) ? activeFile : getSelectedNode();
     if (!node) {
-      infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
+      infoPaneEl.innerHTML = buildWelcomeHTML();
     } else {
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
       // Wire up symbol browser click handlers
@@ -2792,7 +2826,7 @@
 
   // --- Initial graph build ---
   rebuildGraph();
-  infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
+  infoPaneEl.innerHTML = buildWelcomeHTML();
 
   // --- Remote command SSE ---
   (function() {
