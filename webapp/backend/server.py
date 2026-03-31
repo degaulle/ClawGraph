@@ -548,8 +548,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         with _builds_lock:
             build = _builds.get(jid)
-            if build:
-                # Send the last known event immediately (catch-up)
+            if build and build["status"] == "building":
+                # Build in progress — send catch-up event and subscribe
                 if build.get("last_event"):
                     payload = ("data: " + json.dumps(build["last_event"]) + "\n\n").encode()
                     try:
@@ -559,26 +559,21 @@ class Handler(http.server.BaseHTTPRequestHandler):
                         return
                 build["sse_clients"].append(self.wfile)
             else:
-                # No build in progress — check if already done
+                # Build finished or not found — send final event immediately
                 graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
                 if graph_path.is_file():
                     event = {"stage": "done", "progress": 1.0, "message": "Graph ready (cached)"}
-                    payload = ("data: " + json.dumps(event) + "\n\n").encode()
-                    try:
-                        self.wfile.write(payload)
-                        self.wfile.flush()
-                    except Exception:
-                        pass
-                    return
+                elif build and build["status"] == "error":
+                    event = {"stage": "error", "progress": 0, "message": build.get("error", "Build failed")}
                 else:
                     event = {"stage": "error", "progress": 0, "message": "No build found"}
-                    payload = ("data: " + json.dumps(event) + "\n\n").encode()
-                    try:
-                        self.wfile.write(payload)
-                        self.wfile.flush()
-                    except Exception:
-                        pass
-                    return
+                payload = ("data: " + json.dumps(event) + "\n\n").encode()
+                try:
+                    self.wfile.write(payload)
+                    self.wfile.flush()
+                except Exception:
+                    pass
+                return
 
         # Keep connection open until build finishes
         try:
