@@ -1628,7 +1628,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
 
   // Radial layout radii (mutable via controls)
   const RING_RADII = [200, 400, 550, 800, 1000]; // [concepts, minors, files_near, files_far, contributors]
-  const nudgeOffset = nudge === 'right' ? 150 : nudge === 'left' ? -150 : 0;
+  const nudgeOffset = nudge === 'right' ? 80 : nudge === 'left' ? -150 : 0;
   let centerX = width / 2 + nudgeOffset, centerY = height / 2;
 
   // Track previous node set for positioning new nodes near the trigger
