@@ -62,6 +62,37 @@ def job_id_for(owner: str, name: str) -> str:
     return f"{owner}_{name}".replace(".", "-")
 
 
+# Clone phase → (start_pct, end_pct) within the 0.0–0.40 clone band
+_CLONE_PHASES = {
+    "counting":    (0.00, 0.05),
+    "compressing": (0.05, 0.10),
+    "receiving":   (0.10, 0.35),
+    "resolving":   (0.35, 0.40),
+}
+
+
+def _parse_clone_progress(line: str) -> tuple[str, float] | None:
+    """Extract phase name and overall progress (0.0–0.40) from a git clone line."""
+    low = line.lower()
+    phase = None
+    if "counting" in low:
+        phase = "counting"
+    elif "compressing" in low:
+        phase = "compressing"
+    elif "receiving" in low:
+        phase = "receiving"
+    elif "resolving" in low:
+        phase = "resolving"
+    if not phase:
+        return None
+    m = re.search(r'(\d+)%', line)
+    if not m:
+        return None
+    pct = int(m.group(1)) / 100.0
+    start, end = _CLONE_PHASES[phase]
+    return phase, start + pct * (end - start)
+
+
 def build_repo_graph(
     owner: str,
     name: str,
@@ -90,7 +121,7 @@ def build_repo_graph(
 
     tmp_dir = None
     try:
-        # --- Stage 1: Clone ---
+        # --- Stage 1: Clone (0.00 – 0.40) ---
         emit("cloning", 0.0, f"Cloning {owner}/{name}...")
         tmp_dir = tempfile.mkdtemp(prefix="clawgraph_")
         repo_dir = os.path.join(tmp_dir, name)
@@ -110,12 +141,12 @@ def build_repo_graph(
 
         # Git progress uses \r for in-place updates. Read raw bytes in chunks.
         buf = b""
+        last_progress = 0.0
         while True:
             chunk = proc.stderr.read(256)
             if not chunk:
                 break
             buf += chunk
-            # Process any complete lines (split on \r or \n)
             while b"\r" in buf or b"\n" in buf:
                 idx_r = buf.find(b"\r")
                 idx_n = buf.find(b"\n")
@@ -127,34 +158,62 @@ def build_repo_graph(
                     buf = buf[idx_n + 1:]
                 if not line:
                     continue
-                m = re.search(r'(\d+)%', line)
-                if m:
-                    pct = int(m.group(1)) / 100.0
-                    emit("cloning", pct * 0.4, f"Cloning {owner}/{name}... {m.group(1)}%")
+                parsed = _parse_clone_progress(line)
+                if parsed:
+                    phase, prog = parsed
+                    # Never go backwards
+                    if prog >= last_progress:
+                        last_progress = prog
+                        label = phase.capitalize()
+                        pct_str = re.search(r'(\d+)%', line)
+                        pct_display = pct_str.group(1) if pct_str else "?"
+                        emit("cloning", prog, f"{label}... {pct_display}%")
 
         proc.wait()
         if proc.returncode != 0:
             raise RuntimeError(f"git clone failed (exit {proc.returncode})")
 
-        emit("cloning", 0.4, f"Clone complete")
+        emit("cloning", 0.40, "Clone complete")
 
-        # --- Stage 2: Parse git log ---
-        emit("parsing", 0.45, "Parsing git history...")
-        result = subprocess.run(
+        # --- Stage 2: Git log (0.40 – 0.60) ---
+        emit("git_log", 0.42, "Running git log...")
+
+        # Use Popen so we can stream stderr and detect when git log finishes
+        log_proc = subprocess.Popen(
             [
                 "git", "log", "--first-parent", "--reverse",
                 "--format=COMMIT_START%n%H%n%aN%n%aE%n%at%n%s",
                 "--name-status", "-M",
             ],
             cwd=repo_dir,
-            capture_output=True,
-            text=True,
-            timeout=120,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
         )
-        if result.returncode != 0:
-            raise RuntimeError(f"git log failed: {result.stderr[:200]}")
 
-        parsed_commits = parse_git_log(result.stdout)
+        # Read stdout in chunks and count COMMIT_START markers for progress
+        raw_chunks = []
+        commit_count = 0
+        while True:
+            chunk = log_proc.stdout.read(65536)
+            if not chunk:
+                break
+            raw_chunks.append(chunk)
+            commit_count += chunk.count(b"COMMIT_START")
+            # Emit progress as we discover commits
+            if commit_count % 200 == 0 and commit_count > 0:
+                emit("git_log", min(0.42 + 0.13, 0.55),
+                     f"Reading history... {commit_count:,} commits so far")
+
+        log_proc.wait()
+        if log_proc.returncode != 0:
+            raise RuntimeError("git log failed")
+
+        raw_output = b"".join(raw_chunks).decode("utf-8", errors="replace")
+        emit("git_log", 0.55, f"Read {commit_count:,} commits from history")
+
+        # --- Stage 3: Parse commits (0.55 – 0.65) ---
+        emit("parsing", 0.57, f"Parsing {commit_count:,} commits...")
+        parsed_commits = parse_git_log(raw_output)
 
         # Safety: reject extremely large repos
         if len(parsed_commits) > 50000:
@@ -163,19 +222,22 @@ def build_repo_graph(
                 f"(limit: 50,000). Try a smaller repo."
             )
 
-        emit("parsing", 0.55, f"Parsed {len(parsed_commits):,} commits")
+        n_changes = sum(len(c["changes"]) for c in parsed_commits)
+        emit("parsing", 0.65,
+             f"Parsed {len(parsed_commits):,} commits, {n_changes:,} file changes")
 
-        # --- Stage 3: Build graph ---
-        emit("building", 0.6, "Building knowledge graph...")
+        # --- Stage 4: Build graph (0.65 – 0.85) ---
+        emit("building", 0.67, "Building nodes and edges...")
         graph = build_graph(parsed_commits, repo_dir)
 
         n_files = len(graph["nodes"]["files"])
         n_contributors = len(graph["nodes"]["contributors"])
         n_edges = len(graph["edges"])
-        emit("building", 0.85, f"{n_files:,} files, {n_contributors:,} contributors")
+        emit("building", 0.85,
+             f"Built graph: {n_files:,} files, {n_contributors:,} contributors, {n_edges:,} edges")
 
-        # --- Stage 4: Write JSON ---
-        emit("writing", 0.9, "Writing graph...")
+        # --- Stage 5: Write JSON (0.85 – 1.0) ---
+        emit("writing", 0.90, "Writing graph to disk...")
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, "knowledge_graph.json")
         with open(output_path, "w") as f:

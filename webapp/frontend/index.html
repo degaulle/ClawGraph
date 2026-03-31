@@ -919,12 +919,26 @@
       return await resp.json();
     }
 
+    // Stage labels for display
+    const stageLabels = {
+      queued: 'Preparing',
+      cloning: 'Cloning repository',
+      git_log: 'Reading git history',
+      parsing: 'Parsing commits',
+      building: 'Building graph',
+      writing: 'Writing output',
+      done: 'Complete',
+      error: 'Error',
+    };
+
     // Stream progress via SSE
     return new Promise((resolve) => {
       const es = new EventSource('/api/build-events?repo=' + encodeURIComponent(jobId));
       es.onmessage = async (ev) => {
         const data = JSON.parse(ev.data);
+        const stageLabel = stageLabels[data.stage] || data.stage;
         statusEl.textContent = data.message;
+        detailEl.textContent = stageLabel + '  \u2022  ' + Math.round(data.progress * 100) + '%';
         progressBar.style.width = (data.progress * 100) + '%';
 
         if (data.stage === 'done') {
