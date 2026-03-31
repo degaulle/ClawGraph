@@ -497,9 +497,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         jid = job_id_for(owner, name)
 
         with _builds_lock:
-            # Already built and cached on disk?
+            # Already built and cached on disk (generated/ or output/)?
             graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
-            if graph_path.is_file():
+            presaved_path = ROOT / "output" / jid / "knowledge_graph.json"
+            if graph_path.is_file() or presaved_path.is_file():
                 existing = _builds.get(jid)
                 if not existing or existing["status"] != "building":
                     self._send_json(200, {"job_id": jid, "status": "cached"})
@@ -562,7 +563,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             else:
                 # Build finished or not found — send final event immediately
                 graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
-                if graph_path.is_file():
+                presaved_path = ROOT / "output" / jid / "knowledge_graph.json"
+                if graph_path.is_file() or presaved_path.is_file():
                     event = {"stage": "done", "progress": 1.0, "message": "Graph ready (cached)"}
                 elif build and build["status"] == "error":
                     event = {"stage": "error", "progress": 0, "message": build.get("error", "Build failed")}
@@ -599,7 +601,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
         if not re.match(r'^[a-zA-Z0-9._-]+$', jid):
             self.send_error(400, "Invalid job ID")
             return
+        # Check generated/ first, then output/ for pre-saved graphs
         graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
+        if not graph_path.is_file():
+            graph_path = ROOT / "output" / jid / "knowledge_graph.json"
         if graph_path.is_file():
             self._serve_file(graph_path, "application/json")
         else:
