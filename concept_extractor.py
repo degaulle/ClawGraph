@@ -5,8 +5,8 @@ import json
 import yaml
 
 
-def extract_concepts(yaml_path: str) -> tuple[list[dict], list[dict]]:
-    """Extract major and minor concept nodes from a concept-map YAML file.
+def extract_concepts_from_data(data: dict) -> tuple[list[dict], list[dict]]:
+    """Extract major and minor concept nodes from parsed YAML data.
 
     Major concepts are sorted by name, assigned IDs major_concept_1..N.
     Minor concepts are sorted by (major_name, minor_name), assigned IDs minor_concept_1..N.
@@ -14,9 +14,6 @@ def extract_concepts(yaml_path: str) -> tuple[list[dict], list[dict]]:
     Returns:
         (major_concept_nodes, minor_concept_nodes)
     """
-    with open(yaml_path, "r") as f:
-        data = yaml.safe_load(f)
-
     raw_concepts = data.get("concepts", [])
 
     # Sort major concepts by name for stable IDs
@@ -54,6 +51,13 @@ def extract_concepts(yaml_path: str) -> tuple[list[dict], list[dict]]:
     return major_nodes, minor_nodes
 
 
+def extract_concepts(yaml_path: str) -> tuple[list[dict], list[dict]]:
+    """Extract concepts from a YAML file path (convenience wrapper)."""
+    with open(yaml_path, "r") as f:
+        data = yaml.safe_load(f)
+    return extract_concepts_from_data(data)
+
+
 def build_concept_hierarchy_edges(
     major_concepts: list[dict],
     minor_concepts: list[dict],
@@ -73,25 +77,19 @@ def build_concept_hierarchy_edges(
     ]
 
 
-def build_concept_file_edges(
-    tag_json_path: str,
+def build_concept_file_edges_from_data(
+    tag_entries: list[dict],
     major_concepts: list[dict],
     minor_concepts: list[dict],
     file_nodes: list[dict],
 ) -> list[dict]:
-    """Build tagged_with edges from a tag JSON file.
+    """Build tagged_with edges from in-memory tag data.
 
-    Parses each file entry's JSON-encoded response to extract concept tags,
-    then matches tag names against concept names and source_path against
-    file node names.
+    Each entry should have 'source_path' and 'response' (JSON-encoded tags).
 
     Returns:
         [{source: concept_id, target: file_id, type: "tagged_with"}, ...]
     """
-    with open(tag_json_path, "r") as f:
-        tag_data = json.load(f)
-
-    # Build name→id lookups
     concept_lookup: dict[str, str] = {}
     for c in major_concepts:
         concept_lookup[c["name"]] = c["id"]
@@ -105,15 +103,19 @@ def build_concept_file_edges(
     seen: set[tuple[str, str]] = set()
     edges: list[dict] = []
 
-    for entry in tag_data.get("files", []):
+    for entry in tag_entries:
         source_path = entry.get("source_path", "")
         file_id = file_lookup.get(source_path)
         if file_id is None:
             continue
 
         try:
-            tags = json.loads(entry["response"]).get("tags", [])
-        except (json.JSONDecodeError, KeyError):
+            resp = entry["response"]
+            if isinstance(resp, str):
+                tags = json.loads(resp).get("tags", [])
+            else:
+                tags = resp.get("tags", [])
+        except (json.JSONDecodeError, KeyError, AttributeError):
             continue
 
         for tag in tags:
@@ -133,23 +135,40 @@ def build_concept_file_edges(
     return edges
 
 
+def build_concept_file_edges(
+    tag_json_path: str,
+    major_concepts: list[dict],
+    minor_concepts: list[dict],
+    file_nodes: list[dict],
+) -> list[dict]:
+    """Build tagged_with edges from a tag JSON file (convenience wrapper)."""
+    with open(tag_json_path, "r") as f:
+        tag_data = json.load(f)
+    return build_concept_file_edges_from_data(
+        tag_data.get("files", []), major_concepts, minor_concepts, file_nodes,
+    )
+
+
+def enrich_file_summaries_from_data(
+    file_nodes: list[dict],
+    summary_entries: list[dict],
+) -> None:
+    """Mutate file nodes in place, adding 'summary' from in-memory data."""
+    summary_lookup: dict[str, str] = {}
+    for entry in summary_entries:
+        summary_lookup[entry["source_path"]] = entry["response"]
+    for node in file_nodes:
+        node["summary"] = summary_lookup.get(node["name"])
+
+
 def enrich_file_summaries(
     file_nodes: list[dict],
     summary_json_path: str,
 ) -> None:
-    """Mutate file nodes in place, adding a 'summary' field from a summary JSON file.
-
-    Files not found in the summary data get summary=None.
-    """
+    """Mutate file nodes in place, adding 'summary' from a JSON file."""
     with open(summary_json_path, "r") as f:
         summary_data = json.load(f)
-
-    summary_lookup: dict[str, str] = {}
-    for entry in summary_data.get("files", []):
-        summary_lookup[entry["source_path"]] = entry["response"]
-
-    for node in file_nodes:
-        node["summary"] = summary_lookup.get(node["name"])
+    enrich_file_summaries_from_data(file_nodes, summary_data.get("files", []))
 
 
 def _parse_json_response(response: str) -> dict | None:
@@ -166,24 +185,31 @@ def _parse_json_response(response: str) -> dict | None:
         return None
 
 
-def enrich_contributor_summaries(
+def enrich_contributor_summaries_from_data(
     contributor_nodes: list[dict],
-    summary_json_path: str,
+    summary_entries: list[dict],
 ) -> None:
-    """Mutate contributor nodes in place, adding 'role' and 'contributions' fields."""
-    with open(summary_json_path, "r") as f:
-        summary_data = json.load(f)
-
-    # source_path is like "contributor_1.txt" → key on "contributor_1"
+    """Mutate contributor nodes in place, adding 'role' and 'contributions' from in-memory data."""
     summary_lookup: dict[str, dict] = {}
-    for entry in summary_data.get("files", []):
+    for entry in summary_entries:
         key = entry["source_path"].removesuffix(".txt")
         parsed = _parse_json_response(entry["response"])
         if parsed:
             summary_lookup[key] = parsed
-
     for node in contributor_nodes:
         info = summary_lookup.get(node["id"])
         if info:
             node["role"] = info.get("role")
             node["contributions"] = info.get("contributions")
+
+
+def enrich_contributor_summaries(
+    contributor_nodes: list[dict],
+    summary_json_path: str,
+) -> None:
+    """Mutate contributor nodes in place from a JSON file."""
+    with open(summary_json_path, "r") as f:
+        summary_data = json.load(f)
+    enrich_contributor_summaries_from_data(
+        contributor_nodes, summary_data.get("files", []),
+    )
