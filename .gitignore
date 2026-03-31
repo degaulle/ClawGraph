@@ -4,3 +4,4 @@ __pycache__/
 summary-graph/output/*/
 webapp/server.log*
 .playwright-mcp/
+generated/

@@ -241,6 +241,69 @@
     text-align: center;
     margin-top: 6px;
   }
+  .welcome-input-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .welcome-input-row input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    color: #fff;
+    padding: 6px 10px;
+    font-size: 12px;
+    outline: none;
+    font-family: inherit;
+  }
+  .welcome-input-row input:focus { border-color: #3b82f6; }
+  .welcome-input-row input::placeholder { color: #555; }
+  .welcome-error { color: #ef4444; font-size: 11px; display: none; margin-bottom: 6px; }
+  .welcome-back { display: inline-block; color: #3b82f6; font-size: 11px; cursor: pointer; margin-top: 4px; }
+  .welcome-back:hover { text-decoration: underline; }
+
+  /* Build progress overlay */
+  #build-overlay {
+    display: none;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,10,10,0.97);
+    z-index: 200;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .build-card {
+    width: 340px;
+    text-align: center;
+  }
+  .build-card .welcome-title { margin-bottom: 20px; }
+  #build-status {
+    color: #ccc;
+    font-size: 14px;
+    margin-bottom: 12px;
+    min-height: 20px;
+  }
+  .build-track {
+    background: #222;
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  #build-progress-bar {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+  }
+  #build-detail {
+    color: #555;
+    font-size: 11px;
+    min-height: 16px;
+  }
   .ctrl-btn {
     background: #333;
     color: #ccc;
@@ -662,8 +725,13 @@
         <li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>
       </ul>
       <hr class="welcome-divider">
-      <div class="welcome-section-title">Powered By</div>
-      <div class="welcome-desc" style="margin-bottom:4px">Opus 4.6 knowledge indexing, D3 force simulation, and deep integration with Claude Code and Cursor IDE.</div>
+      <div class="welcome-section-title">Explore Any Repo</div>
+      <div class="welcome-input-row">
+        <input type="text" id="repo-input-static" placeholder="owner/name or GitHub URL"
+               onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)}">
+        <button class="ctrl-btn" style="margin:0;margin-top:0"
+                onclick="var v=document.getElementById('repo-input-static').value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)">Generate</button>
+      </div>
       <div class="welcome-hint">Click any node to begin</div>
     </div>
   </div>
@@ -688,14 +756,28 @@
   </div>
   <div class="bottom-sheet-content" id="bottom-sheet-content"></div>
 </div>
+<div id="build-overlay">
+  <div class="build-card">
+    <div class="welcome-title"><span class="claw">Claw</span>Graph</div>
+    <div id="build-status">Preparing...</div>
+    <div class="build-track"><div id="build-progress-bar"></div></div>
+    <div id="build-detail"></div>
+  </div>
+</div>
 <div id="loading">Loading knowledge graph...</div>
 
 <script src="https://d3js.org/d3.v7.min.js"></script>
 <script>
-// Strip password (or any query params) from the URL bar after the page loads
-if (window.location.search) {
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
+// Strip password from the URL bar (but preserve ?repo= param)
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('password')) {
+    params.delete('password');
+    const qs = params.toString();
+    const newUrl = window.location.pathname + (qs ? '?' + qs : '');
+    window.history.replaceState({}, document.title, newUrl);
+  }
+})();
 (async function() {
   const canvas = document.getElementById('canvas');
   const ctx = canvas.getContext('2d');
@@ -793,16 +875,103 @@ if (window.location.search) {
     defined_in: refLum / luminance(100, 116, 139),
   };
 
+  // Determine which graph to load
+  const urlParams = new URLSearchParams(window.location.search);
+  const repoParam = urlParams.get('repo');
+
+  async function loadDynamicRepo(repo) {
+    const overlayEl = document.getElementById('build-overlay');
+    const statusEl = document.getElementById('build-status');
+    const progressBar = document.getElementById('build-progress-bar');
+    const detailEl = document.getElementById('build-detail');
+
+    loadingEl.style.display = 'none';
+    overlayEl.style.display = 'flex';
+    statusEl.style.color = '#ccc';
+
+    // Kick off the build
+    let buildData;
+    try {
+      const buildResp = await fetch('/api/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo }),
+      });
+      buildData = await buildResp.json();
+      if (!buildResp.ok) {
+        statusEl.textContent = buildData.error || 'Build request failed';
+        statusEl.style.color = '#ef4444';
+        return null;
+      }
+    } catch (e) {
+      statusEl.textContent = 'Failed to connect: ' + e.message;
+      statusEl.style.color = '#ef4444';
+      return null;
+    }
+
+    const jobId = buildData.job_id;
+
+    if (buildData.status === 'cached') {
+      statusEl.textContent = 'Loading cached graph...';
+      progressBar.style.width = '100%';
+      overlayEl.style.display = 'none';
+      const resp = await fetch('/api/graph/' + jobId);
+      return await resp.json();
+    }
+
+    // Stream progress via SSE
+    return new Promise((resolve) => {
+      const es = new EventSource('/api/build-events?repo=' + encodeURIComponent(jobId));
+      es.onmessage = async (ev) => {
+        const data = JSON.parse(ev.data);
+        statusEl.textContent = data.message;
+        progressBar.style.width = (data.progress * 100) + '%';
+
+        if (data.stage === 'done') {
+          es.close();
+          detailEl.textContent = 'Loading graph...';
+          try {
+            const resp = await fetch('/api/graph/' + jobId);
+            const json = await resp.json();
+            overlayEl.style.display = 'none';
+            resolve(json);
+          } catch (e) {
+            statusEl.textContent = 'Failed to load graph: ' + e.message;
+            statusEl.style.color = '#ef4444';
+            resolve(null);
+          }
+        } else if (data.stage === 'error') {
+          es.close();
+          statusEl.style.color = '#ef4444';
+          detailEl.textContent = 'You can close this and try another repo.';
+          resolve(null);
+        }
+      };
+      es.onerror = () => {
+        es.close();
+        statusEl.textContent = 'Connection lost during build';
+        statusEl.style.color = '#ef4444';
+        resolve(null);
+      };
+    });
+  }
+
   // Load data
   let raw;
-  try {
-    const resp = await fetch('/knowledge_graph.json');
-    raw = await resp.json();
-  } catch (e) {
-    loadingEl.textContent = 'Failed to load knowledge_graph.json: ' + e.message;
-    return;
+  if (repoParam) {
+    raw = await loadDynamicRepo(repoParam);
+    if (!raw) return;
+  } else {
+    try {
+      const resp = await fetch('/knowledge_graph.json');
+      raw = await resp.json();
+    } catch (e) {
+      loadingEl.textContent = 'Failed to load knowledge_graph.json: ' + e.message;
+      return;
+    }
   }
   loadingEl.style.display = 'none';
+  if (repoParam) document.title = 'ClawGraph — ' + repoParam;
 
   // Check if Cursor IDE is connected (non-blocking)
   let cursorConnected = false;
@@ -907,7 +1076,7 @@ if (window.location.search) {
   const ROOT_ID = '__root__';
   const rootNode = {
     id: ROOT_ID,
-    name: 'Codex',
+    name: repoParam ? repoParam.split('/').pop() : 'Codex',
     type: 'root',
     createdAt: null,
     radius: 14,
@@ -2179,41 +2348,74 @@ if (window.location.search) {
     const nEdges = graphStats.edges;
     const nCommits = graphStats.commits;
     const nConcepts = graphStats.concepts;
+    const isCustomRepo = !!repoParam;
+    const displayName = repoParam || 'OpenAI Codex';
 
     let html = `<div class="welcome">`;
     html += `<div class="welcome-title"><span class="claw">Claw</span>Graph</div>`;
     html += `<div class="welcome-subtitle">Knowledge Graph Explorer</div>`;
-    html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>`;
+
+    if (isCustomRepo) {
+      html += `<div class="welcome-desc">Interactive visualization of <strong style="color:#fff">${displayName}</strong> &mdash; ${nFiles.toLocaleString()} files, ${nContrib.toLocaleString()} contributors, and the relationships between them.</div>`;
+      html += `<span class="welcome-back" onclick="window.location.href='/'">Back to Codex showcase</span>`;
+    } else {
+      html += `<div class="welcome-desc">Interactive visualization of the <strong style="color:#fff">OpenAI Codex</strong> codebase &mdash; thousands of files, hundreds of contributors, and the relationships between them, rendered as a navigable knowledge graph.</div>`;
+    }
 
     html += `<div class="welcome-stats">`;
     html += `<div class="welcome-stat accent"><span class="stat-num">${nCommits.toLocaleString()}</span><span class="stat-label">Commits</span></div>`;
     html += `<div class="welcome-stat accent"><span class="stat-num">${nFiles.toLocaleString()}</span><span class="stat-label">Files</span></div>`;
     html += `<div class="welcome-stat"><span class="stat-num">${nContrib.toLocaleString()}</span><span class="stat-label">Contributors</span></div>`;
-    html += `<div class="welcome-stat"><span class="stat-num">${nCrates.toLocaleString()}</span><span class="stat-label">Crates</span></div>`;
+    if (nCrates > 0) {
+      html += `<div class="welcome-stat"><span class="stat-num">${nCrates.toLocaleString()}</span><span class="stat-label">Crates</span></div>`;
+    }
     if (nConcepts > 0) {
       html += `<div class="welcome-stat"><span class="stat-num">${nConcepts.toLocaleString()}</span><span class="stat-label">Concepts</span></div>`;
     }
     if (nSymbols > 0) {
       html += `<div class="welcome-stat"><span class="stat-num">${nSymbols.toLocaleString()}</span><span class="stat-label">Symbols</span></div>`;
     }
+    if (nEdges > 0) {
+      html += `<div class="welcome-stat"><span class="stat-num">${nEdges.toLocaleString()}</span><span class="stat-label">Edges</span></div>`;
+    }
     html += `</div>`;
 
     html += `<hr class="welcome-divider">`;
     html += `<div class="welcome-section-title">How to Explore</div>`;
     html += `<ul class="welcome-features">`;
-    html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
-    html += `<li>Drill into a file to see contributors, AI summary, and symbols</li>`;
+    if (!isCustomRepo) {
+      html += `<li>Click a <strong style="color:#fff">concept node</strong> to expand subconcepts and tagged files</li>`;
+    }
+    html += `<li>Click a <strong style="color:#fff">file node</strong> to see its contributors and details</li>`;
     html += `<li>Use the <strong style="color:#fff">timeline slider</strong> to watch the codebase evolve step by step</li>`;
     html += `<li>Toggle <strong style="color:#fff">Overview</strong> mode to see every node and edge at once</li>`;
     html += `</ul>`;
 
     html += `<hr class="welcome-divider">`;
-    html += `<div class="welcome-section-title">Powered By</div>`;
-    html += `<div class="welcome-desc" style="margin-bottom:4px">Opus 4.6 knowledge indexing, D3 force simulation, and deep integration with Claude Code and Cursor IDE.</div>`;
+    html += `<div class="welcome-section-title">Explore Any Repo</div>`;
+    html += `<div class="welcome-input-row">`;
+    html += `<input type="text" id="repo-input" placeholder="owner/name or GitHub URL">`;
+    html += `<button id="repo-go" class="ctrl-btn" style="margin:0;margin-top:0">Generate</button>`;
+    html += `</div>`;
+    html += `<div class="welcome-error" id="repo-error"></div>`;
 
     html += `<div class="welcome-hint">Click any node to begin</div>`;
     html += `</div>`;
     return html;
+  }
+
+  // Wire up repo input after welcome panel is rendered
+  function wireRepoInput() {
+    const input = document.getElementById('repo-input');
+    const btn = document.getElementById('repo-go');
+    if (!input || !btn) return;
+    function go() {
+      const val = input.value.trim();
+      if (!val) return;
+      window.location.href = '/?repo=' + encodeURIComponent(val);
+    }
+    btn.addEventListener('click', go);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
   }
 
   // Get the currently selected node from active* state
@@ -2353,7 +2555,7 @@ if (window.location.search) {
         activeContributor = null; activeSymbol = null;
         rebuildGraph(rootNode);
         // Update info pane without re-triggering sheet (already hidden)
-        infoPaneEl.innerHTML = buildWelcomeHTML();
+        infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
       } else if (currentY < 35) {
         bottomSheet.setState('full', true);
       } else {
@@ -2371,7 +2573,7 @@ if (window.location.search) {
     // When a symbol is active, show file info (with symbol browser) rather than symbol info
     const node = (activeSymbol && activeFile) ? activeFile : getSelectedNode();
     if (!node) {
-      infoPaneEl.innerHTML = buildWelcomeHTML();
+      infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
     } else {
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
       // Wire up symbol browser click handlers
@@ -2560,7 +2762,7 @@ if (window.location.search) {
 
   // --- Initial graph build ---
   rebuildGraph();
-  infoPaneEl.innerHTML = buildWelcomeHTML();
+  infoPaneEl.innerHTML = buildWelcomeHTML(); wireRepoInput();
 
   // --- Remote command SSE ---
   (function() {

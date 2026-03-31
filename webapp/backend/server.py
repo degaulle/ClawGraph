@@ -17,9 +17,12 @@ import json
 import logging
 import logging.handlers
 import os
+import re
 import secrets
+import shutil
 import socketserver
 import subprocess
+import sys
 import threading
 import time
 import argparse
@@ -56,6 +59,90 @@ _command_clients: list = []  # SSE client wfile handles for /commands
 _command_clients_lock = threading.Lock()
 
 _valid_sessions: set = set()  # session tokens for password auth
+
+# ── Dynamic repo build state ─────────────────────────────────────────
+# Ensure project root is importable (for repo_builder, git_log_parser, etc.)
+sys.path.insert(0, str(ROOT))
+
+from repo_builder import validate_repo, job_id_for, build_repo_graph
+
+GENERATED_DIR = ROOT / "generated"
+MAX_CONCURRENT_BUILDS = 2
+GENERATED_TTL = 3600  # 1 hour
+
+# _builds[job_id] = {
+#     "status": "building" | "done" | "error",
+#     "error": str | None,
+#     "sse_clients": [wfile, ...],
+#     "thread": Thread,
+#     "last_event": {"stage": ..., "progress": ..., "message": ...},
+# }
+_builds: dict[str, dict] = {}
+_builds_lock = threading.Lock()
+
+
+def _build_notify(job_id: str, stage: str, progress: float, message: str):
+    """Push an SSE event to all clients watching this build."""
+    event = {"stage": stage, "progress": progress, "message": message}
+    payload = ("data: " + json.dumps(event) + "\n\n").encode()
+    with _builds_lock:
+        build = _builds.get(job_id)
+        if not build:
+            return
+        build["last_event"] = event
+        dead = []
+        for wfile in build["sse_clients"]:
+            try:
+                wfile.write(payload)
+                wfile.flush()
+            except Exception:
+                dead.append(wfile)
+        for d in dead:
+            build["sse_clients"].remove(d)
+
+
+def _run_build(job_id: str, owner: str, name: str, clone_url: str):
+    """Background thread: clone + build, push SSE progress."""
+    output_dir = str(GENERATED_DIR / job_id)
+    try:
+        build_repo_graph(
+            owner, name, clone_url, output_dir,
+            progress_cb=lambda stage, prog, msg: _build_notify(job_id, stage, prog, msg),
+        )
+        with _builds_lock:
+            _builds[job_id]["status"] = "done"
+    except Exception as e:
+        log.error("Build failed for %s: %s", job_id, e)
+        _build_notify(job_id, "error", 0, str(e))
+        with _builds_lock:
+            _builds[job_id]["status"] = "error"
+            _builds[job_id]["error"] = str(e)
+
+
+def _reaper():
+    """Periodically delete generated graphs older than TTL."""
+    while True:
+        time.sleep(300)
+        if not GENERATED_DIR.is_dir():
+            continue
+        now = time.time()
+        for entry in GENERATED_DIR.iterdir():
+            if not entry.is_dir():
+                continue
+            try:
+                age = now - entry.stat().st_mtime
+                if age > GENERATED_TTL:
+                    # Don't reap if there's an active build
+                    with _builds_lock:
+                        b = _builds.get(entry.name)
+                        if b and b["status"] == "building":
+                            continue
+                    shutil.rmtree(entry, ignore_errors=True)
+                    with _builds_lock:
+                        _builds.pop(entry.name, None)
+                    log.info("Reaped old graph: %s (age: %ds)", entry.name, int(age))
+            except OSError:
+                pass
 
 
 def _push_command(data: dict):
@@ -220,6 +307,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(body)
             return
 
+        # SSE endpoint (build progress)
+        if path == "/api/build-events":
+            self._handle_build_sse()
+            return
+
+        # Serve a generated graph
+        if path.startswith("/api/graph/"):
+            self._serve_generated_graph(path)
+            return
+
         # Serve knowledge_graph.json from project root
         if path == "/knowledge_graph.json":
             self._serve_file(ROOT / "output" / "knowledge_graph.json", "application/json")
@@ -247,6 +344,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
 
         path = self.path.split("?")[0]
+
+        # /api/build is allowed in all modes
+        if path == "/api/build":
+            self._handle_build_request()
+            return
 
         if self.public_mode and path in ("/state", "/command", "/open-in-cursor", "/cursor-running"):
             self.send_error(403, "Endpoint disabled in public mode")
@@ -359,6 +461,145 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         self.send_error(404)
 
+    # ── Dynamic build endpoints ────────────────────────────────────
+
+    def _handle_build_request(self):
+        """POST /api/build — start or check a graph build."""
+        length = int(self.headers.get("Content-Length", 0))
+        body = self.rfile.read(length)
+        try:
+            data = json.loads(body)
+        except (json.JSONDecodeError, ValueError):
+            self._send_json(400, {"error": "Invalid JSON"})
+            return
+
+        repo_str = data.get("repo", "").strip()
+        if not repo_str:
+            self._send_json(400, {"error": "Missing 'repo' field"})
+            return
+
+        try:
+            owner, name, clone_url = validate_repo(repo_str)
+        except ValueError as e:
+            self._send_json(400, {"error": str(e)})
+            return
+
+        jid = job_id_for(owner, name)
+
+        with _builds_lock:
+            # Already built and cached on disk?
+            graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
+            if graph_path.is_file():
+                existing = _builds.get(jid)
+                if not existing or existing["status"] != "building":
+                    self._send_json(200, {"job_id": jid, "status": "cached"})
+                    return
+
+            # Already building?
+            existing = _builds.get(jid)
+            if existing and existing["status"] == "building":
+                self._send_json(200, {"job_id": jid, "status": "building"})
+                return
+
+            # Concurrency limit
+            active = sum(1 for b in _builds.values() if b["status"] == "building")
+            if active >= MAX_CONCURRENT_BUILDS:
+                self._send_json(429, {"error": "Too many concurrent builds. Try again shortly."})
+                return
+
+            # Start build
+            _builds[jid] = {
+                "status": "building",
+                "error": None,
+                "sse_clients": [],
+                "last_event": {"stage": "queued", "progress": 0, "message": "Starting..."},
+            }
+            t = threading.Thread(
+                target=_run_build, args=(jid, owner, name, clone_url), daemon=True,
+            )
+            _builds[jid]["thread"] = t
+            t.start()
+
+        self._send_json(200, {"job_id": jid, "status": "started"})
+
+    def _handle_build_sse(self):
+        """GET /api/build-events?repo=job_id — SSE stream of build progress."""
+        parsed = urlparse(self.path)
+        params = parse_qs(parsed.query)
+        jid = params.get("repo", [None])[0]
+        if not jid:
+            self.send_error(400, "Missing repo param")
+            return
+
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.end_headers()
+
+        with _builds_lock:
+            build = _builds.get(jid)
+            if build:
+                # Send the last known event immediately (catch-up)
+                if build.get("last_event"):
+                    payload = ("data: " + json.dumps(build["last_event"]) + "\n\n").encode()
+                    try:
+                        self.wfile.write(payload)
+                        self.wfile.flush()
+                    except Exception:
+                        return
+                build["sse_clients"].append(self.wfile)
+            else:
+                # No build in progress — check if already done
+                graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
+                if graph_path.is_file():
+                    event = {"stage": "done", "progress": 1.0, "message": "Graph ready (cached)"}
+                    payload = ("data: " + json.dumps(event) + "\n\n").encode()
+                    try:
+                        self.wfile.write(payload)
+                        self.wfile.flush()
+                    except Exception:
+                        pass
+                    return
+                else:
+                    event = {"stage": "error", "progress": 0, "message": "No build found"}
+                    payload = ("data: " + json.dumps(event) + "\n\n").encode()
+                    try:
+                        self.wfile.write(payload)
+                        self.wfile.flush()
+                    except Exception:
+                        pass
+                    return
+
+        # Keep connection open until build finishes
+        try:
+            while True:
+                time.sleep(1)
+                with _builds_lock:
+                    build = _builds.get(jid)
+                    if not build or build["status"] != "building":
+                        break
+        except Exception:
+            pass
+        finally:
+            with _builds_lock:
+                build = _builds.get(jid)
+                if build and self.wfile in build["sse_clients"]:
+                    build["sse_clients"].remove(self.wfile)
+
+    def _serve_generated_graph(self, path: str):
+        """GET /api/graph/{job_id} — serve a dynamically generated graph."""
+        jid = path[len("/api/graph/"):]
+        # Security: only allow safe characters
+        if not re.match(r'^[a-zA-Z0-9._-]+$', jid):
+            self.send_error(400, "Invalid job ID")
+            return
+        graph_path = GENERATED_DIR / jid / "knowledge_graph.json"
+        if graph_path.is_file():
+            self._serve_file(graph_path, "application/json")
+        else:
+            self.send_error(404, "Graph not found")
+
     def _send_json(self, status: int, data: dict):
         body = json.dumps(data).encode()
         self.send_response(status)
@@ -440,7 +681,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # Route HTTP request logging through the logging module
         # Skip SSE /events since those are long-lived connections
         msg = format % args if args else format
-        if "/events" not in msg and "/commands" not in msg:
+        if "/events" not in msg and "/commands" not in msg and "/build-events" not in msg:
             log.info("%s %s", self.client_address[0], msg)
 
     def log_error(self, format, *args):
@@ -474,6 +715,10 @@ def main():
     # Start file watcher thread
     t = threading.Thread(target=_watcher, daemon=True)
     t.start()
+
+    # Start generated graph reaper thread
+    r = threading.Thread(target=_reaper, daemon=True)
+    r.start()
 
     server = ThreadedServer(("0.0.0.0", args.port), Handler)
     log.info("Dev server running at http://localhost:%d", args.port)
