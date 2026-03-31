@@ -1628,7 +1628,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
 
   // Radial layout radii (mutable via controls)
   const RING_RADII = [200, 400, 550, 800, 1000]; // [concepts, minors, files_near, files_far, contributors]
-  const nudgeOffset = nudge === 'right' ? 120 : nudge === 'left' ? -120 : 0;
+  const nudgeOffset = nudge === 'right' ? 150 : nudge === 'left' ? -150 : 0;
   let centerX = width / 2 + nudgeOffset, centerY = height / 2;
 
   // Track previous node set for positioning new nodes near the trigger
@@ -1991,8 +1991,8 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     const sheetOccupied = (bottomSheet.isMobile() && bottomSheet.state === 'peek') ? 0.25 : 0;
     const visibleH = height * (1 - sheetOccupied);
 
-    // Padding: 15% to keep nodes away from edges and info panels
-    const pad = 0.15;
+    // Padding: 20% to keep nodes away from edges and info panels
+    const pad = 0.20;
     const availW = width * (1 - 2 * pad);
     const availH = visibleH * (1 - 2 * pad);
 
