@@ -871,7 +871,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   resize();
   window.addEventListener('resize', () => {
     resize();
-    centerX = width / 2;
+    centerX = width / 2 + (typeof nudgeOffset !== 'undefined' ? nudgeOffset : 0);
     centerY = height / 2;
     draw();
     pushState();
@@ -941,6 +941,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   const noBack = urlParams.get('noback') === 'true';
   const infoFolded = urlParams.get('infofolded') === 'true';
   const infoSide = urlParams.get('infoside'); // 'left' or 'right'
+  const nudge = urlParams.get('nudge'); // 'left' or 'right' — offset graph center
 
   // Embed mode: hide repo bar, appearance, mode switch, timeline for clean embedding
   if (embedMode) {
@@ -1627,7 +1628,8 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
 
   // Radial layout radii (mutable via controls)
   const RING_RADII = [200, 400, 550, 800, 1000]; // [concepts, minors, files_near, files_far, contributors]
-  let centerX = width / 2, centerY = height / 2;
+  const nudgeOffset = nudge === 'right' ? 120 : nudge === 'left' ? -120 : 0;
+  let centerX = width / 2 + nudgeOffset, centerY = height / 2;
 
   // Track previous node set for positioning new nodes near the trigger
   let prevNodeIds = new Set();
