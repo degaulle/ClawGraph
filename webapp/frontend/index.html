@@ -1080,7 +1080,28 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
 
   // Load data
   let raw;
-  if (repoParam) {
+  const cachedMode = urlParams.get('cached') === 'true';
+  if (repoParam && cachedMode) {
+    // Build already completed on compare page — just fetch the graph
+    loadingEl.textContent = 'Loading graph...';
+    try {
+      const buildResp = await fetch('/api/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo: repoParam }),
+      });
+      const buildData = await buildResp.json();
+      if (buildData.job_id) {
+        const resp = await fetch('/api/graph/' + buildData.job_id);
+        raw = await resp.json();
+      }
+    } catch (e) {}
+    if (!raw) {
+      // Fallback to full build flow
+      raw = await loadDynamicRepo(repoParam);
+    }
+    if (!raw) return;
+  } else if (repoParam) {
     raw = await loadDynamicRepo(repoParam);
     if (!raw) return;
   } else {
@@ -2312,6 +2333,22 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     if (link.type === 'tagged_with') {
       if (!conceptToFiles.has(link.source)) conceptToFiles.set(link.source, new Set());
       conceptToFiles.get(link.source).add(link.target);
+    }
+  }
+  // Fallback: if no tagged_with edges exist, synthesize from evidence arrays
+  if (!allLinksRaw.some(l => l.type === 'tagged_with')) {
+    for (const n of allNodes) {
+      if ((n.type === 'minor_concept' || n.type === 'major_concept') && n.evidence && n.evidence.length) {
+        for (const fileName of n.evidence) {
+          const fid = fileNameToId.get(fileName);
+          if (fid) {
+            if (!conceptToFiles.has(n.id)) conceptToFiles.set(n.id, new Set());
+            conceptToFiles.get(n.id).add(fid);
+            // Also inject a synthetic edge so drill-down filtering works
+            allLinksRaw.push({ source: n.id, target: fid, type: 'tagged_with' });
+          }
+        }
+      }
     }
   }
   // Pre-compute: contributor id → set of authored file ids

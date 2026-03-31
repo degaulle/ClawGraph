@@ -74,9 +74,82 @@
   }
   #top-bar .repo-go-btn:hover { opacity: 0.9; }
 
+  #build-bar {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 28px 14px;
+    background: linear-gradient(180deg, rgba(14,14,16,0.98) 0%, rgba(10,10,12,0.95) 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  #build-bar .build-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  #build-bar .build-repo {
+    color: #e0e0e0;
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #build-bar .build-status {
+    color: #888;
+    font-size: 13px;
+    white-space: nowrap;
+    flex: 1;
+  }
+  #build-bar .build-pct {
+    color: #60a5fa;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    min-width: 36px;
+    text-align: right;
+  }
+  #build-bar .build-cancel {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #999;
+    padding: 4px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  #build-bar .build-cancel:hover { border-color: rgba(255,255,255,0.25); color: #ccc; }
+  #build-bar .build-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  #build-bar .build-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  #build-bar .build-hint {
+    color: #555;
+    font-size: 12px;
+    letter-spacing: 0.3px;
+  }
+  #build-bar.error .build-status { color: #ef4444; }
+  #build-bar.error .build-fill { background: #ef4444; }
+  #build-bar.error .build-pct { color: #ef4444; }
+
   .panels {
     display: flex;
     height: calc(100vh - 68px);
+  }
+  body.building .panels {
+    height: calc(100vh - 68px - 82px);
   }
   .panel {
     flex: 1;
@@ -119,6 +192,16 @@
     <button class="repo-go-btn" onclick="go()">Visualize</button>
   </div>
 </div>
+<div id="build-bar">
+  <div class="build-top">
+    <span class="build-repo" id="build-repo"></span>
+    <span class="build-status" id="build-status">Starting build...</span>
+    <span class="build-pct" id="build-pct"></span>
+    <button class="build-cancel" onclick="cancelBuild()">Cancel</button>
+  </div>
+  <div class="build-track"><div class="build-fill" id="build-fill"></div></div>
+  <div class="build-hint" id="build-hint">Explore the graphs below while your repo builds</div>
+</div>
 <div class="panels">
   <div class="panel">
     <div class="panel-label">OpenAI Codex</div>
@@ -130,9 +213,107 @@
   </div>
 </div>
 <script>
+var _buildES = null;
+
 function go() {
   var v = document.getElementById('repo-input').value.trim();
-  if (v) window.location.href = '/index.html?repo=' + encodeURIComponent(v);
+  if (!v) return;
+
+  var bar = document.getElementById('build-bar');
+  var repoEl = document.getElementById('build-repo');
+  var statusEl = document.getElementById('build-status');
+  var fillEl = document.getElementById('build-fill');
+  var pctEl = document.getElementById('build-pct');
+  var hintEl = document.getElementById('build-hint');
+
+  // Show the bar
+  bar.style.display = 'flex';
+  bar.className = '';
+  bar.id = 'build-bar';
+  document.body.classList.add('building');
+  repoEl.textContent = v;
+  statusEl.textContent = 'Starting build...';
+  pctEl.textContent = '';
+  hintEl.textContent = 'Explore the graphs below while your repo builds';
+  hintEl.style.display = '';
+  fillEl.style.width = '0%';
+
+  fetch('/api/build', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repo: v }),
+  })
+  .then(function(resp) { return resp.json().then(function(d) { return { ok: resp.ok, data: d }; }); })
+  .then(function(result) {
+    if (!result.ok) {
+      statusEl.textContent = result.data.error || 'Build request failed';
+      bar.className = 'error'; bar.id = 'build-bar';
+      hintEl.textContent = 'Try another repo.';
+      return;
+    }
+
+    var jobId = result.data.job_id;
+
+    if (result.data.status === 'cached') {
+      statusEl.textContent = 'Graph ready!';
+      pctEl.textContent = '100%';
+      fillEl.style.width = '100%';
+      hintEl.style.display = 'none';
+      setTimeout(function() {
+        window.location.href = '/index.html?repo=' + encodeURIComponent(v) + '&cached=true';
+      }, 400);
+      return;
+    }
+
+    var stageLabels = {
+      queued: 'Preparing', cloning: 'Cloning repository',
+      git_log: 'Reading git history', parsing: 'Parsing commits',
+      building: 'Building graph', concept_map: 'Generating concept map',
+      summarizing: 'Summarizing files', tagging: 'Tagging files with concepts',
+      contributors: 'Summarizing contributors', writing: 'Writing output',
+      done: 'Complete', error: 'Error',
+    };
+
+    _buildES = new EventSource('/api/build-events?repo=' + encodeURIComponent(jobId));
+    _buildES.onmessage = function(ev) {
+      var data = JSON.parse(ev.data);
+      var label = stageLabels[data.stage] || data.stage;
+      statusEl.textContent = label + ' \u2014 ' + data.message;
+      var pct = Math.round(data.progress * 100);
+      pctEl.textContent = pct + '%';
+      fillEl.style.width = pct + '%';
+
+      if (data.stage === 'done') {
+        _buildES.close(); _buildES = null;
+        statusEl.textContent = 'Graph ready! Loading...';
+        hintEl.style.display = 'none';
+        setTimeout(function() {
+          window.location.href = '/index.html?repo=' + encodeURIComponent(v) + '&cached=true';
+        }, 600);
+      } else if (data.stage === 'error') {
+        _buildES.close(); _buildES = null;
+        bar.className = 'error'; bar.id = 'build-bar';
+        hintEl.textContent = 'Try another repo.';
+      }
+    };
+    _buildES.onerror = function() {
+      _buildES.close(); _buildES = null;
+      statusEl.textContent = 'Connection lost during build';
+      bar.className = 'error'; bar.id = 'build-bar';
+      hintEl.textContent = 'Try again or enter a different repo.';
+    };
+  })
+  .catch(function(e) {
+    statusEl.textContent = 'Failed to connect: ' + e.message;
+    bar.className = 'error'; bar.id = 'build-bar';
+    hintEl.textContent = 'Check your connection and try again.';
+  });
+}
+
+function cancelBuild() {
+  if (_buildES) { _buildES.close(); _buildES = null; }
+  document.getElementById('build-bar').style.display = 'none';
+  document.body.classList.remove('building');
 }
 </script>
 </body>
