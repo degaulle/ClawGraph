@@ -65,6 +65,12 @@
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #444 transparent;
+    transition: all 0.2s ease;
+  }
+  #controls.folded #info-pane { display: none; }
+  #controls.folded {
+    padding: 6px 12px;
+    width: auto;
   }
   #controls::-webkit-scrollbar { width: 5px; }
   #controls::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
@@ -709,7 +715,7 @@
     <input type="text" id="repo-input-top" placeholder="Enter GitHub repo (owner/name or URL)"
            onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)}">
     <button class="repo-go-btn"
-            onclick="var v=document.getElementById('repo-input-top').value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)">Generate</button>
+            onclick="var v=document.getElementById('repo-input-top').value.trim();if(v)window.location.href='/?repo='+encodeURIComponent(v)">Visualize</button>
   </div>
   <div class="repo-current" id="repo-current"></div>
 </div>
@@ -933,6 +939,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
   const infoBottom = urlParams.get('infobottom') === 'true';
   const noHowTo = urlParams.get('nohowto') === 'true';
   const noBack = urlParams.get('noback') === 'true';
+  const infoFolded = urlParams.get('infofolded') === 'true';
 
   // Embed mode: hide repo bar, appearance, mode switch, timeline for clean embedding
   if (embedMode) {
@@ -959,10 +966,21 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     }
   }
 
-  // Custom info tab label
-  if (infoLabel) {
-    const infoTabBtn = document.getElementById('info-tab-btn');
-    if (infoTabBtn) infoTabBtn.textContent = infoLabel;
+  // Custom info tab label + fold toggle
+  const controlsEl = document.getElementById('controls');
+  const infoTabBtn = document.getElementById('info-tab-btn');
+  if (infoLabel && infoTabBtn) infoTabBtn.textContent = infoLabel;
+
+  // Make info tab button toggle fold/unfold
+  if (infoTabBtn) {
+    infoTabBtn.addEventListener('click', () => {
+      controlsEl.classList.toggle('folded');
+    });
+  }
+
+  // Start folded if requested
+  if (infoFolded && controlsEl) {
+    controlsEl.classList.add('folded');
   }
 
   async function loadDynamicRepo(repo) {
@@ -2688,6 +2706,8 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     if (!node) {
       infoPaneEl.innerHTML = buildWelcomeHTML();
     } else {
+      // Unfold info panel when a node is selected
+      if (controlsEl) controlsEl.classList.remove('folded');
       infoPaneEl.innerHTML = buildInfoPaneHTML(node);
       // Wire up symbol browser click handlers
       infoPaneEl.querySelectorAll('.symbol-item').forEach(el => {
