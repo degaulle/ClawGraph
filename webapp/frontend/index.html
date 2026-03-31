@@ -1870,7 +1870,7 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
       draw();
       updateStats();
       pushState();
-      scheduleMobileFit();
+      scheduleAutoFit();
     } else {
       // Explore: animated forces with smart initial positioning
 
@@ -1961,11 +1961,11 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
       simulation.alpha(0.35).restart();
       updateStats();
       pushState();
-      scheduleMobileFit();
+      scheduleAutoFit();
     }
   }
 
-  // --- Auto-fit visible nodes (mobile) ---
+  // --- Auto-fit visible nodes ---
   let _fitTimer = null;
   function fitNodesToView(animate) {
     // Compute bounding box of all drawn nodes
@@ -1981,25 +1981,24 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
       maxY = Math.max(maxY, n.y + r);
       count++;
     }
-    if (count < 2) return; // nothing meaningful to fit
+    if (count < 2) return;
 
     const boxW = maxX - minX;
     const boxH = maxY - minY;
     if (boxW <= 0 || boxH <= 0) return;
 
-    // Account for bottom sheet in peek state (covers bottom 25% of viewport)
+    // Account for bottom sheet on mobile
     const sheetOccupied = (bottomSheet.isMobile() && bottomSheet.state === 'peek') ? 0.25 : 0;
     const visibleH = height * (1 - sheetOccupied);
 
-    // Padding: 12% on each side of the visible area
-    const pad = 0.12;
+    // Padding: 15% to keep nodes away from edges and info panels
+    const pad = 0.15;
     const availW = width * (1 - 2 * pad);
     const availH = visibleH * (1 - 2 * pad);
 
-    const k = Math.min(availW / boxW, availH / boxH, 5); // cap zoom at 5x
+    const k = Math.min(availW / boxW, availH / boxH, 5);
     const cx = (minX + maxX) / 2;
     const cy = (minY + maxY) / 2;
-    // Center within the visible area (above the bottom sheet)
     const tx = width / 2 - cx * k;
     const ty = visibleH / 2 - cy * k;
     const t = d3.zoomIdentity.translate(tx, ty).scale(k);
@@ -2011,15 +2010,13 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     }
   }
 
-  // Schedule a fit-to-view after the simulation settles (mobile only)
-  function scheduleMobileFit() {
-    if (!bottomSheet.isMobile()) return;
+  // Schedule a fit-to-view after the simulation settles
+  function scheduleAutoFit() {
     if (_fitTimer) clearTimeout(_fitTimer);
-    // Wait for simulation to partially settle before fitting
     _fitTimer = setTimeout(() => {
       _fitTimer = null;
       fitNodesToView(true);
-    }, 400);
+    }, 500);
   }
 
   // Force simulation with radial positioning
