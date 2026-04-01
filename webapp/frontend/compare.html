@@ -74,6 +74,47 @@
   }
   #top-bar .repo-go-btn:hover { opacity: 0.9; }
 
+  /* ── Stats Ribbon ── */
+  #stats-ribbon {
+    height: 48px;
+    background: linear-gradient(180deg, rgba(12,12,14,0.98) 0%, rgba(10,10,12,0.96) 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    gap: 0;
+  }
+  .stat-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2px 18px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    min-width: 0;
+  }
+  .stat-chip:last-child { border-right: none; }
+  .stat-chip .stat-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: #4a4a4a;
+    margin-bottom: 3px;
+  }
+  .stat-chip .stat-vals {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .stat-chip .sv-cc { color: #60a5fa; }
+  .stat-chip .sv-vs { color: #2a2a2a; font-size: 9px; font-weight: 400; }
+  .stat-chip .sv-cx { color: #4ade80; }
+
+  /* ── Build Bar ── */
   #build-bar {
     display: none;
     flex-direction: column;
@@ -144,12 +185,14 @@
   #build-bar.error .build-fill { background: #ef4444; }
   #build-bar.error .build-pct { color: #ef4444; }
 
+  /* ── Panels ── */
   .panels {
     display: flex;
-    height: calc(100vh - 68px);
+    position: relative;
+    height: calc(100vh - 68px - 48px);
   }
   body.building .panels {
-    height: calc(100vh - 68px - 82px);
+    height: calc(100vh - 68px - 48px - 82px);
   }
   .panel {
     flex: 1;
@@ -180,6 +223,349 @@
     height: 100%;
     border: none;
   }
+
+  /* ── Architecture Drawer Handle ── */
+  #arch-handle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+    background: rgba(18, 18, 22, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 14px 7px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    transition: all 0.2s;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 10px;
+    font-weight: 700;
+    color: #666;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    user-select: none;
+  }
+  #arch-handle:hover {
+    border-color: rgba(59,130,246,0.4);
+    color: #aaa;
+    background: rgba(22, 22, 28, 0.96);
+  }
+  body.drawer-open #arch-handle { opacity: 0; pointer-events: none; }
+
+  /* ── Architecture Drawer ── */
+  #arch-drawer {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 100%;
+    z-index: 25;
+    overflow: hidden;
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  body.drawer-open #arch-drawer {
+    width: 480px;
+    pointer-events: auto;
+  }
+  #arch-content {
+    width: 480px;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: rgba(10, 10, 13, 0.97);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    padding: 18px 20px 30px;
+  }
+  #arch-content::-webkit-scrollbar { width: 4px; }
+  #arch-content::-webkit-scrollbar-track { background: transparent; }
+  #arch-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+  /* Drawer header */
+  .arch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .arch-header .arch-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ddd;
+    letter-spacing: 0.3px;
+  }
+  .arch-header .arch-subtitle {
+    font-size: 11px;
+    color: #555;
+    margin-top: 2px;
+  }
+  .arch-header .arch-close-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #777;
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .arch-header .arch-close-btn:hover { border-color: rgba(255,255,255,0.2); color: #bbb; }
+
+  /* ── Dimension Cards ── */
+  .dim-card {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+  .dim-card:hover { border-color: rgba(255,255,255,0.12); }
+  .dim-card.active {
+    border-color: rgba(56,189,248,0.35);
+    background: rgba(56,189,248,0.04);
+  }
+  .dim-card-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #ccc;
+    margin-bottom: 10px;
+    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .dim-card-title .dim-icon {
+    font-size: 13px;
+    opacity: 0.7;
+  }
+  .dim-card-title .dim-expand {
+    margin-left: auto;
+    font-size: 10px;
+    color: #444;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .dim-card.active .dim-card-title .dim-expand { transform: rotate(90deg); color: #38bdf8; }
+
+  /* Detail panel (hidden by default, shown when card is active) */
+  .dim-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s;
+    opacity: 0;
+  }
+  .dim-card.active .dim-detail {
+    max-height: 300px;
+    opacity: 1;
+  }
+  .dim-detail-inner {
+    padding-top: 10px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .dim-detail-prose {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .dim-concepts-row {
+    display: flex;
+    gap: 10px;
+  }
+  .dim-concepts-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .dim-concepts-col-label {
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .dim-concepts-col-label.cc { color: #60a5fa; }
+  .dim-concepts-col-label.cx { color: #4ade80; }
+  .dim-concept-tag {
+    display: inline-block;
+    font-size: 9.5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 1px 3px 1px 0;
+    font-weight: 600;
+  }
+  .dim-concept-tag.cc { background: rgba(96,165,250,0.12); color: #7db8fc; }
+  .dim-concept-tag.cx { background: rgba(74,222,128,0.12); color: #6ee7a0; }
+  .dim-cols {
+    display: flex;
+    gap: 14px;
+  }
+  .dim-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .dim-col-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .dim-col-label.cc { color: #60a5fa; }
+  .dim-col-label.cx { color: #4ade80; }
+  .dim-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .dim-col li {
+    font-size: 11px;
+    color: #909090;
+    line-height: 1.65;
+    padding-left: 10px;
+    position: relative;
+  }
+  .dim-col li::before {
+    content: '\b7';
+    position: absolute;
+    left: 1px;
+    color: #444;
+    font-weight: 700;
+  }
+  .dim-insight {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    font-size: 10.5px;
+    color: #5a5a5a;
+    font-style: italic;
+    line-height: 1.55;
+  }
+
+  /* ── Thesis Card ── */
+  .thesis-card {
+    background: linear-gradient(135deg, rgba(59,130,246,0.05), rgba(74,222,128,0.05));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 16px;
+    margin-top: 6px;
+  }
+  .thesis-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #ccc;
+    margin-bottom: 12px;
+    text-align: center;
+    letter-spacing: 0.2px;
+  }
+  .thesis-shared {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .thesis-shared-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #555;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+  .thesis-shared ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
+  .thesis-shared li {
+    font-size: 10.5px;
+    color: #777;
+    line-height: 1.7;
+  }
+  .thesis-bets {
+    display: flex;
+    gap: 10px;
+  }
+  .thesis-bet {
+    flex: 1;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .thesis-bet.cc-bet {
+    background: rgba(59,130,246,0.07);
+    border: 1px solid rgba(59,130,246,0.14);
+  }
+  .thesis-bet.cx-bet {
+    background: rgba(74,222,128,0.07);
+    border: 1px solid rgba(74,222,128,0.14);
+  }
+  .thesis-bet-label {
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .thesis-bet.cc-bet .thesis-bet-label { color: #60a5fa; }
+  .thesis-bet.cx-bet .thesis-bet-label { color: #4ade80; }
+  .thesis-bet-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ddd;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .thesis-bet ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .thesis-bet li {
+    font-size: 10px;
+    color: #888;
+    line-height: 1.65;
+  }
+
+  /* ── Thesis SVG Diagram ── */
+  .thesis-svg-wrap {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  .thesis-svg-wrap svg {
+    overflow: visible;
+  }
+  .thesis-svg-wrap text {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  @keyframes pulse-line {
+    0%, 100% { stroke-opacity: 0.3; }
+    50% { stroke-opacity: 0.7; }
+  }
+  .thesis-pulse { animation: pulse-line 2.5s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -192,6 +578,35 @@
     <button class="repo-go-btn" onclick="go()">Visualize</button>
   </div>
 </div>
+
+<!-- Stats Ribbon -->
+<div id="stats-ribbon">
+  <div class="stat-chip">
+    <span class="stat-label">Language</span>
+    <span class="stat-vals"><span class="sv-cc">TS / Bun</span><span class="sv-vs">vs</span><span class="sv-cx">Rust</span></span>
+  </div>
+  <div class="stat-chip">
+    <span class="stat-label">Codebase</span>
+    <span class="stat-vals"><span class="sv-cc">512K LOC</span><span class="sv-vs">vs</span><span class="sv-cx">lean CLI</span></span>
+  </div>
+  <div class="stat-chip">
+    <span class="stat-label">Tools</span>
+    <span class="stat-vals"><span class="sv-cc">60+</span><span class="sv-vs">vs</span><span class="sv-cx">~6 core</span></span>
+  </div>
+  <div class="stat-chip">
+    <span class="stat-label">Sys Prompt</span>
+    <span class="stat-vals"><span class="sv-cc">~76 KB</span><span class="sv-vs">vs</span><span class="sv-cx">shorter</span></span>
+  </div>
+  <div class="stat-chip">
+    <span class="stat-label">Context</span>
+    <span class="stat-vals"><span class="sv-cc">200K tok</span><span class="sv-vs">vs</span><span class="sv-cx">cached</span></span>
+  </div>
+  <div class="stat-chip">
+    <span class="stat-label">Sandbox</span>
+    <span class="stat-vals"><span class="sv-cc">permission</span><span class="sv-vs">vs</span><span class="sv-cx">OS-native</span></span>
+  </div>
+</div>
+
 <div id="build-bar">
   <div class="build-top">
     <span class="build-repo" id="build-repo"></span>
@@ -204,16 +619,409 @@
 </div>
 <div class="panels">
   <div class="panel">
-    <div class="panel-label">OpenAI Codex</div>
-    <iframe src="/index.html?embed=true&label=Info-Codex&infoside=left&nohowto=true&nudge=right"></iframe>
+    <div class="panel-label" style="color:#60a5fa">claude-code</div>
+    <iframe src="/index.html?repo=Kuberwastaken/claude-code&embed=true&label=Info-Claude+Code&infoside=left&nohowto=true&noback=true&nudge=right"></iframe>
   </div>
+
+  <!-- Architecture drawer handle -->
+  <div id="arch-handle" onclick="toggleDrawer()">Arch</div>
+
+  <!-- Architecture comparison drawer -->
+  <div id="arch-drawer">
+    <div id="arch-content">
+      <div class="arch-header">
+        <div>
+          <div class="arch-title">Architecture Comparison</div>
+          <div class="arch-subtitle">How these harnesses differ under the hood</div>
+        </div>
+        <button class="arch-close-btn" onclick="toggleDrawer()">&times;</button>
+      </div>
+
+      <!-- 1. Agentic Loop -->
+      <div class="dim-card" data-dim="loop">
+        <div class="dim-card-title"><span class="dim-icon">&#x21bb;</span> Agentic Loop <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>Single-threaded while-loop</li>
+              <li>h2A async dual-buffer queue</li>
+              <li>Reads parallel (&times;10), writes serial</li>
+              <li>3 recovery attempts on token limit</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>HTTP POST to /responses</li>
+              <li>App Server wraps loop (JSON-RPC 1.0)</li>
+              <li>Client-side state in prompt</li>
+              <li>Shared across CLI, VS Code, desktop</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Same skeleton &mdash; both loop until no tool calls, inject invisible continuation on token limits.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code runs in <code>query.ts</code> / <code>QueryEngine.ts</code> (~47K lines) with a flat &ldquo;nO&rdquo; message history. The h2A queue lets users inject instructions mid-execution. Codex wraps its loop in an App Server (JSON-RPC over stdio/WebSocket) so every surface shares the exact same harness.</div>
+          <div class="dim-concepts-row" id="tags-loop"></div>
+        </div></div>
+      </div>
+
+      <!-- 2. Models -->
+      <div class="dim-card" data-dim="models">
+        <div class="dim-card-title"><span class="dim-icon">&#x2B22;</span> Models <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>Sonnet 4.6 default</li>
+              <li>Opus 4.6 via --model flag</li>
+              <li>Haiku for metadata tasks</li>
+              <li>Dual-model architecture</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>GPT-5.3-Codex default</li>
+              <li>GPT-5.4 recommended upgrade</li>
+              <li>Spark fast variant for Pro</li>
+              <li>Hours-long autonomous runs</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Both use tiered model selection &mdash; premium for coding, lightweight for metadata.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code&rsquo;s dual-model architecture uses Haiku for metadata tasks like summarization and sub-agent exploration, reserving Sonnet/Opus for coding. Codex&rsquo;s GPT-5.3 uses &ldquo;medium&rdquo; reasoning effort by default and supports hours-long autonomous execution with GPT-5.4.</div>
+          <div class="dim-concepts-row" id="tags-models"></div>
+        </div></div>
+      </div>
+
+      <!-- 3. System Prompt -->
+      <div class="dim-card" data-dim="prompt">
+        <div class="dim-card-title"><span class="dim-icon">&#x2709;</span> System Prompt <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>~76 KB dynamically assembled</li>
+              <li>Modular cached sections</li>
+              <li>Environment context appended</li>
+              <li>Single system field in API</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>Shorter prompt.md in repo</li>
+              <li>Role-based: system / dev / user</li>
+              <li>Server-injected model preambles</li>
+              <li>config.toml + AGENTS.md layers</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Both share the same ethos: be concise, technically accurate, keep going until done.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code splits its 76KB prompt by a <code>SYSTEM_PROMPT_DYNAMIC_BOUNDARY</code> marker into cacheable static portions and per-session dynamic portions. Codex structures prompts through the Responses API&rsquo;s role-based assembly, letting OpenAI inject model-specific preambles server-side.</div>
+          <div class="dim-concepts-row" id="tags-prompt"></div>
+        </div></div>
+      </div>
+
+      <!-- 4. Tool Arsenal -->
+      <div class="dim-card" data-dim="tools">
+        <div class="dim-card-title"><span class="dim-icon">&#x2692;</span> Tool Arsenal <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>60+ tools, ~18 deferred-loaded</li>
+              <li>ToolSearchTool for on-demand load</li>
+              <li>Search-and-replace file editing</li>
+              <li>Built-in LSP (9 operations)</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>~6 core tools, always available</li>
+              <li>RL-trained apply_patch (signature)</li>
+              <li>Unified diff patch editing</li>
+              <li>Shell tools for code navigation</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Breadth vs depth &mdash; Claude covers more surface, Codex trains deeper on fewer tools.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code sorts tools alphabetically for prompt cache hits and defers ~18 tools via <code>ToolSearchTool</code>. Each tool conforms to a <code>Tool&lt;Input, Output, Progress&gt;</code> interface with Zod validation. Codex&rsquo;s <code>apply_patch</code> is its signature &mdash; models are RL-trained to produce unified diffs, making large edits more precise.</div>
+          <div class="dim-concepts-row" id="tags-tools"></div>
+        </div></div>
+      </div>
+
+      <!-- 5. Context Management -->
+      <div class="dim-card" data-dim="context">
+        <div class="dim-card-title"><span class="dim-icon">&#x29C9;</span> Context Management <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>200K tokens (1M beta)</li>
+              <li>MicroCompact + AutoCompact</li>
+              <li>Triggers at ~83.5% utilization</li>
+              <li>60-80% reduction via summaries</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>Prompt caching (prefix match)</li>
+              <li>Encrypted /responses/compact</li>
+              <li>Static content at prompt start</li>
+              <li>AGENTS.md capped at 32 KB</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Claude Code summarizes to compress; Codex caches prefixes and encrypts compaction tokens.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">AutoCompact triggers at ~83.5% utilization, generating up to 20K-token summaries with a 13K-token buffer, achieving 60-80% reduction. Codex&rsquo;s <code>/responses/compact</code> returns encrypted <code>type=compaction</code> items preserving the model&rsquo;s latent understanding without full history &mdash; a fundamentally different approach.</div>
+          <div class="dim-concepts-row" id="tags-context"></div>
+        </div></div>
+      </div>
+
+      <!-- 6. Sandboxing -->
+      <div class="dim-card" data-dim="sandbox">
+        <div class="dim-card-title"><span class="dim-icon">&#x1F6E1;</span> Sandboxing <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>Risk levels: low / med / high</li>
+              <li>5 permission modes</li>
+              <li>Glob pattern rules</li>
+              <li>Priority cascade across configs</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>macOS Seatbelt, Linux bwrap</li>
+              <li>seccomp syscall filtering</li>
+              <li>Network off by default</li>
+              <li>.git always read-only</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Permission prompts vs OS isolation &mdash; trust-the-user vs trust-the-sandbox.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code classifies actions as LOW/MEDIUM/HIGH risk across five modes: default, plan, acceptEdits, bypassPermissions, dontAsk. Codex uses Apple Seatbelt on macOS and Bubblewrap+seccomp on Linux with network disabled by default &mdash; every spawned subprocess inherits sandbox policies.</div>
+          <div class="dim-concepts-row" id="tags-sandbox"></div>
+        </div></div>
+      </div>
+
+      <!-- 7. API Structure -->
+      <div class="dim-card" data-dim="api">
+        <div class="dim-card-title"><span class="dim-icon">&#x27A4;</span> API Structure <span class="dim-expand">&#x25B6;</span></div>
+        <div class="dim-cols">
+          <div class="dim-col">
+            <div class="dim-col-label cc">Claude Code</div>
+            <ul>
+              <li>Anthropic Messages API</li>
+              <li>Adaptive extended thinking</li>
+              <li>Client attestation hashes</li>
+              <li>Single system prompt field</li>
+            </ul>
+          </div>
+          <div class="dim-col">
+            <div class="dim-col-label cx">Codex</div>
+            <ul>
+              <li>OpenAI Responses API</li>
+              <li>Role separation: sys / dev / user</li>
+              <li>SSE streaming + response chain</li>
+              <li>Server-side model optimization</li>
+            </ul>
+          </div>
+        </div>
+        <div class="dim-insight">Role separation lets OpenAI inject model-specific preambles server-side.</div>
+        <div class="dim-detail"><div class="dim-detail-inner">
+          <div class="dim-detail-prose">Claude Code sends to the Messages API with adaptive extended thinking, client attestation hashes, and session IDs for proxy aggregation. Codex uses the Responses API&rsquo;s role separation (system/developer/user) with <code>previous_response_id</code> chaining and Server-Sent Events streaming.</div>
+          <div class="dim-concepts-row" id="tags-api"></div>
+        </div></div>
+      </div>
+
+      <!-- Strategic Bets (thesis) — Phase 4: SVG diagram -->
+      <div class="thesis-card">
+        <div class="thesis-title">Converging Designs, Diverging Bets</div>
+        <div class="thesis-svg-wrap">
+          <svg width="420" height="200" viewBox="0 0 420 200">
+            <!-- Shared trunk -->
+            <line x1="210" y1="10" x2="210" y2="70" stroke="#555" stroke-width="2" stroke-dasharray="4,3"/>
+            <rect x="130" y="0" width="160" height="22" rx="6" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+            <text x="210" y="15" text-anchor="middle" fill="#999" font-size="9" font-weight="700" letter-spacing="0.8">SHARED FOUNDATION</text>
+            <!-- Foundation labels -->
+            <text x="210" y="38" text-anchor="middle" fill="#666" font-size="8">agent loop &middot; markdown memory &middot; permissions</text>
+            <text x="210" y="50" text-anchor="middle" fill="#666" font-size="8">subagent spawning &middot; auto-compaction</text>
+            <!-- Fork point -->
+            <circle cx="210" cy="70" r="4" fill="#888"/>
+            <!-- Left branch (Claude Code / Anthropic) -->
+            <path d="M210,70 Q210,90 120,105" fill="none" stroke="#60a5fa" stroke-width="2" class="thesis-pulse"/>
+            <rect x="20" y="100" width="200" height="90" rx="8" fill="rgba(59,130,246,0.06)" stroke="rgba(59,130,246,0.2)" stroke-width="1"/>
+            <text x="120" y="118" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="700" letter-spacing="1">ANTHROPIC</text>
+            <text x="120" y="134" text-anchor="middle" fill="#ddd" font-size="11" font-weight="700">&ldquo;Prompt Breadth&rdquo;</text>
+            <text x="120" y="152" text-anchor="middle" fill="#888" font-size="8.5">60+ tools &middot; 76KB prompt</text>
+            <text x="120" y="165" text-anchor="middle" fill="#888" font-size="8.5">Multi-layer compression</text>
+            <text x="120" y="178" text-anchor="middle" fill="#888" font-size="8.5">TypeScript / Bun</text>
+            <!-- Right branch (Codex / OpenAI) -->
+            <path d="M210,70 Q210,90 300,105" fill="none" stroke="#4ade80" stroke-width="2" class="thesis-pulse"/>
+            <rect x="200" y="100" width="200" height="90" rx="8" fill="rgba(74,222,128,0.06)" stroke="rgba(74,222,128,0.2)" stroke-width="1"/>
+            <text x="300" y="118" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="700" letter-spacing="1">OPENAI</text>
+            <text x="300" y="134" text-anchor="middle" fill="#ddd" font-size="11" font-weight="700">&ldquo;Model Depth&rdquo;</text>
+            <text x="300" y="152" text-anchor="middle" fill="#888" font-size="8.5">RL-trained tools &middot; OS sandbox</text>
+            <text x="300" y="165" text-anchor="middle" fill="#888" font-size="8.5">Encrypted compaction</text>
+            <text x="300" y="178" text-anchor="middle" fill="#888" font-size="8.5">Rust binary</text>
+          </svg>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <div class="panel">
-    <div class="panel-label">claude-code</div>
-    <iframe src="/index.html?repo=Kuberwastaken/claude-code&embed=true&label=Info-Claude+Code&infoside=right&nohowto=true&noback=true&nudge=left"></iframe>
+    <div class="panel-label" style="color:#4ade80">OpenAI Codex</div>
+    <iframe src="/index.html?embed=true&label=Info-Codex&infoside=right&nohowto=true&nudge=left"></iframe>
   </div>
 </div>
 <script>
 var _buildES = null;
+
+function toggleDrawer() {
+  document.body.classList.toggle('drawer-open');
+  // Clear highlights when closing
+  if (!document.body.classList.contains('drawer-open')) {
+    clearAllHighlights();
+  }
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    if (_activeDim) { clearAllHighlights(); return; }
+    if (document.body.classList.contains('drawer-open')) { toggleDrawer(); }
+  }
+});
+
+// ── Phase 3: Cross-graph concept highlighting ──
+
+// Concept name mapping: dimension → { cc: [names for claude-code graph], cx: [names for codex graph] }
+var DIM_CONCEPTS = {
+  loop: {
+    cc: ['Agent Actions', 'Session Lifecycle', 'Turn Management', 'Tool Execution', 'Thread Fork'],
+    cx: ['Agent Actions', 'Session Lifecycle', 'Turn Management', 'Agent Response Stream', 'Thread Fork']
+  },
+  models: {
+    cc: ['Model & Reasoning', 'Context Window', 'Cost Calculation'],
+    cx: ['Model & Reasoning', 'Context Window', 'Model Catalog', 'Model Switching', 'Reasoning Effort']
+  },
+  prompt: {
+    cc: ['Project Context', 'Base Instructions', 'Configuration File', 'Working Directory Awareness'],
+    cx: ['Project Context', 'Base Instructions', 'Developer Instructions', 'Instruction Precedence', 'Global AGENTS.md', 'Project AGENTS.md', 'Folder AGENTS.md']
+  },
+  tools: {
+    cc: ['Agent Actions', 'Shell Execution', 'File Read', 'MCP Tool Call', 'MCP Server', 'Tool Execution', 'Skills System'],
+    cx: ['Agent Actions', 'Extensibility', 'Shell Execution', 'File Patch', 'File Read', 'Codebase Search', 'MCP Tool Call', 'Skills System', 'Progressive Skill Loading']
+  },
+  context: {
+    cc: ['Session Lifecycle', 'Conversation', 'Context Compaction', 'Context Window', 'Dream Engine', 'Conversation Clearing'],
+    cx: ['Session Lifecycle', 'Context Compaction', 'Context Window', 'Tool Output Truncation']
+  },
+  sandbox: {
+    cc: ['Safety & Containment', 'External Sandbox', 'Approval Request Flow', 'Directory Trust', 'Full-Auto Mode'],
+    cx: ['Safety & Containment', 'Autonomy & Approval', 'External Sandbox', 'Linux Sandbox', 'macOS Seatbelt', 'Network Restriction', 'Read-Only Sandbox', 'Workspace-Write Sandbox', 'Execution Policy']
+  },
+  api: {
+    cc: ['Interfaces', 'Bridge & Remote Execution', 'App Server Protocol', 'Structured Output', 'JWT Authentication'],
+    cx: ['Interfaces', 'App Server Protocol', 'Structured Output', 'Headless Exec Mode', 'IDE Extension']
+  }
+};
+
+var _activeDim = null;
+
+function getIframes() {
+  var panels = document.querySelectorAll('.panel iframe');
+  return { cc: panels[0], codex: panels[1] };
+}
+
+function sendHighlight(iframe, names) {
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'highlightConcepts', names: names }, '*');
+  }
+}
+
+function sendClear(iframe) {
+  if (iframe && iframe.contentWindow) {
+    iframe.contentWindow.postMessage({ type: 'clearHighlight' }, '*');
+  }
+}
+
+function clearAllHighlights() {
+  var iframes = getIframes();
+  sendClear(iframes.codex);
+  sendClear(iframes.cc);
+  if (_activeDim) {
+    var prev = document.querySelector('.dim-card.active');
+    if (prev) prev.classList.remove('active');
+    _activeDim = null;
+  }
+}
+
+function activateDim(dim) {
+  var mapping = DIM_CONCEPTS[dim];
+  if (!mapping) return;
+
+  // Toggle off if already active
+  if (_activeDim === dim) {
+    clearAllHighlights();
+    return;
+  }
+
+  // Deactivate previous
+  var prev = document.querySelector('.dim-card.active');
+  if (prev) prev.classList.remove('active');
+
+  // Activate new
+  _activeDim = dim;
+  var card = document.querySelector('.dim-card[data-dim="' + dim + '"]');
+  if (card) card.classList.add('active');
+
+  // Send highlights to both iframes
+  var iframes = getIframes();
+  sendHighlight(iframes.cc, mapping.cc);
+  sendHighlight(iframes.codex, mapping.cx);
+}
+
+// Render concept tags into each card's detail section
+function renderConceptTags() {
+  for (var dim in DIM_CONCEPTS) {
+    var el = document.getElementById('tags-' + dim);
+    if (!el) continue;
+    var m = DIM_CONCEPTS[dim];
+    var html = '<div class="dim-concepts-col">'
+      + '<div class="dim-concepts-col-label cc">Highlighted in Claude Code</div>'
+      + m.cc.map(function(n) { return '<span class="dim-concept-tag cc">' + n + '</span>'; }).join('')
+      + '</div><div class="dim-concepts-col">'
+      + '<div class="dim-concepts-col-label cx">Highlighted in Codex</div>'
+      + m.cx.map(function(n) { return '<span class="dim-concept-tag cx">' + n + '</span>'; }).join('')
+      + '</div>';
+    el.innerHTML = html;
+  }
+}
+
+// Wire up card clicks
+document.addEventListener('DOMContentLoaded', function() {
+  renderConceptTags();
+  document.querySelectorAll('.dim-card[data-dim]').forEach(function(card) {
+    card.addEventListener('click', function() {
+      activateDim(card.getAttribute('data-dim'));
+    });
+  });
+});
 
 function go() {
   var v = document.getElementById('repo-input').value.trim();

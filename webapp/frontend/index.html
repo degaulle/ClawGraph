@@ -3127,9 +3127,12 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
       const opScale = EDGE_OPACITY_SCALE[link.type] || 1;
 
       let hl = hoveredNode && highlightSet.has(s.id) && highlightSet.has(t.id);
+      const extEdgeHl = externalHighlightActive && (externalHighlightIds.has(s.id) || externalHighlightIds.has(t.id));
       const alpha = hl
         ? Math.min(highlightEdgeOpacity * opScale, 1)
-        : Math.min(edgeOpacity * opScale, 1);
+        : externalHighlightActive
+          ? (extEdgeHl ? Math.min(edgeOpacity * opScale * 1.5, 1) : Math.min(edgeOpacity * opScale * 0.15, 0.08))
+          : Math.min(edgeOpacity * opScale, 1);
       let commitExtra = 0;
       if (commitWidthScale > 0 && (link.type === 'authored' || link.type === 'contributed_to')) {
         const count = link.type === 'authored' ? link.commits : (link.totalCommits || 0);
@@ -3173,12 +3176,14 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
     }
 
     // Nodes
-    const dimAlpha = hoveredNode ? 0.15 : 1;
+    const dimAlpha = hoveredNode ? 0.15 : (externalHighlightActive ? 0.18 : 1);
     for (const node of nodes) {
       if (!nodeDrawn(node)) continue;
 
       const highlighted = highlightSet.has(node.id);
-      let alpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 1;
+      const extHl = externalHighlightActive && externalHighlightIds.has(node.id);
+      let alpha = hoveredNode ? (highlighted ? 1 : dimAlpha)
+        : (externalHighlightActive ? (extHl ? 1 : dimAlpha) : 1);
 
       // No extra dimming — filtering handles what's visible
 
@@ -3259,6 +3264,24 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
           ctx.arc(node.x, node.y, r + 2 * zk, 0, 2 * Math.PI);
           ctx.stroke();
         }
+
+        // External highlight glow (pulsing)
+        if (extHl) {
+          const pulse = 0.55 + 0.45 * Math.sin(Date.now() / 350);
+          ctx.globalAlpha = 1;
+          // Inner ring
+          ctx.strokeStyle = `rgba(56, 189, 248, ${pulse})`;
+          ctx.lineWidth = Math.max(2.5 * zk, 1.5);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 4 * zk, 0, 2 * Math.PI);
+          ctx.stroke();
+          // Outer glow
+          ctx.strokeStyle = `rgba(56, 189, 248, ${pulse * 0.25})`;
+          ctx.lineWidth = Math.max(6 * zk, 2.5);
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, r + 8 * zk, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
       }
     }
     ctx.globalAlpha = 1;
@@ -3277,9 +3300,11 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
       if (hoveredNode && node.id === hoveredNode.id) continue; // drawn below with hover styling
 
       const highlighted = hoveredNode ? highlightSet.has(node.id) : true;
+      const extLabelHl = externalHighlightActive && externalHighlightIds.has(node.id);
       const scale = getNodeScale(node);
       const r = node.radius * scale * zk;
-      ctx.globalAlpha = hoveredNode ? (highlighted ? 1 : dimAlpha) : 0.9;
+      ctx.globalAlpha = hoveredNode ? (highlighted ? 1 : dimAlpha)
+        : externalHighlightActive ? (extLabelHl ? 1 : 0.15) : 0.9;
       ctx.font = `bold ${fontSize}px -apple-system, sans-serif`;
       ctx.fillStyle = '#fff';
       ctx.textAlign = 'left';
@@ -3454,6 +3479,39 @@ const _isEmbed = _earlyParams.get('embed') === 'true';
         draw();
       })
   );
+
+  // ── External highlight support (for compare page cross-graph highlighting) ──
+  const externalHighlightIds = new Set();
+  let externalHighlightActive = false;
+  let _extHighlightRAF = null;
+
+  function _extHighlightLoop() {
+    if (!externalHighlightActive) { _extHighlightRAF = null; return; }
+    draw();
+    _extHighlightRAF = requestAnimationFrame(_extHighlightLoop);
+  }
+
+  window.addEventListener('message', function(ev) {
+    if (!ev.data || !ev.data.type) return;
+
+    if (ev.data.type === 'highlightConcepts') {
+      externalHighlightIds.clear();
+      const names = (ev.data.names || []).map(n => n.toLowerCase());
+      for (const node of allNodes) {
+        if ((node.type === 'major_concept' || node.type === 'minor_concept')
+            && names.includes(node.name.toLowerCase())) {
+          externalHighlightIds.add(node.id);
+        }
+      }
+      externalHighlightActive = externalHighlightIds.size > 0;
+      if (externalHighlightActive && !_extHighlightRAF) _extHighlightLoop();
+      else draw();
+    } else if (ev.data.type === 'clearHighlight') {
+      externalHighlightIds.clear();
+      externalHighlightActive = false;
+      draw();
+    }
+  });
 
   // Escape to go back / deselect
   document.addEventListener('keydown', (e) => {
