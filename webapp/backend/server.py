@@ -294,13 +294,19 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
         path = self.path.split("?")[0]
 
-        # SSE endpoint (live-reload)
+        # SSE endpoint (live-reload) — disabled in public mode to prevent thread exhaustion
         if path == "/events":
+            if self.public_mode:
+                self.send_error(404)
+                return
             self._handle_sse()
             return
 
-        # SSE endpoint (remote commands)
+        # SSE endpoint (remote commands) — disabled in public mode
         if path == "/commands":
+            if self.public_mode:
+                self.send_error(404)
+                return
             self._handle_command_sse()
             return
 
